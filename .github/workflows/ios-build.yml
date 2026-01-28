@@ -34,6 +34,12 @@ jobs:
           fi
         shell: bash
       
+      - name: Copy iOS App Icons
+        run: |
+          # Copy app icons from android/AppIcons to iOS project
+          cp -r android/AppIcons/Assets.xcassets/AppIcon.appiconset/* ios/App/App/Assets.xcassets/AppIcon.appiconset/
+        shell: bash
+      
       - name: Sync Capacitor iOS
         run: npx cap sync ios
       
