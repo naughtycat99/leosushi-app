@@ -1,0 +1,12 @@
+/* Mobile App Specific Fixes */
+
+/* Hide fixed order button on mobile app */
+.mobile-app .fixed-order-btn,
+.mobile-app #fixedOrderBtn,
+body .fixed-order-btn,
+body #fixedOrderBtn {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
