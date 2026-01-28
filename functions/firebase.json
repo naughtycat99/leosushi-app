@@ -1,0 +1,17 @@
+{
+  "functions": {
+    "source": ".",
+    "runtime": "nodejs18",
+    "region": "us-central1"
+  },
+  "emulators": {
+    "functions": {
+      "port": 5001
+    },
+    "ui": {
+      "enabled": true,
+      "port": 4000
+    }
+  }
+}
+

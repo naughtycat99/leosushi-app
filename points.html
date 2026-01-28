@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meine Punkte - LEO SUSHI</title>
+    <meta name="theme-color" content="#0b0b0c">
+    <link rel="icon" href="assets/logo.png">
+    <link rel="apple-touch-icon" href="assets/logo.png">
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        body {
+            background: linear-gradient(180deg, #09090a, #0b0b0c 30%, #0b0b0c 70%, #0a0a0b);
+            min-height: 100vh;
+        }
+        .points-wrapper {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 100px 20px 60px;
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            gap: 30px;
+        }
+        @media (max-width: 968px) {
+            .points-wrapper {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            .points-sidebar {
+                order: 2;
+            }
+            .points-main {
+                order: 1;
+            }
+        }
+        /* Sidebar Navigation */
+        .points-sidebar {
+            position: sticky;
+            top: 100px;
+            height: fit-content;
+        }
+        .points-nav {
+            background: linear-gradient(135deg, rgba(18, 18, 20, 0.95), rgba(15, 15, 17, 0.95));
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(229, 207, 142, 0.15);
+            border-radius: 16px;
+            padding: 24px 0;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+        }
+        .points-nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 24px;
+            color: rgba(255, 255, 255, 0.7);
+            text-decoration: none;
+            transition: all 0.2s;
+            border-left: 3px solid transparent;
+            font-weight: 500;
+        }
+        .points-nav-item:hover {
+            background: rgba(229, 207, 142, 0.1);
+            color: var(--gold);
+            border-left-color: var(--gold);
+        }
+        .points-nav-item.active {
+            background: rgba(229, 207, 142, 0.15);
+            color: var(--gold);
+            border-left-color: var(--gold);
+            font-weight: 600;
+        }
+        .points-nav-item span:first-child {
+            font-size: 20px;
+            width: 24px;
+            text-align: center;
+        }
+        /* Main Content */
+        .points-main {
+            min-height: 600px;
+        }
+        .points-header {
+            margin-bottom: 30px;
+        }
+        .points-header h1 {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: var(--gold);
+        }
+        .points-header p {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.6);
+        }
+        .points-card {
+            background: linear-gradient(135deg, rgba(18, 18, 20, 0.95), rgba(15, 15, 17, 0.95));
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(229, 207, 142, 0.15);
+            border-radius: 16px;
+            padding: 32px;
+            margin-bottom: 24px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+        .points-balance {
+            text-align: center;
+            padding: 40px 20px;
+            background: linear-gradient(135deg, rgba(229, 207, 142, 0.1), rgba(229, 207, 142, 0.05));
+            border-radius: 12px;
+            margin-bottom: 32px;
+        }
+        .points-balance h2 {
+            font-size: 48px;
+            font-weight: 700;
+            color: var(--gold);
+            margin: 0 0 8px 0;
+        }
+        .points-balance p {
+            font-size: 16px;
+            color: rgba(255, 255, 255, 0.7);
+            margin: 0;
+        }
+        .redemption-rules {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 32px;
+        }
+        .redemption-rule-card {
+            background: rgba(229, 207, 142, 0.05);
+            border: 1px solid rgba(229, 207, 142, 0.2);
+            border-radius: 12px;
+            padding: 24px;
+            text-align: center;
+            transition: all 0.3s;
+        }
+        .redemption-rule-card:hover {
+            background: rgba(229, 207, 142, 0.1);
+            border-color: var(--gold);
+            transform: translateY(-2px);
+        }
+        .redemption-rule-card.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .redemption-rule-card h3 {
+            font-size: 24px;
+            color: var(--gold);
+            margin: 0 0 8px 0;
+        }
+        .redemption-rule-card p {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.7);
+            margin: 4px 0;
+        }
+        .redeem-btn {
+            background: linear-gradient(135deg, var(--gold), #d4af37);
+            color: #0b0b0c;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 16px;
+            transition: all 0.3s;
+        }
+        .redeem-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(229, 207, 142, 0.4);
+        }
+        .redeem-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .transactions-list {
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        .transaction-item {
+            padding: 16px;
+            border-bottom: 1px solid rgba(229, 207, 142, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .transaction-item:last-child {
+            border-bottom: none;
+        }
+        .transaction-item.earn .points {
+            color: #10b981;
+        }
+        .transaction-item.redeem .points {
+            color: #ef4444;
+        }
+        .transaction-info {
+            flex: 1;
+        }
+        .transaction-info h4 {
+            margin: 0 0 4px 0;
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 16px;
+        }
+        .transaction-info p {
+            margin: 0;
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.6);
+        }
+        .transaction-points {
+            font-size: 20px;
+            font-weight: 700;
+        }
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: rgba(255, 255, 255, 0.6);
+        }
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: rgba(255, 255, 255, 0.5);
+        }
+    </style>
+</head>
+<body>
+    <!-- Header sẽ được load từ script -->
+    <div id="header-placeholder"></div>
+
+    <div class="points-wrapper">
+        <!-- Sidebar Navigation -->
+        <aside class="points-sidebar">
+            <nav class="points-nav">
+                <a href="account" class="points-nav-item">
+                    <span>👤</span>
+                    <span>Mein Profil</span>
+                </a>
+                <a href="orders" class="points-nav-item">
+                    <span>📦</span>
+                    <span>Meine Bestellungen</span>
+                </a>
+                <a href="rewards" class="points-nav-item active">
+                    <span>⭐</span>
+                    <span>Meine Punkte</span>
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="points-main">
+            <div class="points-header">
+                <h1>⭐ Meine Punkte</h1>
+                <p>Verdienen Sie Punkte bei jeder Bestellung und tauschen Sie sie gegen Gutscheincodes ein</p>
+            </div>
+
+            <!-- Points Balance -->
+            <div class="points-card">
+                <div class="points-balance">
+                    <h2 id="pointsBalance">0</h2>
+                    <p>Verfügbare Punkte</p>
+                </div>
+            </div>
+
+            <!-- Redemption Rules -->
+            <div class="points-card">
+                <h3 style="margin-top: 0; margin-bottom: 24px; color: var(--gold);">Punkte einlösen</h3>
+                <div class="redemption-rules" id="redemptionRules">
+                    <div class="loading">Lade Einlösungsoptionen...</div>
+                </div>
+            </div>
+
+            <!-- Transaction History -->
+            <div class="points-card">
+                <h3 style="margin-top: 0; margin-bottom: 24px; color: var(--gold);">Transaktionsverlauf</h3>
+                <div class="transactions-list" id="transactionsList">
+                    <div class="loading">Lade Transaktionen...</div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Footer sẽ được load từ script -->
+    <div id="footer-placeholder"></div>
+
+    <!-- Scripts -->
+    <script>
+        // Set API base URLs
+        window.API_BASE_URL = window.location.origin;
+        window.API_PHP_BASE_URL = window.location.origin + (window.location.pathname.includes('/leosushi') ? '/leosushi/api' : '/api');
+    </script>
+    <script src="js/api.js"></script>
+    <script src="js/auth-mysql.js"></script>
+    <script src="js/notifications.js"></script>
+    <script src="script.js"></script>
+    <script>
+        // Load header and footer
+        document.addEventListener('DOMContentLoaded', () => {
+            loadHeader();
+            loadFooter();
+            loadPointsData();
+        });
+
+        async function loadPointsData() {
+            try {
+                const user = getCurrentUser();
+                if (!user || !user.id) {
+                    window.location.href = '/';
+                    return;
+                }
+
+                // Load points balance
+                if (window.api && window.api.points) {
+                    const pointsResult = await window.api.points.getPoints(user.id);
+                    if (pointsResult && pointsResult.success) {
+                        document.getElementById('pointsBalance').textContent = pointsResult.points || 0;
+                    }
+
+                    // Load redemption rules
+                    const rulesResult = await window.api.points.getRedemptionRules();
+                    if (rulesResult && rulesResult.success) {
+                        renderRedemptionRules(rulesResult.rules, pointsResult.points || 0);
+                    }
+
+                    // Load transactions
+                    const transResult = await window.api.points.getTransactions(user.id);
+                    if (transResult && transResult.success) {
+                        renderTransactions(transResult.transactions);
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading points data:', error);
+                if (window.addNotification) {
+                    window.addNotification('error', 'Fehler', 'Fehler beim Laden der Punkte-Daten');
+                }
+            }
+        }
+
+        function renderRedemptionRules(rules, currentPoints) {
+            const container = document.getElementById('redemptionRules');
+            if (!rules || rules.length === 0) {
+                container.innerHTML = '<div class="empty-state">Keine Einlösungsoptionen verfügbar</div>';
+                return;
+            }
+
+            container.innerHTML = rules.map(rule => {
+                const canRedeem = currentPoints >= rule.points_required;
+                const discountText = rule.discount_type === 'percentage' 
+                    ? `${rule.discount_value}%` 
+                    : `${rule.discount_value}€`;
+                const minOrderText = rule.min_order > 0 ? ` (Min. Bestellung: ${rule.min_order}€)` : '';
+
+                return `
+                    <div class="redemption-rule-card ${canRedeem ? '' : 'disabled'}">
+                        <h3>${rule.points_required} Punkte</h3>
+                        <p style="font-size: 18px; font-weight: 600; color: var(--gold); margin: 8px 0;">
+                            ${discountText} Rabatt${minOrderText}
+                        </p>
+                        <p style="font-size: 12px; color: rgba(255,255,255,0.5);">
+                            Gültig für ${rule.valid_days} Tage
+                        </p>
+                        <button 
+                            class="redeem-btn" 
+                            onclick="redeemPoints('${rule.rule_id}', ${rule.points_required})"
+                            ${canRedeem ? '' : 'disabled'}
+                        >
+                            ${canRedeem ? 'Einlösen' : 'Nicht genug Punkte'}
+                        </button>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function renderTransactions(transactions) {
+            const container = document.getElementById('transactionsList');
+            if (!transactions || transactions.length === 0) {
+                container.innerHTML = '<div class="empty-state">Noch keine Transaktionen</div>';
+                return;
+            }
+
+            container.innerHTML = transactions.map(trans => {
+                const points = parseInt(trans.points);
+                const isEarn = points > 0;
+                const pointsText = isEarn ? `+${points}` : `${points}`;
+                const date = new Date(trans.created_at).toLocaleDateString('de-DE', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+
+                return `
+                    <div class="transaction-item ${isEarn ? 'earn' : 'redeem'}">
+                        <div class="transaction-info">
+                            <h4>${trans.description || trans.type}</h4>
+                            <p>${date}</p>
+                        </div>
+                        <div class="transaction-points points">${pointsText} Punkte</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        async function redeemPoints(ruleId, pointsRequired) {
+            if (!confirm(`Möchten Sie ${pointsRequired} Punkte einlösen?`)) {
+                return;
+            }
+
+            try {
+                const user = getCurrentUser();
+                if (!user || !user.id) {
+                    window.location.href = '/';
+                    return;
+                }
+
+                if (window.api && window.api.points) {
+                    const result = await window.api.points.redeemPoints(user.id, ruleId);
+                    
+                    if (result && result.success) {
+                        if (window.addNotification) {
+                            window.addNotification(
+                                'success',
+                                'Erfolgreich eingelöst',
+                                `Mã khuyến mãi: ${result.promotion_code}`
+                            );
+                        }
+                        
+                        // Reload data
+                        loadPointsData();
+                    } else {
+                        if (window.addNotification) {
+                            window.addNotification('error', 'Fehler', result.message || 'Fehler beim Einlösen');
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error('Error redeeming points:', error);
+                if (window.addNotification) {
+                    window.addNotification('error', 'Fehler', 'Fehler beim Einlösen der Punkte');
+                }
+            }
+        }
+    </script>
+</body>
+</html>
+

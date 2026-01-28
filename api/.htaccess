@@ -1,0 +1,44 @@
+# API Security Configuration
+
+# 1. Security Headers & CORS
+<IfModule mod_headers.c>
+    # CORS headers for mobile App
+    Header always set Access-Control-Allow-Origin "*"
+    Header always set Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS"
+    Header always set Access-Control-Allow-Headers "Content-Type, Authorization, X-Requested-With"
+    
+    # Security headers
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set X-Frame-Options "DENY"
+</IfModule>
+
+# 2. Handle Preflight OPTIONS requests
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteCond %{REQUEST_METHOD} OPTIONS
+    RewriteRule ^(.*)$ $1 [R=200,L]
+</IfModule>
+
+# 3. Protect sensitive API files
+<FilesMatch "^(config|security-config|change-admin-password)\.php$">
+    Order Allow,Deny
+    Deny from all
+</FilesMatch>
+
+# 4. Disable directory listing
+Options -Indexes
+
+# 5. Prevent access to .htaccess
+<Files .htaccess>
+    Order Allow,Deny
+    Deny from all
+</Files>
+
+# 6. PHP Execution
+# DISABLED explicit handlers for Production/Web Hosting.
+# Most hosting providers configure PHP globally.
+# Overriding it with incorrect names (like x-httpd-php) BREAKS execution.
+# <FilesMatch "\.php$">
+#     SetHandler application/x-httpd-php
+# </FilesMatch>
+# AddType application/x-httpd-php .php

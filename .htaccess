@@ -1,0 +1,166 @@
+# Force HTTPS redirect (if not already HTTPS)
+# NOTE: Only enable this AFTER SSL certificate is properly configured on the server
+# Uncomment the block below once SSL is working
+# <IfModule mod_rewrite.c>
+#     RewriteEngine On
+#     RewriteCond %{HTTPS} off
+#     RewriteCond %{HTTP_HOST} !^localhost [NC]
+#     RewriteCond %{HTTP_HOST} !^127\.0\.0\.1 [NC]
+#     RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+# </IfModule>
+
+# Security Headers
+<IfModule mod_headers.c>
+    # Prevent clickjacking
+    Header always set X-Frame-Options "DENY"
+    
+    # XSS protection
+    Header always set X-XSS-Protection "1; mode=block"
+    
+    # Prevent MIME type sniffing
+    Header always set X-Content-Type-Options "nosniff"
+    
+    # Referrer policy
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+    
+    # Permissions Policy
+    Header always set Permissions-Policy "geolocation=(), microphone=(), camera=()"
+</IfModule>
+
+# Disable directory browsing
+Options -Indexes
+
+# Protect sensitive files
+<FilesMatch "\.(htaccess|htpasswd|ini|log|sh|sql|bak)$">
+    Order Allow,Deny
+    Deny from all
+</FilesMatch>
+
+# Protect config files
+<FilesMatch "^(config|security-config|admin-auth)\.php$">
+    Order Allow,Deny
+    Deny from all
+</FilesMatch>
+
+# PHP Handling:
+# DISABLED ON PRODUCTION - relying on Hosting Provider's default configuration.
+# Forcing specific handlers (like application/x-httpd-php) often BREAKS execution 
+# on shared hosting (cPanel, Plesk, etc) because they might use different internal names.
+# <IfModule mod_php7.c>
+#     <FilesMatch "\.php$">
+#         SetHandler application/x-httpd-php
+#     </FilesMatch>
+# </IfModule>
+# <IfModule mod_php.c>
+#     <FilesMatch "\.php$">
+#         SetHandler application/x-httpd-php
+#     </FilesMatch>
+# </IfModule>
+# AddType application/x-httpd-php .php
+# AddHandler application/x-httpd-php .php
+
+# URL Rewriting - Hide actual file names
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    # Set RewriteBase for production hosting (root directory)
+    RewriteBase /
+    
+    # Route ALL API v1 requests to api/index.php router FIRST
+    # Match REQUEST_URI (absolute path) to catch all api/v1/ requests
+    RewriteCond %{REQUEST_URI} ^/api/v1/ [NC]
+    RewriteCond %{REQUEST_URI} !api/index\.php [NC]
+    RewriteRule ^api/v1/(.*)$ /api/index.php?route=v1/$1 [L,QSA]
+    
+    # Hide HTML/PHP files behind obfuscated routes
+    # Admin panel
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^dashboard$ admin.html [L]
+    
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^control$ admin.html [L]
+    
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^admin-panel$ admin.html [L]
+    
+    # User pages
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^account$ profile.html [L]
+    
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^my-profile$ profile.html [L]
+    
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^my-account$ profile.html [L]
+    
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^orders$ my-orders.html [L]
+    
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^my-orders$ my-orders.html [L]
+    
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^order-history$ my-orders.html [L]
+    
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^points$ points.html [L]
+    
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^loyalty$ points.html [L]
+    
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^rewards$ points.html [L]
+    
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^reservation$ reservation.html [L]
+    
+    RewriteRule ^book-table/?$ reservation.html [L]
+    
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^table-booking$ reservation.html [L]
+    
+    RewriteRule ^checkout/?$ checkout.html [L]
+    
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^payment$ checkout.html [L]
+    
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^order$ checkout.html [L]
+    
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^menu$ menu.html [L]
+    
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^catalog$ menu.html [L]
+    
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^dishes$ menu.html [L]
+    
+    # Prevent access to logs directory
+    RewriteRule ^logs/ - [F,L]
+    
+    # Ensure existing API PHP files (non-v1) are executed (don't rewrite them)
+    RewriteCond %{REQUEST_URI} ^/api/ [NC]
+    RewriteCond %{REQUEST_URI} !api/v1/ [NC]
+    RewriteCond %{REQUEST_FILENAME} -f
+    RewriteCond %{REQUEST_FILENAME} \.php$ [NC]
+    RewriteRule ^ - [L]
+</IfModule>

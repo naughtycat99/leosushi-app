@@ -1,0 +1,13 @@
+{
+  "name": "leosushi-database-setup",
+  "version": "1.0.0",
+  "description": "Database setup script for Leo Sushi",
+  "main": "setup.js",
+  "scripts": {
+    "setup": "node setup.js"
+  },
+  "dependencies": {
+    "mysql2": "^3.6.5"
+  }
+}
+

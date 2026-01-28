@@ -1,0 +1,30 @@
+# PHP 8.4 Handler Configuration
+# Alternative .htaccess for PHP 8.4
+
+# Force PHP 8.4 execution
+<IfModule mod_php8.c>
+    <FilesMatch "\.php$">
+        SetHandler application/x-httpd-php84
+    </FilesMatch>
+</IfModule>
+
+# Fallback to standard PHP handler
+<IfModule mod_php.c>
+    <FilesMatch "\.php$">
+        SetHandler application/x-httpd-php
+    </FilesMatch>
+</IfModule>
+
+# PHP-FPM handler (if using FPM)
+<IfModule mod_proxy_fcgi.c>
+    <FilesMatch "\.php$">
+        SetHandler "proxy:fcgi://127.0.0.1:9000"
+    </FilesMatch>
+</IfModule>
+
+# Force MIME type
+AddType application/x-httpd-php84 .php
+AddType application/x-httpd-php .php
+AddHandler application/x-httpd-php84 .php
+AddHandler application/x-httpd-php .php
+

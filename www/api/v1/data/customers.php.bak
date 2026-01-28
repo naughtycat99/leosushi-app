@@ -1,0 +1,56 @@
+<?php
+/**
+ * Customers endpoint
+ * Route: api/v1/data/customers.php
+ * Works on both local and production
+ */
+
+// Set error handling
+error_reporting(E_ALL);
+ini_set('display_errors', 0);
+ini_set('log_errors', 1);
+
+// Set headers first - CRITICAL: Must be before any output
+header('Content-Type: application/json; charset=utf-8');
+header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
+header('Access-Control-Allow-Headers: Content-Type, Authorization');
+
+// Handle preflight
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(200);
+    exit();
+}
+
+try {
+    // Bootstrap - Check environment and load dependencies
+    $bootstrapFile = __DIR__ . '/../../bootstrap.php';
+    if (file_exists($bootstrapFile)) {
+        require_once $bootstrapFile;
+    }
+    
+    // Set default action if not provided
+    if (empty($_GET['action'])) {
+        $_GET['action'] = 'list';
+    }
+
+    // Load customers.php handler
+    $customersFile = __DIR__ . '/../../customers.php';
+    if (!file_exists($customersFile)) {
+        throw new Exception('Customers handler file not found at: ' . $customersFile);
+    }
+
+    require_once $customersFile;
+} catch (Throwable $e) {
+    http_response_code(500);
+    header('Content-Type: application/json; charset=utf-8');
+    echo json_encode([
+        'success' => false,
+        'message' => 'Server error: ' . $e->getMessage(),
+        'file' => basename($e->getFile()),
+        'line' => $e->getLine(),
+        'error_code' => 'EXECUTION_ERROR'
+    ]);
+    exit();
+}
+
