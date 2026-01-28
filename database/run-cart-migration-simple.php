@@ -1,40 +1,51 @@
 <?php
 /**
- * Run Cart Sync Migration
- * Tạo bảng user_cart trong database
- * 
- * Cách dùng: Truy cập file này qua browser 1 lần
- * URL: https://your-domain.com/database/run-cart-migration.php
+ * Simple Cart Migration Script
+ * Không cần bootstrap, kết nối database trực tiếp
  */
 
-// Enable error reporting
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
-echo "<h2>🔄 Starting Cart Sync Migration...</h2>";
-echo "<p>Loading bootstrap...</p>";
-flush();
+echo "<h2>🔄 Running Cart Sync Migration (Simple Version)...</h2>";
+
+// Database config - THAY ĐỔI THÔNG TIN NÀY
+$host = 'localhost';
+$dbname = 'your_database_name';  // ← Thay tên database
+$username = 'your_username';      // ← Thay username
+$password = 'your_password';      // ← Thay password
 
 try {
-    require_once '../api/bootstrap.php';
-    echo "<p>✅ Bootstrap loaded successfully</p>";
-    flush();
+    echo "<p>Connecting to database...</p>";
     
-    // Check if table already exists
+    $pdo = new PDO(
+        "mysql:host=$host;dbname=$dbname;charset=utf8mb4",
+        $username,
+        $password,
+        [
+            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC
+        ]
+    );
+    
+    echo "<p>✅ Connected to database successfully!</p>";
+    
+    // Check if table exists
     $stmt = $pdo->query("SHOW TABLES LIKE 'user_cart'");
     if ($stmt->rowCount() > 0) {
         echo "<p>⚠️ Table 'user_cart' already exists. Skipping creation.</p>";
     } else {
+        echo "<p>Creating table 'user_cart'...</p>";
+        
         // Create table
         $sql = "
-        CREATE TABLE IF NOT EXISTS user_cart (
+        CREATE TABLE user_cart (
             id INT AUTO_INCREMENT PRIMARY KEY,
             user_id INT NOT NULL,
             cart_data TEXT NOT NULL,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             UNIQUE KEY unique_user_cart (user_id),
-            FOREIGN KEY (user_id) REFERENCES customers(id) ON DELETE CASCADE,
             INDEX idx_user_id (user_id),
             INDEX idx_updated_at (updated_at)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -61,7 +72,7 @@ try {
         echo "<td>{$col['Type']}</td>";
         echo "<td>{$col['Null']}</td>";
         echo "<td>{$col['Key']}</td>";
-        echo "<td>{$col['Default']}</td>";
+        echo "<td>" . ($col['Default'] ?? 'NULL') . "</td>";
         echo "<td>{$col['Extra']}</td>";
         echo "</tr>";
     }
@@ -71,6 +82,10 @@ try {
     echo "<p><strong>⚠️ IMPORTANT:</strong> Delete this file after running for security!</p>";
     
 } catch (PDOException $e) {
+    echo "<h3>❌ Database Error:</h3>";
+    echo "<p style='color: red;'>" . htmlspecialchars($e->getMessage()) . "</p>";
+    echo "<p><strong>Tip:</strong> Check your database credentials in this file.</p>";
+} catch (Exception $e) {
     echo "<h3>❌ Error:</h3>";
     echo "<p style='color: red;'>" . htmlspecialchars($e->getMessage()) . "</p>";
 }
@@ -90,10 +105,18 @@ try {
     table {
         background: white;
         width: 100%;
+        margin: 20px 0;
     }
     th {
         background: #4CAF50;
         color: white;
         text-align: left;
+        padding: 10px;
+    }
+    td {
+        padding: 8px;
+    }
+    p {
+        line-height: 1.6;
     }
 </style>
