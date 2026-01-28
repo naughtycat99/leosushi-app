@@ -1,0 +1,88 @@
+name: Build Android APK
+
+on:
+  push:
+    branches: [ main, master, develop ]
+  pull_request:
+    branches: [ main, master, develop ]
+  workflow_dispatch: # Cho phép chạy thủ công
+
+jobs:
+  build-android:
+    name: Build Android APK
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+      
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+      
+      - name: Install dependencies
+        run: npm install
+      
+      - name: Build web assets
+        run: npm run build
+      
+      - name: Add Android platform (if not exists)
+        run: |
+          if [ ! -d "android" ]; then
+            npx cap add android
+          fi
+        shell: bash
+      
+      - name: Sync Capacitor Android
+        run: npx cap sync android
+      
+      - name: Grant execute permission for gradlew
+        run: chmod +x android/gradlew
+      
+      - name: Build Android Debug APK
+        run: |
+          cd android
+          ./gradlew assembleDebug
+      
+      - name: Build Android Release APK (unsigned)
+        run: |
+          cd android
+          ./gradlew assembleRelease
+        continue-on-error: true
+      
+      - name: Upload Debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-debug-apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          retention-days: 30
+      
+      - name: Upload Release APK (if exists)
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-release-apk
+          path: android/app/build/outputs/apk/release/app-release-unsigned.apk
+          retention-days: 30
+        continue-on-error: true
+      
+      - name: Build summary
+        run: |
+          echo "### ✅ Android Build Successful!" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**App Name:** LEO SUSHI" >> $GITHUB_STEP_SUMMARY
+          echo "**Package:** com.leosushi.app" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "📦 **Artifacts:**" >> $GITHUB_STEP_SUMMARY
+          echo "- **Debug APK:** Ready to install on any Android device" >> $GITHUB_STEP_SUMMARY
+          echo "- **Release APK:** Needs signing for Play Store" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "🔧 **Next Steps:**" >> $GITHUB_STEP_SUMMARY
+          echo "1. Download Debug APK to test on Android device" >> $GITHUB_STEP_SUMMARY
+          echo "2. Sign Release APK with your keystore for Play Store" >> $GITHUB_STEP_SUMMARY
