@@ -9,11 +9,11 @@ ini_set('display_errors', 1);
 
 echo "<h2>🔄 Running Cart Sync Migration (Simple Version)...</h2>";
 
-// Database config - THAY ĐỔI THÔNG TIN NÀY
-$host = 'localhost';
-$dbname = 'your_database_name';  // ← Thay tên database
-$username = 'your_username';      // ← Thay username
-$password = 'your_password';      // ← Thay password
+// Database config - PRODUCTION (IONOS)
+$host = 'db5019177072.hosting-data.io';
+$dbname = 'dbs15058296';
+$username = 'dbu2318386';
+$password = 'leo0301.';
 
 try {
     echo "<p>Connecting to database...</p>";
