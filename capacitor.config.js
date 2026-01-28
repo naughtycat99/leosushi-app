@@ -4,11 +4,11 @@ const config = {
   appId: 'com.leosushi.app',
   appName: 'LEO SUSHI',
   webDir: 'www',
-  // App chạy hoàn toàn offline - không cần internet
-  // server: {
-  //   url: 'https://leo-sushi.berlin.de',
-  //   cleartext: false
-  // },
+  // App kết nối đến server API online
+  server: {
+    url: 'https://www.leo-sushi-berlin.de',
+    cleartext: false
+  },
   plugins: {
     SplashScreen: {
       launchShowDuration: 2000,
