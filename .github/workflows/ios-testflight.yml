@@ -74,8 +74,9 @@ jobs:
       
       - name: Build and Upload using Fastlane
         env:
-          API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
-          API_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+          APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         run: |
           cd ios/App
           
@@ -95,16 +96,17 @@ jobs:
             lane :beta do
               # Setup App Store Connect API
               api_key = app_store_connect_api_key(
-                key_id: ENV["API_KEY_ID"],
-                issuer_id: ENV["API_ISSUER_ID"],
-                key_filepath: "~/private_keys/AuthKey_#{ENV['API_KEY_ID']}.p8",
+                key_id: ENV["APP_STORE_CONNECT_API_KEY_ID"],
+                issuer_id: ENV["APP_STORE_CONNECT_ISSUER_ID"],
+                key_filepath: "~/private_keys/AuthKey_#{ENV['APP_STORE_CONNECT_API_KEY_ID']}.p8",
                 duration: 1200,
                 in_house: false
               )
               
-              # Update code signing to automatic
+              # Update code signing with Team ID
               update_code_signing_settings(
                 use_automatic_signing: true,
+                team_id: ENV["APPLE_TEAM_ID"],
                 path: "App.xcodeproj"
               )
               
@@ -117,7 +119,8 @@ jobs:
               build_app(
                 workspace: "App.xcworkspace",
                 scheme: "App",
-                export_method: "app-store"
+                export_method: "app-store",
+                export_team_id: ENV["APPLE_TEAM_ID"]
               )
               
               # Upload to TestFlight
