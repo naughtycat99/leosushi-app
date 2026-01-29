@@ -1,0 +1,81 @@
+name: Build iOS Simulator App
+
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: 'Branch to build'
+        required: true
+        default: 'main'
+
+jobs:
+  build-simulator:
+    name: Build iOS Simulator App
+    runs-on: macos-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ github.event.inputs.branch }}
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Sync Capacitor
+        run: npx cap sync ios
+      
+      - name: Copy App Icons
+        run: |
+          if [ -d "android/AppIcons/Assets.xcassets/AppIcon.appiconset" ]; then
+            echo "Copying app icons..."
+            cp -r android/AppIcons/Assets.xcassets/AppIcon.appiconset ios/App/App/Assets.xcassets/
+            echo "App icons copied successfully"
+          else
+            echo "Warning: App icons not found at android/AppIcons/Assets.xcassets/AppIcon.appiconset"
+          fi
+      
+      - name: Build for Simulator
+        run: |
+          cd ios/App
+          xcodebuild \
+            -workspace App.xcworkspace \
+            -scheme App \
+            -configuration Debug \
+            -sdk iphonesimulator \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGN_ENTITLEMENTS="" \
+            DEVELOPMENT_TEAM=""
+      
+      - name: Package Simulator App
+        run: |
+          cd ios/App/build/Build/Products/Debug-iphonesimulator
+          zip -r App.app.zip App.app
+          mv App.app.zip $GITHUB_WORKSPACE/
+      
+      - name: Upload Simulator App
+        uses: actions/upload-artifact@v3
+        with:
+          name: ios-simulator-app
+          path: App.app.zip
+          retention-days: 7
+      
+      - name: Build Summary
+        run: |
+          echo "✅ iOS Simulator app built successfully!"
+          echo ""
+          echo "📦 Download App.app.zip from Artifacts"
+          echo "🌐 Upload to https://appetize.io/upload to test"
+          echo ""
+          echo "📱 Cart button fix included in this build:"
+          echo "   - js/mobile-cart-fix.js enhanced"
+          echo "   - menu.html includes the fix"

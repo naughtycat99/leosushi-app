@@ -1,152 +1,217 @@
-# 🍎 Hướng dẫn chi tiết sử dụng Appetize.io
+# Hướng dẫn Test App trên Appetize.io (Miễn phí)
 
-## 📖 Appetize.io là gì?
-Appetize.io cho phép bạn chạy iOS app trực tiếp trên browser, không cần Mac hay iPhone thật.
+## 🎯 Tại sao dùng Appetize.io?
 
-## 💰 Giá
-- **Miễn phí:** 100 phút/tháng
-- **Trả phí:** $0.05/phút (chỉ tính khi app đang chạy)
+- ✅ **Miễn phí** - 100 phút/tháng free
+- ✅ **Không cần Mac** - Test trên web browser
+- ✅ **Không cần iPhone** - Simulator chạy trên cloud
+- ✅ **Nhanh** - 10 phút setup
+- ✅ **Share được** - Gửi link cho người khác test
 
-## 🚀 Cách sử dụng
+## 📋 Bước 1: Build Simulator App
 
-### Bước 1: Lấy file iOS app
-1. Push code lên GitHub
-2. Vào tab **Actions** → chọn workflow **Build iOS App**
-3. Đợi build xong (5-10 phút)
-4. Download artifact `ios-app-simulator.zip`
-5. Giải nén ra file `App.app.zip`
+### Cách 1: Qua GitHub Actions (Khuyên dùng)
 
-### Bước 2: Upload lên Appetize.io
+1. Vào: https://github.com/naughtycat99/leosushi-app/actions
+2. Chọn workflow **"Build iOS Simulator App"**
+3. Click **"Run workflow"**
+4. Chọn branch: **main**
+5. Click **"Run workflow"** (nút xanh)
+6. Đợi **5-10 phút**
+7. Sau khi xong, click vào build
+8. Scroll xuống **"Artifacts"**
+9. Download file **App.app.zip**
 
-#### Lần đầu tiên (Không cần đăng ký)
-1. Vào https://appetize.io
-2. Click nút **"Upload"** (màu xanh)
-3. Kéo thả file `App.app.zip` vào
-4. Đợi upload xong (30 giây - 2 phút)
+### Cách 2: Build local (Nếu có Mac)
 
-#### Cấu hình app
-- **Platform:** iOS
-- **Device:** iPhone 15 (hoặc bất kỳ)
-- **OS Version:** iOS 17.0 (khuyên dùng)
-- **Scale:** 75% (vừa màn hình)
-- **Orientation:** Portrait
+```bash
+cd ios/App
+xcodebuild \
+  -workspace App.xcworkspace \
+  -scheme App \
+  -configuration Debug \
+  -sdk iphonesimulator \
+  -derivedDataPath build \
+  CODE_SIGNING_ALLOWED=NO
 
-### Bước 3: Chạy app
-1. Click nút **"Run"** (màu xanh)
-2. Đợi simulator khởi động (10-20 giây)
-3. App sẽ tự động mở! 🎉
+cd build/Build/Products/Debug-iphonesimulator
+zip -r App.app.zip App.app
+```
 
-## 🎮 Cách test app
+## 📤 Bước 2: Upload lên Appetize.io
 
-### Thao tác cơ bản
-- **Click:** Click chuột trái
-- **Scroll:** Kéo chuột lên/xuống
-- **Swipe:** Kéo nhanh
-- **Pinch zoom:** Ctrl + Scroll (hoặc dùng nút zoom)
+1. Vào: https://appetize.io/upload
+2. Click **"Choose file"** hoặc kéo thả file **App.app.zip**
+3. Chọn platform: **iOS**
+4. Click **"Upload"**
+5. Đợi 1-2 phút upload
 
-### Debug tools
-1. Click nút **"Debug"** (góc phải)
-2. Mở **Console** để xem logs
-3. Xem **Network** để check API calls
+## 🎮 Bước 3: Test App
 
-### Test các tính năng
-- ✅ Navigation giữa các màn hình
-- ✅ Form input (login, register)
-- ✅ Cart & checkout
-- ✅ Menu browsing
-- ✅ Responsive layout
-- ✅ Animations & transitions
+Sau khi upload xong, bạn sẽ thấy:
 
-### Tính năng không test được
-- ❌ Push notifications (cần thiết bị thật)
-- ❌ Camera (simulator không có camera)
-- ❌ Biometric (Face ID, Touch ID)
-- ❌ In-app purchases
+### Simulator Controls
+- **Device**: Chọn iPhone model (iPhone 14, 15, etc.)
+- **iOS Version**: Chọn iOS version
+- **Scale**: Zoom in/out
+- **Rotate**: Xoay ngang/dọc
 
-## 💡 Tips & Tricks
+### Test Cart Button Fix
 
-### Tiết kiệm thời gian miễn phí
-- Pause app khi không dùng (click nút Pause)
-- Đóng session khi test xong
-- Chỉ test những tính năng quan trọng
+1. Click **"Launch"** để khởi động app
+2. Đợi app load (2-3 giây)
+3. Click vào **"MENU"** ở bottom navigation
+4. Browse menu và add items vào cart
+5. Click **"WARENKORB"** ở bottom navigation
+6. ✅ Cart sidebar phải slide in từ bên phải
+7. ✅ Hiển thị items trong cart
+8. ✅ Có thể checkout
 
-### Upload app mới
-- Mỗi lần build mới, upload lại file mới
-- Appetize sẽ tạo URL mới cho mỗi version
-- Lưu URL để test lại sau
+### Test Other Features
 
-### Share với người khác
-1. Copy URL của app (sau khi upload)
-2. Share URL cho team
-3. Họ có thể test mà không cần upload lại
+- **Login/Register**: Test authentication
+- **Menu browsing**: Scroll, filter, search
+- **Add to cart**: Click items, adjust quantity
+- **Checkout**: Fill form, submit order
+- **Profile**: View/edit profile
+- **Points**: Check loyalty points
+- **Orders**: View order history
 
-### Keyboard shortcuts
-- **Cmd + K:** Mở keyboard
-- **Cmd + R:** Reload app
-- **Cmd + H:** Home button
-- **Cmd + Shift + H:** App switcher
+## 🔗 Bước 4: Share Link
 
-## 📊 So sánh với các platform khác
+Sau khi test xong, bạn có thể:
 
-| Tính năng | Appetize.io | BrowserStack | LambdaTest |
-|-----------|-------------|--------------|------------|
-| Miễn phí | 100 phút | 100 phút | 100 phút |
-| Thiết bị thật | ❌ | ✅ | ✅ |
-| Dễ sử dụng | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐⭐ |
-| Debug tools | ⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐ |
-| Tốc độ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐ | ⭐⭐⭐⭐ |
+1. Click **"Share"** button
+2. Copy link (ví dụ: `https://appetize.io/app/abc123xyz`)
+3. Gửi link cho:
+   - Khách hàng để demo
+   - Team để test
+   - Stakeholders để review
 
-## 🐛 Troubleshooting
+## 💰 Pricing
 
-### App không upload được
-- **Lỗi:** "Invalid app format"
-- **Giải pháp:** Đảm bảo upload file `App.app.zip` (không phải file khác)
+### Free Tier
+- ✅ 100 phút/tháng
+- ✅ Public apps
+- ✅ Unlimited uploads
+- ✅ All devices
 
-### App crash khi mở
-- **Lỗi:** App mở rồi tắt ngay
-- **Giải pháp:** 
-  - Kiểm tra log trong Console
-  - Build lại với iOS version thấp hơn
-  - Kiểm tra `capacitor.config.js`
+### Paid Plans (Nếu cần thêm)
+- **Starter**: $40/tháng - 500 phút
+- **Team**: $100/tháng - 1500 phút
+- **Enterprise**: Custom pricing
 
-### Simulator chậm
-- **Giải pháp:**
-  - Giảm scale xuống 50%
-  - Đóng các tab khác
-  - Thử browser khác (Chrome khuyên dùng)
+## ⚠️ Limitations
 
-### Hết thời gian miễn phí
-- **Giải pháp:**
-  - Đợi tháng sau (reset 100 phút)
-  - Dùng BrowserStack hoặc LambdaTest
-  - Trả $0.05/phút nếu cần gấp
+Appetize.io là simulator, không phải iPhone thật:
 
-## 📝 Checklist test app
+### ✅ Hoạt động:
+- UI/UX testing
+- Navigation
+- Forms, buttons, inputs
+- API calls
+- LocalStorage
+- Most JavaScript features
 
-- [ ] App mở được
-- [ ] Navigation hoạt động
-- [ ] Login/Register form
-- [ ] Menu hiển thị đúng
-- [ ] Add to cart
-- [ ] Checkout flow
-- [ ] Profile page
-- [ ] Order history
-- [ ] Responsive trên các màn hình
-- [ ] Không có lỗi trong Console
+### ❌ Không hoạt động:
+- Push notifications
+- Camera
+- GPS/Location (có thể mock)
+- Touch ID/Face ID
+- App Store features
+- Some native plugins
 
-## 🎯 Kết luận
+## 🆚 So sánh với TestFlight
 
-Appetize.io là công cụ tốt nhất để:
-- ✅ Test nhanh iOS app trên Windows
-- ✅ Demo app cho client
-- ✅ Share với team
-- ✅ Debug UI issues
+| Feature | Appetize.io | TestFlight |
+|---------|-------------|------------|
+| **Cost** | Free (100 min/month) | Free |
+| **Setup Time** | 10 phút | 2-3 ngày |
+| **Device** | Simulator | iPhone thật |
+| **Share** | Link public | Invite testers |
+| **Native Features** | Limited | Full |
+| **Best For** | Quick testing | Final testing |
 
-**Không phù hợp cho:**
-- ❌ Test performance chi tiết
-- ❌ Test tính năng hardware
-- ❌ Test trên thiết bị thật
+## 🎯 Khi nào dùng Appetize.io?
+
+### ✅ Dùng khi:
+- Test UI/UX changes (như cart button fix)
+- Demo cho khách hàng
+- Quick testing trong development
+- Không có iPhone/Mac
+- Cần share link nhanh
+
+### ❌ Không dùng khi:
+- Test push notifications
+- Test camera/GPS features
+- Final testing trước release
+- Test performance trên device thật
+
+## 📱 Alternative: iOS Simulator trên Mac
+
+Nếu bạn có Mac:
+
+```bash
+# Build và run simulator
+cd ios/App
+xcodebuild \
+  -workspace App.xcworkspace \
+  -scheme App \
+  -configuration Debug \
+  -sdk iphonesimulator \
+  -derivedDataPath build
+
+# Open simulator
+open -a Simulator
+
+# Install app
+xcrun simctl install booted build/Build/Products/Debug-iphonesimulator/App.app
+
+# Launch app
+xcrun simctl launch booted com.leosushi.app
+```
+
+## 🔧 Troubleshooting
+
+### Upload failed
+- Đảm bảo file là **App.app.zip** (không phải .ipa)
+- File size < 500MB
+- Chọn đúng platform: **iOS**
+
+### App crashes on launch
+- Check console logs trong Appetize
+- Verify API endpoints accessible
+- Check for missing dependencies
+
+### Cart button still not working
+- Verify `js/mobile-cart-fix.js` included in build
+- Check browser console for errors
+- Try different iOS versions
+
+## 📞 Support
+
+Nếu cần hỗ trợ:
+- Appetize Docs: https://docs.appetize.io
+- Email: anhronan@gmail.com
+- GitHub Issues: https://github.com/naughtycat99/leosushi-app/issues
 
 ---
 
-**Happy testing! 🚀**
+## ✅ Next Steps
+
+Sau khi test trên Appetize.io:
+
+1. **Nếu cart button hoạt động** ✅
+   - Proceed với TestFlight build
+   - Submit lên App Store
+
+2. **Nếu vẫn lỗi** ❌
+   - Check console logs
+   - Debug và fix
+   - Build lại và test
+
+3. **Nếu muốn test trên iPhone thật**
+   - Dùng Codemagic (đã setup)
+   - Hoặc nhờ bạn có Mac build
+   - Hoặc thuê Mac cloud
+
