@@ -36,9 +36,6 @@ jobs:
       - name: Sync Capacitor iOS
         run: npx cap sync ios
       
-      - name: Sync Capacitor iOS
-        run: npx cap sync ios
-      
       - name: Copy iOS App Icons
         run: |
           echo "📱 Copying iOS app icons..."
@@ -62,76 +59,84 @@ jobs:
           }
           EOF
       
+      - name: Setup Ruby and Fastlane
+        run: gem install fastlane
+      
       - name: Create App Store Connect API Key
         run: |
           mkdir -p ~/private_keys
           echo "${{ secrets.APP_STORE_CONNECT_API_KEY_CONTENT }}" > ~/private_keys/AuthKey_${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}.p8
       
-      - name: Build and Upload using xcodebuild and altool
+      - name: Install CocoaPods
+        run: |
+          cd ios/App
+          pod install
+      
+      - name: Build and Upload using Fastlane
         env:
           API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
           API_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
         run: |
           cd ios/App
           
-          # Install pods
-          pod install
+          # Create Gemfile
+          cat > Gemfile << 'EOF'
+          source "https://rubygems.org"
+          gem "fastlane"
+          EOF
           
-          # Create temporary keychain
-          security create-keychain -p actions build.keychain
-          security default-keychain -s build.keychain
-          security unlock-keychain -p actions build.keychain
-          security set-keychain-settings -t 3600 -u build.keychain
+          # Create Fastfile
+          mkdir -p fastlane
+          cat > fastlane/Fastfile << 'EOF'
+          default_platform(:ios)
           
-          # Import App Store Connect API key for automatic signing
-          xcrun altool --store-password-in-keychain-item "AC_PASSWORD" \
-            -u "api-key" \
-            -p "@env:API_KEY_ID"
+          platform :ios do
+            desc "Build and upload to TestFlight"
+            lane :beta do
+              # Setup App Store Connect API
+              api_key = app_store_connect_api_key(
+                key_id: ENV["API_KEY_ID"],
+                issuer_id: ENV["API_ISSUER_ID"],
+                key_filepath: "~/private_keys/AuthKey_#{ENV['API_KEY_ID']}.p8",
+                duration: 1200,
+                in_house: false
+              )
+              
+              # Update code signing to automatic
+              update_code_signing_settings(
+                use_automatic_signing: true,
+                path: "App.xcodeproj"
+              )
+              
+              # Increment build number
+              increment_build_number(
+                xcodeproj: "App.xcodeproj"
+              )
+              
+              # Build the app
+              build_app(
+                workspace: "App.xcworkspace",
+                scheme: "App",
+                export_method: "app-store"
+              )
+              
+              # Upload to TestFlight
+              upload_to_testflight(
+                api_key: api_key,
+                skip_waiting_for_build_processing: true
+              )
+            end
+          end
+          EOF
           
-          # Build archive with automatic signing
-          xcodebuild clean archive \
-            -workspace App.xcworkspace \
-            -scheme App \
-            -configuration Release \
-            -archivePath build/App.xcarchive \
-            -allowProvisioningUpdates \
-            -authenticationKeyPath ~/private_keys/AuthKey_${API_KEY_ID}.p8 \
-            -authenticationKeyID ${API_KEY_ID} \
-            -authenticationKeyIssuerID ${API_ISSUER_ID}
-          
-          # Export IPA
-          xcodebuild -exportArchive \
-            -archivePath build/App.xcarchive \
-            -exportPath build/IPA \
-            -exportOptionsPlist <(echo '<?xml version="1.0" encoding="UTF-8"?>
-          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-          <plist version="1.0">
-          <dict>
-            <key>method</key>
-            <string>app-store</string>
-            <key>uploadSymbols</key>
-            <true/>
-            <key>uploadBitcode</key>
-            <false/>
-          </dict>
-          </plist>') \
-            -allowProvisioningUpdates \
-            -authenticationKeyPath ~/private_keys/AuthKey_${API_KEY_ID}.p8 \
-            -authenticationKeyID ${API_KEY_ID} \
-            -authenticationKeyIssuerID ${API_ISSUER_ID}
-          
-          # Upload to TestFlight
-          xcrun altool --upload-app \
-            -f build/IPA/*.ipa \
-            -t ios \
-            --apiKey ${API_KEY_ID} \
-            --apiIssuer ${API_ISSUER_ID}
+          # Run Fastlane
+          fastlane beta
       
       - name: Upload IPA artifact
         uses: actions/upload-artifact@v4
         with:
           name: ios-ipa
-          path: ios/App/build/IPA/*.ipa
+          path: ios/App/*.ipa
           retention-days: 30
         if: always()
       
