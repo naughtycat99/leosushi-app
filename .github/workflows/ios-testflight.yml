@@ -23,6 +23,12 @@ jobs:
       - name: Build web assets
         run: npm run build
       
+      - name: Add iOS platform
+        run: npx cap add ios || true
+      
+      - name: Sync Capacitor iOS
+        run: npx cap sync ios
+      
       - name: Sync Capacitor iOS
         run: npx cap sync ios
       
