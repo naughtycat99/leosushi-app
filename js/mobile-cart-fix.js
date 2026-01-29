@@ -6,39 +6,59 @@
 
   // Wait for DOM to be ready
   function initMobileCartFix() {
-    // Find ALL cart buttons
-    const cartButtons = [
-      document.getElementById('fixedOrderBtn'),
-      document.getElementById('cartToggle'),
-      document.querySelector('.cart-toggle'),
-      document.querySelector('[data-cart-toggle]'),
-      ...document.querySelectorAll('.fixed-order-btn'),
-      ...document.querySelectorAll('[onclick*="cart"]')
-    ].filter(btn => btn !== null);
+    // Find ALL cart buttons and links
+    const cartSelectors = [
+      '#fixedOrderBtn',
+      '#cartToggle',
+      '.cart-toggle',
+      '.fixed-order-btn',
+      '[data-cart-toggle]',
+      '[aria-label*="Warenkorb"]',
+      '[aria-label*="warenkorb"]',
+      'a[href*="cart"]',
+      'a[href*="warenkorb"]',
+      'button:has(.order-text)',
+      '*[onclick*="cart"]'
+    ];
 
-    if (cartButtons.length === 0) {
+    const cartElements = [];
+    cartSelectors.forEach(selector => {
+      try {
+        const elements = document.querySelectorAll(selector);
+        elements.forEach(el => {
+          if (!cartElements.includes(el)) {
+            cartElements.push(el);
+          }
+        });
+      } catch (e) {
+        // Invalid selector, skip
+      }
+    });
+
+    if (cartElements.length === 0) {
       console.warn('⚠️ No cart buttons found, will retry...');
       setTimeout(initMobileCartFix, 500);
       return;
     }
 
-    console.log(`✅ Found ${cartButtons.length} cart button(s), setting up mobile-specific handlers`);
+    console.log(`✅ Found ${cartElements.length} cart element(s), setting up mobile-specific handlers`);
 
-    cartButtons.forEach((btn, index) => {
-      console.log(`Setting up cart button ${index + 1}:`, btn.id || btn.className);
+    cartElements.forEach((element, index) => {
+      console.log(`Setting up cart element ${index + 1}:`, element.tagName, element.id || element.className);
       
-      // Remove all existing click handlers by cloning the button
-      const newBtn = btn.cloneNode(true);
-      btn.parentNode.replaceChild(newBtn, btn);
+      // Remove all existing click handlers by cloning
+      const newElement = element.cloneNode(true);
+      element.parentNode.replaceChild(newElement, element);
 
       // Add new click handler that always opens cart
-      newBtn.addEventListener('click', function(e) {
+      newElement.addEventListener('click', function(e) {
         e.preventDefault();
         e.stopPropagation();
+        e.stopImmediatePropagation();
         
-        console.log('🛒 Cart button clicked in mobile app');
+        console.log('🛒 Cart element clicked in mobile app');
 
-        // Try to open cart using existing function
+        // Try to open cart using existing functions
         if (typeof window.openCart === 'function') {
           console.log('✅ Opening cart using window.openCart()');
           window.openCart();
@@ -55,17 +75,26 @@
             console.log('Opening cart sidebar');
             cartSidebar.classList.add('active');
             cartSidebar.style.display = 'block';
+            cartSidebar.style.transform = 'translateX(0)';
           }
           if (cartOverlay) {
             cartOverlay.classList.add('active');
             cartOverlay.style.display = 'block';
+            cartOverlay.style.opacity = '1';
           }
           document.body.classList.add('cart-open');
         }
-      }, true); // Use capture phase to ensure we catch it first
+
+        return false;
+      }, true); // Use capture phase
+
+      // Also prevent default on touchstart for mobile
+      newElement.addEventListener('touchstart', function(e) {
+        console.log('👆 Cart element touched');
+      }, { passive: true });
     });
 
-    console.log('✅ Mobile cart fix initialized for all cart buttons');
+    console.log('✅ Mobile cart fix initialized for all cart elements');
   }
 
   // Initialize when DOM is ready
@@ -75,6 +104,8 @@
     initMobileCartFix();
   }
 
-  // Also retry after a delay to catch dynamically added buttons
+  // Also retry after delays to catch dynamically added elements
+  setTimeout(initMobileCartFix, 1000);
   setTimeout(initMobileCartFix, 2000);
+  setTimeout(initMobileCartFix, 3000);
 })();
