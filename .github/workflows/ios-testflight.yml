@@ -1,0 +1,137 @@
+name: Build iOS and Upload to TestFlight
+
+on:
+  workflow_dispatch: # Chạy thủ công
+
+jobs:
+  build-and-upload:
+    name: Build iOS IPA and Upload to TestFlight
+    runs-on: macos-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+      
+      - name: Install dependencies
+        run: npm install
+      
+      - name: Build web assets
+        run: npm run build
+      
+      - name: Sync Capacitor iOS
+        run: npx cap sync ios
+      
+      - name: Copy iOS App Icons
+        run: |
+          echo "📱 Copying iOS app icons..."
+          mkdir -p ios/App/App/Assets.xcassets/AppIcon.appiconset
+          cp -v android/AppIcons/Assets.xcassets/AppIcon.appiconset/_/*.png ios/App/App/Assets.xcassets/AppIcon.appiconset/ || true
+          
+          cat > ios/App/App/Assets.xcassets/AppIcon.appiconset/Contents.json << 'EOF'
+          {
+            "images" : [
+              {"size":"20x20","idiom":"iphone","filename":"40.png","scale":"2x"},
+              {"size":"20x20","idiom":"iphone","filename":"60.png","scale":"3x"},
+              {"size":"29x29","idiom":"iphone","filename":"58.png","scale":"2x"},
+              {"size":"29x29","idiom":"iphone","filename":"87.png","scale":"3x"},
+              {"size":"40x40","idiom":"iphone","filename":"80.png","scale":"2x"},
+              {"size":"40x40","idiom":"iphone","filename":"120.png","scale":"3x"},
+              {"size":"60x60","idiom":"iphone","filename":"120.png","scale":"2x"},
+              {"size":"60x60","idiom":"iphone","filename":"180.png","scale":"3x"},
+              {"size":"1024x1024","idiom":"ios-marketing","filename":"1024.png","scale":"1x"}
+            ],
+            "info" : {"version":1,"author":"xcode"}
+          }
+          EOF
+      
+      - name: Create App Store Connect API Key
+        run: |
+          mkdir -p ~/private_keys
+          echo "${{ secrets.APP_STORE_CONNECT_API_KEY_CONTENT }}" > ~/private_keys/AuthKey_${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}.p8
+      
+      - name: Build and Upload using xcodebuild and altool
+        env:
+          API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+          API_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+        run: |
+          cd ios/App
+          
+          # Install pods
+          pod install
+          
+          # Create temporary keychain
+          security create-keychain -p actions build.keychain
+          security default-keychain -s build.keychain
+          security unlock-keychain -p actions build.keychain
+          security set-keychain-settings -t 3600 -u build.keychain
+          
+          # Import App Store Connect API key for automatic signing
+          xcrun altool --store-password-in-keychain-item "AC_PASSWORD" \
+            -u "api-key" \
+            -p "@env:API_KEY_ID"
+          
+          # Build archive with automatic signing
+          xcodebuild clean archive \
+            -workspace App.xcworkspace \
+            -scheme App \
+            -configuration Release \
+            -archivePath build/App.xcarchive \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath ~/private_keys/AuthKey_${API_KEY_ID}.p8 \
+            -authenticationKeyID ${API_KEY_ID} \
+            -authenticationKeyIssuerID ${API_ISSUER_ID}
+          
+          # Export IPA
+          xcodebuild -exportArchive \
+            -archivePath build/App.xcarchive \
+            -exportPath build/IPA \
+            -exportOptionsPlist <(echo '<?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>method</key>
+            <string>app-store</string>
+            <key>uploadSymbols</key>
+            <true/>
+            <key>uploadBitcode</key>
+            <false/>
+          </dict>
+          </plist>') \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath ~/private_keys/AuthKey_${API_KEY_ID}.p8 \
+            -authenticationKeyID ${API_KEY_ID} \
+            -authenticationKeyIssuerID ${API_ISSUER_ID}
+          
+          # Upload to TestFlight
+          xcrun altool --upload-app \
+            -f build/IPA/*.ipa \
+            -t ios \
+            --apiKey ${API_KEY_ID} \
+            --apiIssuer ${API_ISSUER_ID}
+      
+      - name: Upload IPA artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-ipa
+          path: ios/App/build/IPA/*.ipa
+          retention-days: 30
+        if: always()
+      
+      - name: Build summary
+        run: |
+          echo "### ✅ iOS Build Complete!" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**App Name:** LEO SUSHI" >> $GITHUB_STEP_SUMMARY
+          echo "**Bundle ID:** com.leosushi.app" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "🚀 **IPA uploaded to TestFlight!**" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "📱 **To test:**" >> $GITHUB_STEP_SUMMARY
+          echo "1. Open TestFlight app on iPhone" >> $GITHUB_STEP_SUMMARY
+          echo "2. Find 'LEO SUSHI' app" >> $GITHUB_STEP_SUMMARY
+          echo "3. Install and test!" >> $GITHUB_STEP_SUMMARY
