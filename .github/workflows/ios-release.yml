@@ -35,12 +35,26 @@ jobs:
           fi
         shell: bash
       
-      - name: Copy iOS App Icons
+      - name: Sync Capacitor iOS
+        run: npx cap sync ios
+      
+      - name: Copy iOS App Icons (after sync)
         run: |
           echo "📱 Copying iOS app icons..."
-          mkdir -p ios/App/App/Assets.xcassets/AppIcon.appiconset
-          cp android/AppIcons/Assets.xcassets/AppIcon.appiconset/_/*.png ios/App/App/Assets.xcassets/AppIcon.appiconset/ || echo "Warning: Could not copy some icons"
           
+          # List available icons
+          echo "Available icons:"
+          ls -la android/AppIcons/Assets.xcassets/AppIcon.appiconset/_/
+          
+          # Create AppIcon.appiconset directory
+          mkdir -p ios/App/App/Assets.xcassets/AppIcon.appiconset
+          
+          # Copy all PNG files from android AppIcons
+          echo "Copying icons..."
+          cp -v android/AppIcons/Assets.xcassets/AppIcon.appiconset/_/*.png ios/App/App/Assets.xcassets/AppIcon.appiconset/
+          
+          # Create Contents.json
+          echo "Creating Contents.json..."
           cat > ios/App/App/Assets.xcassets/AppIcon.appiconset/Contents.json << 'EOF'
           {
             "images" : [
@@ -58,12 +72,12 @@ jobs:
           }
           EOF
           
-          echo "✅ iOS app icons copied"
+          # Verify icons were copied
+          echo "Verifying copied icons:"
+          ls -la ios/App/App/Assets.xcassets/AppIcon.appiconset/
+          
+          echo "✅ iOS app icons copied successfully"
         shell: bash
-        continue-on-error: true
-      
-      - name: Sync Capacitor iOS
-        run: npx cap sync ios
       
       - name: Setup Xcode
         uses: maxim-lobanov/setup-xcode@v1
