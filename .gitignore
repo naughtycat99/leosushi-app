@@ -37,6 +37,13 @@ www.zip
 android/AppIcons.zip
 api.zip
 
+# iOS build artifacts (không cần commit)
+App.app/
+Products/
+dSYMs/
+Info.plist
+*.xcarchive
+
 
 
 
