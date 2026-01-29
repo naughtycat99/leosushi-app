@@ -1,0 +1,892 @@
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>LEO SUSHI - Menu & Order</title>
+  <meta name="description" content="LEO SUSHI Menu - Order online">
+  <meta name="theme-color" content="#0b0b0c">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="LEO SUSHI">
+  <link rel="icon" href="assets/logo.png">
+  <link rel="stylesheet" href="styles-luxe.css">
+  <link rel="stylesheet" href="menu-order.css">
+  <link rel="stylesheet" href="css/mobile-app.css">
+  <link rel="apple-touch-icon" href="assets/logo.png">
+  <link rel="manifest" href="manifest.json">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=Inter:wght@300;400;600&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <!-- API Configuration -->
+  <script>
+    // API base URL is auto-detected by js/api.js from current location
+    // Only override for localhost development
+    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+      window.API_BASE_URL = window.location.origin + (window.location.pathname.includes('/leosushi') ? '/leosushi/api' : '/api');
+      window.API_PHP_BASE_URL = window.API_BASE_URL;
+    }
+    // Production: js/api.js will auto-detect HTTPS and correct path
+  </script>
+  <!-- EmailJS for sending order emails -->
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+  <!-- PayPal SDK -->
+  <script
+    src="https://www.paypal.com/sdk/js?client-id=AVX7OWzjn1GaFrih0WfAIBFScH66UYxBTAdMiB9WcUCOWUDX4msBREdpRdxgJiRQpiN0ExswysrQNL-K&currency=EUR&locale=de_DE"></script>
+
+  <!-- Capacitor Detection & Early App Styling -->
+  <script>
+    (function () {
+      const isCapacitor = (window.Capacitor && window.Capacitor.isNativePlatform()) ||
+        window.location.search.includes('mock-app') ||
+        localStorage.getItem('leo_mock_app') === 'true';
+      if (isCapacitor) {
+        document.documentElement.classList.add('is-capacitor-app');
+        // Also add to body as soon as it exists
+        document.addEventListener('DOMContentLoaded', function () {
+          document.body.classList.add('is-capacitor-app');
+        });
+      }
+    })();
+  </script>
+</head>
+
+<body>
+  <!-- Intro/Loading Screen -->
+  <div class="intro-screen" id="introScreen">
+    <div class="intro-background">
+      <div class="intro-gradient-orb orb-1"></div>
+      <div class="intro-gradient-orb orb-2"></div>
+      <div class="intro-gradient-orb orb-3"></div>
+    </div>
+    <div class="intro-particles">
+      <div class="particle"></div>
+      <div class="particle"></div>
+      <div class="particle"></div>
+      <div class="particle"></div>
+      <div class="particle"></div>
+      <div class="particle"></div>
+      <div class="particle"></div>
+      <div class="particle"></div>
+      <div class="particle"></div>
+      <div class="particle"></div>
+    </div>
+    <div class="intro-sparkles">
+      <span class="sparkle">✨</span>
+      <span class="sparkle">✨</span>
+      <span class="sparkle">✨</span>
+      <span class="sparkle">✨</span>
+      <span class="sparkle">✨</span>
+      <span class="sparkle">✨</span>
+    </div>
+    <div class="intro-content">
+      <div class="intro-logo-wrapper">
+        <div class="logo-ring ring-1"></div>
+        <div class="logo-ring ring-2"></div>
+        <div class="logo-ring ring-3"></div>
+        <img src="assets/logo.png" alt="LEO SUSHI" class="intro-logo">
+      </div>
+      <div class="intro-text">
+        <h1 class="intro-title">LEO SUSHI</h1>
+        <p class="intro-subtitle">Premium Asiatische Küche</p>
+      </div>
+      <div class="intro-loader">
+        <div class="loader-line"></div>
+        <div class="loader-glow"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Header -->
+  <header class="site-header">
+    <div class="container nav">
+      <a class="brand" href="index.html">
+        <img src="assets/logo.png" alt="LEO SUSHI" class="brand-logo">
+        <span class="brand-name">LEO SUSHI</span>
+      </a>
+      <nav id="primaryNav" class="menu" role="navigation" aria-label="Hauptnavigation">
+        <a href="index.html">Home</a>
+        <a href="index.html#about">Über uns</a>
+        <a href="index.html#reviews">Bewertungen</a>
+        <a href="index.html#contact">Kontakt</a>
+        <a href="reservation.html" style="color: var(--gold); font-weight: 600;">Reservieren</a>
+        <!-- Auth Links (shown when not logged in) -->
+        <div class="auth-links" id="authLinks">
+          <a href="#" onclick="event.preventDefault(); openAuthModal('login');"
+            class="auth-link login-link">Anmelden</a>
+          <a href="#" onclick="event.preventDefault(); openAuthModal('register');"
+            class="auth-link register-link">Registrieren</a>
+        </div>
+        <!-- User Menu (shown when logged in) -->
+        <div class="user-menu-wrapper" id="userMenuWrapper" style="display: none;">
+          <button class="notification-toggle" id="notificationToggle" aria-label="Benachrichtigungen">
+            <span class="notification-icon">🔔</span>
+            <span class="notification-badge" id="notificationBadge" style="display: none;">0</span>
+          </button>
+          <div class="user-menu">
+            <button class="user-menu-toggle" id="userMenuToggle" aria-label="Benutzermenü">
+              <span class="user-avatar" id="userAvatar">👤</span>
+              <span class="user-name" id="userName">Benutzer</span>
+              <span class="user-chevron">▼</span>
+            </button>
+            <div class="user-menu-dropdown" id="userMenuDropdown">
+              <div class="user-info">
+                <div class="user-email" id="userEmail"></div>
+                <div class="user-status" id="userStatus"></div>
+              </div>
+              <a href="profile.html" class="user-menu-item">
+                <span>👤</span> Mein Profil
+              </a>
+              <a href="my-orders.html" class="user-menu-item">
+                <span>📦</span> Meine Bestellungen
+              </a>
+              <a href="#" class="user-menu-item" id="logoutBtn">
+                <span>🚪</span> Abmelden
+              </a>
+            </div>
+          </div>
+        </div>
+      </nav>
+      <button class="burger" aria-label="Menü öffnen" id="burger" aria-controls="primaryNav" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </header>
+
+  <main>
+    <div class="menu-order-page active" id="menuOrderPage">
+      <div class="menu-bg-luxury">
+        <div class="menu-bg-radial-glow"></div>
+        <div class="menu-bg-pattern-layer"></div>
+        <div class="menu-bg-shimmer-effect"></div>
+        <div class="menu-floating-particles">
+          <div class="menu-particle particle-1"></div>
+          <div class="menu-particle particle-2"></div>
+          <div class="menu-particle particle-3"></div>
+          <div class="menu-particle particle-4"></div>
+          <div class="menu-particle particle-5"></div>
+          <div class="menu-particle particle-6"></div>
+        </div>
+        <div class="menu-decorative-shapes">
+          <div class="decor-shape shape-a"></div>
+          <div class="decor-shape shape-b"></div>
+          <div class="decor-shape shape-c"></div>
+        </div>
+      </div>
+      <section class="menu-order-hero" aria-labelledby="menuHeroTitle">
+        <div class="menu-order-hero-backdrop">
+          <img src="assets/bua-tiec-shushi.png" alt="Atmosphäre im Leo Sushi">
+        </div>
+        <div class="hero-ambient-layers">
+          <div class="hero-ambient-orb orb-hero-1"></div>
+          <div class="hero-ambient-orb orb-hero-2"></div>
+          <div class="hero-ambient-glow hero-glow-top"></div>
+          <div class="hero-ambient-glow hero-glow-bottom"></div>
+        </div>
+        <div class="container wide hero-inner">
+          <div class="hero-text">
+            <p class="hero-eyebrow">Bringdienst · Berlin</p>
+            <h1 class="hero-title" id="menuHeroTitle">Leo Sushi Haute Cuisine To-Go</h1>
+            <p class="hero-description">Genießen Sie handverlesene Sushi-Kreationen, Bowls und warme Signature-Gerichte
+              – frisch gerollt und elegant verpackt für Ihren Abend zuhause.</p>
+            <div class="hero-meta-grid">
+              <div class="hero-meta-card">
+                <span class="meta-label">Heute geöffnet</span>
+                <span class="meta-value">12:00 – 22:00</span>
+                <span class="meta-sub">Letzte Bestellung 21:30 Uhr</span>
+              </div>
+              <div class="hero-meta-card">
+                <span class="meta-label">Durchschnittliche Lieferung</span>
+                <span class="meta-value">12:00 – 22:00</span>
+                <span class="meta-sub">Schnell & temperaturgeführt</span>
+              </div>
+              <div class="hero-meta-card">
+                <span class="meta-label">Bewertung</span>
+                <span class="meta-value">4.8 / 5</span>
+                <span class="meta-sub">Nach über 1.200 Rezensionen</span>
+              </div>
+            </div>
+          </div>
+          <div class="hero-card">
+            <div class="restaurant-image hero-card-image">
+              <img src="assets/close-up-sushi-served-table 1.png" alt="Leo Sushi Restaurant">
+              <span class="hero-card-badge">Signature Kitchen</span>
+            </div>
+            <div class="hero-card-body">
+              <div class="hero-info-row">
+                <span class="hero-info-icon" aria-hidden="true">📍</span>
+                <div>
+                  <span class="hero-info-label">Adresse</span>
+                  <span class="hero-info-value">Florastraße 10A, 13187 Berlin</span>
+                  <a href="#" class="change-link">Standort ändern</a>
+                </div>
+              </div>
+              <div class="hero-info-row">
+                <span class="hero-info-icon" aria-hidden="true">⏱️</span>
+                <div>
+                  <span class="hero-info-label">Zeitfenster</span>
+                  <span class="hero-info-value">12:00 – 22:00</span>
+                  <a href="#" class="change-link">Zeit anpassen</a>
+                </div>
+              </div>
+              <div class="hero-info-row">
+                <span class="hero-info-icon" aria-hidden="true">🕒</span>
+                <div>
+                  <span class="hero-info-label">Öffnungszeiten</span>
+                  <span class="hero-info-value">12:00 – 22:00 Uhr</span>
+                  <a href="#" class="change-link">Zeiten anzeigen</a>
+                </div>
+              </div>
+              <div class="service-options" role="group" aria-label="Service Optionen">
+                <button class="service-btn active" onclick="setServiceType('pickup')">
+                  <span class="service-icon">🛍️</span>
+                  Abholung
+                </button>
+                <button class="service-btn" onclick="setServiceType('delivery')">
+                  <span class="service-icon">🚴</span>
+                  Lieferung
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div class="menu-content">
+        <!-- Mobile: Dropdown Select - Outside sidebar for sticky -->
+        <div class="category-dropdown-mobile" id="categoryDropdownMobile">
+          <select id="categorySelectMobile" class="category-select" aria-label="Kategorie auswählen">
+            <option value="">Kategorie wählen...</option>
+            <!-- Options will be generated dynamically -->
+          </select>
+          <div class="select-arrow">▼</div>
+        </div>
+
+        <div class="menu-layout">
+          <!-- Tab Navigation Sidebar -->
+          <aside class="menu-tabs-sidebar">
+            <div class="menu-tabs-navigation glass-panel">
+              <!-- Desktop: Horizontal Tabs -->
+              <div class="tabs-container" id="menuTabsContainer" role="tablist" aria-label="Menü Tabs">
+                <!-- Tabs will be generated dynamically -->
+              </div>
+
+              <div class="search-bar-wrapper">
+                <div class="search-bar">
+                  <span class="search-icon">🔍</span>
+                  <input type="text" id="menuSearchInput" placeholder="Suchen Sie nach Rolls, Bowls, Currys..."
+                    aria-label="Menü durchsuchen">
+                </div>
+              </div>
+            </div>
+          </aside>
+
+          <div class="menu-primary">
+            <!-- Tab Content Area -->
+            <div class="menu-tabs-content">
+              <!-- Welcome Tab Content -->
+              <div class="tab-pane active" id="tab-welcome" role="tabpanel" aria-labelledby="tab-btn-welcome">
+                <section class="welcome-section" id="welcomeSection">
+                  <div id="welcomeContent1" class="welcome-pane"><!-- Dynamically generated --></div>
+                </section>
+              </div>
+
+              <!-- Category Tabs Content -->
+              <div class="tab-pane" id="tab-category" role="tabpanel" aria-labelledby="tab-btn-category">
+                <section class="menu-items-section" id="menuItemsSection">
+                  <div class="category-hero-image" id="categoryHeroImage">
+                    <!-- Hero image will be generated dynamically -->
+                  </div>
+                  <div class="category-content-frame">
+                    <div class="category-title-wrapper">
+                      <div class="category-title-line-top"></div>
+                      <h2 class="category-page-title" id="currentCategoryTitle">VORSPEISEN</h2>
+                      <div class="category-title-line-bottom"></div>
+                    </div>
+                    <div class="category-title-underline"></div>
+                    <div class="menu-items-grid" id="menuItemsList">
+                      <!-- Menu items generated dynamically -->
+                    </div>
+                    <div class="category-footer-bar">
+                      <div class="dietary-labels">
+                        <div class="dietary-label">
+                          <span class="dietary-icon">🌶️</span>
+                          <span class="dietary-text">Scharf</span>
+                        </div>
+                        <div class="dietary-label">
+                          <span class="dietary-icon">🌿</span>
+                          <span class="dietary-text">Vegetarisch</span>
+                        </div>
+                      </div>
+                      <p class="category-disclaimer">
+                        Bitte fragen Sie nach Allergenen, Zutaten oder Unverträglichkeiten. Please ask about allergens,
+                        ingredients, or intolerances.
+                      </p>
+                    </div>
+                  </div>
+                </section>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="site-footer">
+    <div class="footer-top">
+      <div class="container footer-inner">
+        <div class="footer-brand">
+          <div class="brand-mini">
+            <img src="assets/logo.png" alt="LEO SUSHI" loading="lazy" decoding="async">
+            <div class="brand-text">
+              <span class="brand-name">LEO SUSHI</span>
+              <span class="brand-tagline">Moderne vietnamesische Küche</span>
+            </div>
+          </div>
+        </div>
+        <div class="footer-content">
+          <nav class="footer-nav">
+            <div class="footer-nav-section">
+              <h4>Navigation</h4>
+              <a href="index.html">Home</a>
+              <a href="menu.html">Menü</a>
+              <a href="index.html#about">Über uns</a>
+              <a href="index.html#reviews">Bewertungen</a>
+              <a href="index.html#contact">Kontakt</a>
+            </div>
+          </nav>
+          <div class="footer-contact">
+            <h4>Kontakt</h4>
+            <div class="footer-contact-item">
+              <span class="footer-icon">📍</span>
+              <span>Florastraße 10A<br>13187 Berlin</span>
+            </div>
+            <div class="footer-contact-item">
+              <span class="footer-icon">📞</span>
+              <a href="tel:+493037476204">+49 30 37476204</a>
+            </div>
+            <div class="footer-contact-item">
+              <span class="footer-icon">✉️</span>
+              <a href="mailto:hallo@leosushi.de">hallo@leosushi.de</a>
+            </div>
+            <div class="footer-contact-item">
+              <span class="footer-icon">🌐</span>
+              <a href="https://www.leo-sushi.de/" target="_blank" rel="noopener">www.leo-sushi.de</a>
+            </div>
+          </div>
+          <div class="footer-hours">
+            <h4>Öffnungszeiten</h4>
+            <div class="hours-list">
+              <div class="hours-item">
+                <span>Mo. – So.</span>
+                <span>12:00 – 22:00 Uhr</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <div class="container">
+        <div class="footer-bottom-inner">
+          <div class="legal">© <span id="year"></span> LEO SUSHI · Alle Rechte vorbehalten</div>
+          <div class="footer-social">
+            <a href="#" class="social-link" aria-label="Facebook">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                <path
+                  d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
+              </svg>
+            </a>
+            <a href="#" class="social-link" aria-label="Instagram">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                <path
+                  d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zM12 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" />
+              </svg>
+            </a>
+            <a href="https://www.openstreetmap.org/?mlat=52.5505&mlon=13.4304&zoom=16" target="_blank"
+              class="social-link" aria-label="OpenStreetMap">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                <path
+                  d="M12 0C8.74 0 5.97 1.47 4 3.74c2.26 2.26 4.26 4.26 8 8 3.74-3.74 5.74-5.74 8-8C18.03 1.47 15.26 0 12 0zm0 2c5.51 0 10 4.49 10 10s-4.49 10-10 10S2 17.51 2 12 6.49 2 12 2zm0 3c-3.87 0-7 3.13-7 7s3.13 7 7 7 7-3.13 7-7-3.13-7-7-7zm0 3c2.21 0 4 1.79 4 4s-1.79 4-4 4-4-1.79-4-4 1.79-4 4-4z" />
+              </svg>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Cart Sidebar -->
+  <div class="cart-sidebar" id="cartSidebar">
+    <div class="cart-header">
+      <h3>Warenkorb</h3>
+      <button class="cart-close" id="cartClose" aria-label="Schließen">×</button>
+    </div>
+    <div class="cart-items" id="cartItems">
+      <!-- Cart items will be dynamically generated -->
+    </div>
+    <div class="cart-footer">
+      <div class="cart-total">
+        <strong>Gesamt: <span id="cartTotal">€0,00</span></strong>
+      </div>
+      <div style="display: flex; gap: 10px; flex-direction: column;">
+        <a href="reservation.html" class="btn" id="reserveBtn"
+          style="background: rgba(229,207,142,.1); border: 1px solid rgba(229,207,142,.3); color: var(--gold); width: 100%; cursor: pointer; pointer-events: auto; text-decoration: none; display: flex; align-items: center; justify-content: center;">📍
+          Tisch reservieren</a>
+        <button class="btn primary cart-checkout" id="checkoutBtn" disabled>💳 Zur Kasse</button>
+      </div>
+    </div>
+  </div>
+  <div class="cart-overlay" id="cartOverlay"></div>
+
+  <!-- Auth Modal - Single modal with sliding forms -->
+  <div class="auth-modal" id="authModal">
+    <div class="auth-modal-content">
+      <div class="auth-modal-header">
+        <h3 id="authModalTitle">Willkommen zurück</h3>
+        <button class="auth-modal-close" onclick="closeAuthModal()" aria-label="Schließen">×</button>
+      </div>
+      <div class="auth-forms-container">
+        <!-- Login Form -->
+        <div class="auth-form-wrapper active" id="loginFormWrapper">
+          <div class="auth-modal-body">
+            <div class="auth-error-message" id="loginErrorMessage"></div>
+            <form id="loginModalForm">
+              <div class="auth-form-group">
+                <label>E-Mail oder Telefonnummer <span class="auth-required">*</span></label>
+                <input type="text" id="loginIdentifier" placeholder="E-Mail oder Telefonnummer">
+                <div class="auth-info-text">Geben Sie Ihre E-Mail-Adresse oder Telefonnummer ein</div>
+              </div>
+              <div class="auth-form-group">
+                <label>Passwort <span class="auth-required">*</span></label>
+                <input type="password" id="loginPassword" required placeholder="Passwort">
+              </div>
+              <button type="submit" class="auth-btn-primary" id="loginModalBtn">
+                Anmelden
+              </button>
+            </form>
+            <div class="auth-switch-link" style="margin-top: 12px;">
+              <a href="#" onclick="event.preventDefault(); switchAuthForm('forgot');">Passwort vergessen?</a>
+            </div>
+            <div class="auth-switch-link">
+              Noch kein Konto? <a href="#" onclick="event.preventDefault(); switchAuthForm('register');">Jetzt
+                registrieren</a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Forgot Password Form -->
+        <div class="auth-form-wrapper" id="forgotFormWrapper">
+          <div class="auth-modal-body">
+            <div class="auth-error-message" id="forgotErrorMessage"></div>
+            <div class="auth-success-message" id="forgotSuccessMessage"></div>
+            <form id="forgotPasswordForm">
+              <div class="auth-form-group">
+                <label>E-Mail <span class="auth-required">*</span></label>
+                <input type="text" id="forgotIdentifier" required placeholder="E-Mail oder Telefonnummer">
+              </div>
+              <button type="submit" class="auth-btn-primary" id="forgotPasswordBtn">
+                Reset-Link senden
+              </button>
+            </form>
+            <div class="auth-switch-link">
+              <a href="#" onclick="event.preventDefault(); switchAuthForm('login');">Zurück zur Anmeldung</a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Register Form -->
+        <div class="auth-form-wrapper" id="registerFormWrapper">
+          <div class="auth-modal-body">
+            <div class="auth-error-message" id="registerErrorMessage"></div>
+            <div class="auth-success-message" id="registerSuccessMessage"></div>
+            <form id="registerModalForm">
+              <div class="auth-form-group">
+                <label>Vorname <span class="auth-required">*</span></label>
+                <input type="text" id="registerFirstName" required placeholder="Ihr Vorname">
+              </div>
+              <div class="auth-form-group">
+                <label>Nachname <span class="auth-required">*</span></label>
+                <input type="text" id="registerLastName" required placeholder="Ihr Nachname">
+              </div>
+              <div class="auth-form-group">
+                <label>E-Mail <span class="auth-required">*</span></label>
+                <input type="email" id="registerEmail" required placeholder="ihre.email@beispiel.de">
+              </div>
+              <div class="auth-form-group">
+                <label>Telefonnummer <span class="auth-required">*</span></label>
+                <input type="tel" id="registerPhone" required placeholder="+49 123 456789">
+              </div>
+              <div class="auth-form-group">
+                <label>Passwort <span class="auth-required">*</span></label>
+                <input type="password" id="registerPassword" required minlength="6" placeholder="Mindestens 6 Zeichen">
+              </div>
+              <div class="auth-form-group">
+                <label>Passwort bestätigen <span class="auth-required">*</span></label>
+                <input type="password" id="registerConfirmPassword" required minlength="6"
+                  placeholder="Passwort erneut eingeben">
+              </div>
+              <div class="auth-form-group">
+                <label>🎂 Geburtstag</label>
+                <input type="date" id="registerBirthday" placeholder="Geburtsdatum">
+                <small style="color: rgba(255,255,255,0.6); font-size: 12px; margin-top: 4px; display: block;">Wir
+                  senden Ihnen an Ihrem Geburtstag einen besonderen Gutschein!</small>
+              </div>
+              <div class="auth-form-group">
+                <label>Straße</label>
+                <input type="text" id="registerStreet" placeholder="Straße und Hausnummer">
+              </div>
+              <div class="auth-form-row">
+                <div class="auth-form-group">
+                  <label>PLZ</label>
+                  <input type="text" id="registerPostal" placeholder="13187">
+                </div>
+                <div class="auth-form-group">
+                  <label>Stadt</label>
+                  <input type="text" id="registerCity" placeholder="Berlin">
+                </div>
+              </div>
+              <button type="submit" class="auth-btn-primary" id="registerModalBtn">
+                Registrieren
+              </button>
+            </form>
+            <div class="auth-discount-badge hidden" id="registerDiscountBadge">
+              <div style="font-size: 16px; margin-bottom: 4px;">📧 E-Mail-Bestätigung gesendet!</div>
+              <div style="font-size: 13px;">Bitte überprüfen Sie Ihr E-Mail-Postfach</div>
+            </div>
+            <div class="auth-switch-link">
+              Bereits registriert? <a href="#" onclick="event.preventDefault(); switchAuthForm('login');">Jetzt
+                anmelden</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Note Modal -->
+  <div class="note-modal" id="noteModal">
+    <div class="note-modal-content">
+      <div class="note-modal-header">
+        <h3>Bestellung hinzufügen</h3>
+        <button class="note-modal-close" onclick="closeNoteModal()" aria-label="Schließen">×</button>
+      </div>
+      <div class="note-modal-body">
+        <div class="note-item-name" id="noteItemName"></div>
+        <div class="quantity-selector">
+          <label for="quantityInput">Menge:</label>
+          <div class="quantity-controls">
+            <button class="qty-btn" onclick="changeQuantity(-1)">−</button>
+            <input type="number" id="quantityInput" class="quantity-input" value="1" min="1" max="20">
+            <button class="qty-btn" onclick="changeQuantity(1)">+</button>
+          </div>
+        </div>
+        <textarea id="noteInput" class="note-input" placeholder="z.B. bitte scharf, ohne Zwiebeln, extra Sauce..."
+          rows="4" maxlength="200"></textarea>
+        <div class="note-hint">Drücken Sie Esc zum Schließen</div>
+      </div>
+      <div class="note-modal-footer">
+        <div class="modal-total" id="modalTotal">€0,00</div>
+        <div class="modal-actions">
+          <button class="btn ghost" onclick="closeNoteModal()">Abbrechen</button>
+          <button class="btn primary" onclick="saveNote()">In den Warenkorb</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Payment Modal removed - now using checkout.html -->
+
+  <!-- Reservation Modal -->
+  <div class="payment-modal" id="reservationModal">
+    <div class="payment-modal-content">
+      <div class="payment-modal-header">
+        <h3>Tisch reservieren</h3>
+        <button class="payment-modal-close" onclick="closeReservationModal()" aria-label="Schließen">×</button>
+      </div>
+      <div class="payment-modal-body">
+        <form id="reservationForm" onsubmit="handleReservation(event); return false;">
+          <div class="payment-section">
+            <h4 class="payment-section-title">Ihre Daten</h4>
+            <div class="payment-form-row">
+              <div class="payment-form-group">
+                <label for="reserveFirstName">Vorname *</label>
+                <input type="text" id="reserveFirstName" class="payment-input" placeholder="z.B. Max" required>
+              </div>
+              <div class="payment-form-group">
+                <label for="reserveLastName">Nachname *</label>
+                <input type="text" id="reserveLastName" class="payment-input" placeholder="z.B. Mustermann" required>
+              </div>
+            </div>
+            <div class="payment-form-group">
+              <label for="reservePhone">Telefonnummer *</label>
+              <input type="tel" id="reservePhone" class="payment-input" placeholder="z.B. 0176 12345678" required>
+            </div>
+            <div class="payment-form-group">
+              <label for="reserveEmail">E-Mail-Adresse *</label>
+              <input type="email" id="reserveEmail" class="payment-input" placeholder="ihre.email@example.com" required>
+              <small style="color: rgba(255,255,255,.6); font-size: 12px; margin-top: 4px; display: block;">Wir senden
+                Ihnen eine Bestätigungs-E-Mail</small>
+            </div>
+          </div>
+
+          <div class="payment-section">
+            <h4 class="payment-section-title">Reservierungsdetails</h4>
+            <div class="payment-form-row">
+              <div class="payment-form-group">
+                <label for="reserveDate">Datum *</label>
+                <input type="date" id="reserveDate" class="payment-input" required>
+              </div>
+              <div class="payment-form-group">
+                <label for="reserveTime">Uhrzeit *</label>
+                <input type="time" id="reserveTime" class="payment-input" required>
+              </div>
+            </div>
+            <div class="payment-form-group">
+              <label for="reserveGuests">Anzahl Personen *</label>
+              <input type="number" id="reserveGuests" class="payment-input" placeholder="z.B. 2" min="1" max="20"
+                required>
+            </div>
+            <div class="payment-form-group">
+              <label for="reserveNote">Besondere Wünsche (optional)</label>
+              <textarea id="reserveNote" class="payment-textarea"
+                placeholder="z.B. Fensterplatz, Geburtstagsfeier, etc." rows="3"></textarea>
+            </div>
+          </div>
+
+          <div class="payment-section" id="tableSelectionSection">
+            <div id="tableSelectionContainer">
+              <p style="color: rgba(255,255,255,.7); text-align: center; padding: 20px;">
+                Bitte wählen Sie zuerst Datum und Uhrzeit, um die verfügbaren Tische zu sehen.
+              </p>
+            </div>
+          </div>
+
+          <!-- Menu Selection Section -->
+          <div class="payment-section">
+            <h4 class="payment-section-title">Ausgewählte Gerichte (optional)</h4>
+            <div id="reservationCartItems"
+              style="min-height: 50px; max-height: 200px; overflow-y: auto; padding: 10px; background: rgba(255,255,255,.03); border-radius: 8px; margin-bottom: 10px;">
+              <p style="color: rgba(255,255,255,.5); text-align: center; padding: 10px;">Noch keine Gerichte ausgewählt
+              </p>
+            </div>
+            <button type="button" class="btn"
+              style="width: 100%; background: rgba(229,207,142,.1); border: 1px solid rgba(229,207,142,.3); color: var(--gold);"
+              onclick="openMenuForReservation()">
+              + Gerichte aus Menü wählen
+            </button>
+          </div>
+        </form>
+      </div>
+      <div class="payment-modal-footer">
+        <button class="btn ghost" onclick="closeReservationModal()">Abbrechen</button>
+        <button class="btn primary"
+          onclick="document.getElementById('reservationForm').dispatchEvent(new Event('submit'));">Reservierung
+          bestätigen</button>
+      </div>
+    </div>
+  </div>
+  <div class="cart-overlay" id="reservationOverlay"></div>
+
+  <!-- Fixed Order Button -->
+  <button class="fixed-order-btn" id="fixedOrderBtn" aria-label="Warenkorb"
+    style="position: fixed !important; display: flex !important; visibility: visible !important; opacity: 1 !important; right: 12px !important; bottom: 16px !important; z-index: 9999 !important; pointer-events: auto !important;">
+    <span class="order-btn-badge" id="orderBadge">0</span>
+    <div class="order-btn-content">
+      <div class="order-icon-wrapper">
+        <svg class="order-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path
+            d="M7 18C5.9 18 5.01 18.9 5.01 20C5.01 21.1 5.9 22 7 22C8.1 22 9 21.1 9 20C9 18.9 8.1 18 7 18ZM1 2V4H3L6.6 11.59L5.25 14.04C5.09 14.32 5 14.65 5 15C5 16.1 5.9 17 7 17H19V15H7.42C7.28 15 7.17 14.89 7.17 14.75L7.2 14.63L8.1 13H15.55C16.3 13 16.96 12.59 17.3 11.97L20.88 5.48C20.96 5.34 21 5.17 21 5C21 4.45 20.55 4 20 4H5.21L4.27 2H1ZM17 18C15.9 18 15.01 18.9 15.01 20C15.01 21.1 15.9 22 17 22C18.1 22 19 21.1 19 20C19 18.9 18.1 18 17 18Z"
+            fill="currentColor" />
+        </svg>
+      </div>
+      <span class="order-text">WARENKORB</span>
+      <div class="order-total" id="fixedOrderTotal">€0,00</div>
+    </div>
+  </button>
+
+  <!-- Capacitor Core (sẽ được inject tự động trong app) -->
+  <script>
+    // Load Capacitor init script
+    // Capacitor init removed - not needed for web version
+  </script>
+
+  <!-- Load modules theo thứ tự dependency (QUAN TRỌNG - không thay đổi thứ tự!) -->
+  <!-- Backup: Nếu có lỗi, comment các dòng dưới và uncomment dòng: <script src="script.js"></script> -->
+  <script src="js/config.js"></script>
+  <script src="js/capacitor-navigation.js"></script>
+  <script src="js/mobile-app.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/auth-mysql.js"></script>
+  <script src="js/auth-modal.js"></script>
+  <script src="js/header-auth.js"></script>
+  <script src="js/database-helpers.js"></script>
+  <script src="js/menu-data.js"></script>
+  <script src="js/utils.js"></script>
+  <script src="js/payment.js"></script>
+  <script src="js/cart.js"></script>
+  <script src="js/menu.js"></script>
+  <script src="js/reservation.js"></script>
+  <script src="js/email.js"></script>
+  <script src="js/customer.js"></script>
+  <script src="js/notifications.js"></script>
+  <script src="js/main.js"></script>
+  <!-- Load script.js temporarily for remaining dependencies until all functions are moved to modules -->
+  <script src="script.js"></script>
+
+  <script>
+    // Initialize menu order page on load
+    document.addEventListener('DOMContentLoaded', () => {
+      // Ensure dropdown scrolls with page - remove any inline styles
+      const dropdown = document.getElementById('categoryDropdownMobile');
+      if (dropdown) {
+        dropdown.style.position = 'static';
+        dropdown.style.top = 'auto';
+        dropdown.style.bottom = 'auto';
+        dropdown.style.left = 'auto';
+        dropdown.style.right = 'auto';
+        dropdown.style.transform = 'none';
+      }
+
+      // Ensure fixed order button is visible on mobile - UNLESS it's the capacitor app
+      const fixedOrderBtn = document.getElementById('fixedOrderBtn');
+      if (fixedOrderBtn) {
+        const isApp = document.body.classList.contains('is-capacitor-app');
+        const isMobile = window.innerWidth <= 720;
+
+        // REMOVED app-specific hiding to support standard mobile web UI
+        /*
+        if (isApp) {
+          // Hide on App
+          fixedOrderBtn.style.setProperty('display', 'none', 'important');
+          fixedOrderBtn.style.setProperty('visibility', 'hidden', 'important');
+        } else */ if (!document.body.classList.contains('cart-open')) {
+          // Force show button - always visible unless cart is open
+          fixedOrderBtn.style.setProperty('display', 'flex', 'important');
+          fixedOrderBtn.style.setProperty('visibility', 'visible', 'important');
+          fixedOrderBtn.style.setProperty('opacity', '1', 'important');
+          fixedOrderBtn.style.setProperty('position', 'fixed', 'important');
+          fixedOrderBtn.style.setProperty('right', isMobile ? '12px' : '20px', 'important');
+          fixedOrderBtn.style.setProperty('bottom', isMobile ? '16px' : '20px', 'important');
+          fixedOrderBtn.style.setProperty('left', 'auto', 'important');
+          fixedOrderBtn.style.setProperty('top', 'auto', 'important');
+          fixedOrderBtn.style.setProperty('z-index', '99999', 'important');
+          fixedOrderBtn.style.setProperty('pointer-events', 'auto', 'important');
+        }
+      }
+
+      // Initialize menu order page
+      if (typeof initMenuOrderPage === 'function') {
+        initMenuOrderPage();
+      }
+      if (typeof setupCart === 'function') {
+        setupCart();
+      }
+      if (typeof updateCartUI === 'function') {
+        updateCartUI();
+      }
+      if (typeof setupReservationForm === 'function') {
+        setupReservationForm();
+      }
+      // Setup intro screen first
+      if (typeof setupIntroScreen === 'function') {
+        setupIntroScreen();
+      }
+    });
+
+    // Also ensure button is visible after page fully loads (Non-app only)
+    window.addEventListener('load', () => {
+      const fixedOrderBtn = document.getElementById('fixedOrderBtn');
+      const isApp = document.body.classList.contains('is-capacitor-app');
+
+      if (isApp && fixedOrderBtn) {
+        fixedOrderBtn.style.setProperty('display', 'none', 'important');
+        return;
+      }
+
+      if (fixedOrderBtn && !document.body.classList.contains('cart-open')) {
+        const isMobile = window.innerWidth <= 720;
+        // Force show button with all properties
+        fixedOrderBtn.style.setProperty('display', 'flex', 'important');
+        fixedOrderBtn.style.setProperty('visibility', 'visible', 'important');
+        fixedOrderBtn.style.setProperty('opacity', '1', 'important');
+        fixedOrderBtn.style.setProperty('position', 'fixed', 'important');
+        fixedOrderBtn.style.setProperty('right', isMobile ? '12px' : '20px', 'important');
+        fixedOrderBtn.style.setProperty('bottom', isMobile ? '16px' : '20px', 'important');
+        fixedOrderBtn.style.setProperty('left', 'auto', 'important');
+        fixedOrderBtn.style.setProperty('top', 'auto', 'important');
+        fixedOrderBtn.style.setProperty('z-index', '99999', 'important');
+        fixedOrderBtn.style.setProperty('pointer-events', 'auto', 'important');
+        fixedOrderBtn.style.setProperty('transform', 'none', 'important');
+      }
+    });
+
+    // Check button visibility periodically on mobile - ONLY when cart is NOT open AND not in app
+    if (window.innerWidth <= 720) {
+      setInterval(() => {
+        const fixedOrderBtn = document.getElementById('fixedOrderBtn');
+        const isApp = document.body.classList.contains('is-capacitor-app');
+
+        if (isApp && fixedOrderBtn) {
+          fixedOrderBtn.style.setProperty('display', 'none', 'important');
+          fixedOrderBtn.style.setProperty('visibility', 'hidden', 'important');
+          return;
+        }
+
+        // Only force show if cart is NOT open
+        if (fixedOrderBtn && !document.body.classList.contains('cart-open')) {
+          const computedStyle = window.getComputedStyle(fixedOrderBtn);
+          if (computedStyle.display === 'none' || computedStyle.visibility === 'hidden' || parseFloat(computedStyle.opacity) < 0.1) {
+            fixedOrderBtn.style.setProperty('display', 'flex', 'important');
+            fixedOrderBtn.style.setProperty('visibility', 'visible', 'important');
+            fixedOrderBtn.style.setProperty('opacity', '1', 'important');
+            fixedOrderBtn.style.setProperty('position', 'fixed', 'important');
+            fixedOrderBtn.style.setProperty('right', '12px', 'important');
+            fixedOrderBtn.style.setProperty('bottom', '16px', 'important');
+            fixedOrderBtn.style.setProperty('z-index', '99999', 'important');
+          }
+        } else if (fixedOrderBtn && document.body.classList.contains('cart-open')) {
+          // Force hide when cart is open
+          fixedOrderBtn.style.setProperty('display', 'none', 'important');
+          fixedOrderBtn.style.setProperty('visibility', 'hidden', 'important');
+          fixedOrderBtn.style.setProperty('opacity', '0', 'important');
+          fixedOrderBtn.style.setProperty('pointer-events', 'none', 'important');
+        }
+      }, 1000);
+    }
+
+    // Handle window resize to adjust button position
+    window.addEventListener('resize', () => {
+      const fixedOrderBtn = document.getElementById('fixedOrderBtn');
+      if (fixedOrderBtn && !document.body.classList.contains('cart-open')) {
+        const isMobile = window.innerWidth <= 720;
+        fixedOrderBtn.style.setProperty('right', isMobile ? '12px' : '20px', 'important');
+        fixedOrderBtn.style.setProperty('bottom', isMobile ? '16px' : '20px', 'important');
+      }
+    });
+
+    // Menu access is now public - no authentication required
+    // Users can browse menu freely, but will need to provide info when placing order
+
+    // Register Service Worker for PWA
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js')
+          .then((registration) => {
+            console.log('Service Worker registered successfully:', registration.scope);
+          })
+          .catch((error) => {
+            console.log('Service Worker registration failed:', error);
+          });
+      });
+    }
+  </script>
+</body>
+
+</html>

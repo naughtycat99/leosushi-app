@@ -36,6 +36,17 @@ foreach ($requiredFiles as $file) {
     }
 }
 
+// Start session if not already started
+if (session_status() === PHP_SESSION_NONE) {
+    // Configure session for cross-domain support (mobile app)
+    ini_set('session.cookie_samesite', 'None');
+    ini_set('session.cookie_secure', '1'); // Requires HTTPS
+    ini_set('session.cookie_httponly', '1');
+    ini_set('session.cookie_lifetime', '604800'); // 7 days
+    
+    session_start();
+}
+
 // Load config và utils
 try {
     require_once __DIR__ . '/config.php';

@@ -1,0 +1,35 @@
+/* Mobile App Specific Fixes */
+
+/* Hide fixed order button on mobile app */
+.mobile-app .fixed-order-btn,
+.mobile-app #fixedOrderBtn,
+body .fixed-order-btn,
+body #fixedOrderBtn {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+/* Ensure cart footer is visible and not hidden behind bottom nav */
+.mobile-app .cart-footer {
+  position: sticky !important;
+  bottom: 0 !important;
+  background: #0b0b0c !important;
+  z-index: 100 !important;
+  padding-bottom: 100px !important; /* Space for bottom navigation */
+  margin-bottom: 0 !important;
+}
+
+/* Ensure cart sidebar has proper height */
+.mobile-app .cart-sidebar {
+  padding-bottom: 180px !important; /* Extra space for footer + nav */
+}
+
+/* Make sure checkout button is always visible */
+.mobile-app #checkoutBtn {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+

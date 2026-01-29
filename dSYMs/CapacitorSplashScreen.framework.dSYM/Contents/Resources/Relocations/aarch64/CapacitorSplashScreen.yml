@@ -1,0 +1,105 @@
+---
+triple:          'arm64-apple-darwin'
+binary-path:     '/Users/runner/Library/Developer/Xcode/DerivedData/App-gntjapgtnyslmubliygffvqtycep/Build/Intermediates.noindex/ArchiveIntermediates/App/IntermediateBuildFilesPath/UninstalledProducts/iphoneos/CapacitorSplashScreen.framework/CapacitorSplashScreen'
+relocations:
+  - { offset: 0x90680, size: 0x8, addend: 0x0, symName: _CapacitorSplashScreenVersionString, symObjAddr: 0x0, symBinAddr: 0xA9A0, symSize: 0x0 }
+  - { offset: 0x906B5, size: 0x8, addend: 0x0, symName: _CapacitorSplashScreenVersionNumber, symObjAddr: 0x38, symBinAddr: 0xA9D8, symSize: 0x0 }
+  - { offset: 0x906F2, size: 0x8, addend: 0x0, symName: '-[SplashScreenPlugin(CAPPluginCategory) pluginMethods]', symObjAddr: 0x0, symBinAddr: 0x4000, symSize: 0xA0 }
+  - { offset: 0x90700, size: 0x8, addend: 0x0, symName: '-[SplashScreenPlugin(CAPPluginCategory) pluginMethods]', symObjAddr: 0x0, symBinAddr: 0x4000, symSize: 0xA0 }
+  - { offset: 0x90743, size: 0x8, addend: 0x0, symName: '-[SplashScreenPlugin(CAPPluginCategory) identifier]', symObjAddr: 0xA0, symBinAddr: 0x40A0, symSize: 0xC }
+  - { offset: 0x90776, size: 0x8, addend: 0x0, symName: '-[SplashScreenPlugin(CAPPluginCategory) jsName]', symObjAddr: 0xAC, symBinAddr: 0x40AC, symSize: 0xC }
+  - { offset: 0x90966, size: 0x8, addend: 0x0, symName: '_$s21CapacitorSplashScreen0bC0C14viewControllerSo06UIViewE0Cvpfi', symObjAddr: 0x0, symBinAddr: 0x40B8, symSize: 0x24 }
+  - { offset: 0x909AA, size: 0x8, addend: 0x0, symName: '_$s21CapacitorSplashScreen0bC0C7spinnerSo23UIActivityIndicatorViewCvpfi', symObjAddr: 0x24, symBinAddr: 0x40DC, symSize: 0x24 }
+  - { offset: 0x909EE, size: 0x8, addend: 0x0, symName: '_$s21CapacitorSplashScreen0bC0C6configAA0bC6ConfigVvpfi', symObjAddr: 0x48, symBinAddr: 0x4100, symSize: 0x30 }
+  - { offset: 0x90A06, size: 0x8, addend: 0x0, symName: '_$s21CapacitorSplashScreen0bC0C8hideTaskypSgvpfi', symObjAddr: 0x78, symBinAddr: 0x4130, symSize: 0xC }
+  - { offset: 0x90A1E, size: 0x8, addend: 0x0, symName: '_$s21CapacitorSplashScreen0bC0C9isVisibleSbvpfi', symObjAddr: 0x84, symBinAddr: 0x413C, symSize: 0x8 }
+  - { offset: 0x90CBA, size: 0x8, addend: 0x0, symName: '_$sIeg_IeyB_TR', symObjAddr: 0xA20, symBinAddr: 0x4AD8, symSize: 0x2C }
+  - { offset: 0x90CD2, size: 0x8, addend: 0x0, symName: '_$sSbIegy_SbIeyBy_TR', symObjAddr: 0xDBC, symBinAddr: 0x4E74, symSize: 0x3C }
+  - { offset: 0x90EE4, size: 0x8, addend: 0x0, symName: '_$s21CapacitorSplashScreen0bC0C04hideB033_26EF4FFD113A553014DD920E8E40B91BLL15fadeOutDuration08isLaunchB0ySi_SbtFyyScMYccfU_TA', symObjAddr: 0x1DC0, symBinAddr: 0x5E78, symSize: 0x8 }
+  - { offset: 0x90EF8, size: 0x8, addend: 0x0, symName: _block_copy_helper, symObjAddr: 0x1DC8, symBinAddr: 0x5E80, symSize: 0x10 }
+  - { offset: 0x90F0C, size: 0x8, addend: 0x0, symName: _block_destroy_helper, symObjAddr: 0x1DD8, symBinAddr: 0x5E90, symSize: 0x8 }
+  - { offset: 0x90F20, size: 0x8, addend: 0x0, symName: ___swift_instantiateConcreteTypeFromMangledNameV2, symObjAddr: 0x1DE0, symBinAddr: 0x5E98, symSize: 0x44 }
+  - { offset: 0x90F34, size: 0x8, addend: 0x0, symName: '_$sSay8Dispatch0A13WorkItemFlagsVGMa', symObjAddr: 0x1E64, symBinAddr: 0x5F1C, symSize: 0x54 }
+  - { offset: 0x90F5E, size: 0x8, addend: 0x0, symName: '_$s21CapacitorSplashScreen0bC0CMa', symObjAddr: 0x2014, symBinAddr: 0x60CC, symSize: 0x20 }
+  - { offset: 0x90F72, size: 0x8, addend: 0x0, symName: '_$s21CapacitorSplashScreen0bC0CfETo', symObjAddr: 0x2034, symBinAddr: 0x60EC, symSize: 0x78 }
+  - { offset: 0x90FA1, size: 0x8, addend: 0x0, symName: '_$s21CapacitorSplashScreen0bC6ConfigV15backgroundColorSo7UIColorCSgvpfi', symObjAddr: 0x20AC, symBinAddr: 0x6164, symSize: 0x8 }
+  - { offset: 0x90FB9, size: 0x8, addend: 0x0, symName: '_$s21CapacitorSplashScreen0bC6ConfigV12spinnerStyleSo023UIActivityIndicatorViewF0VSgvpfi', symObjAddr: 0x20B4, symBinAddr: 0x616C, symSize: 0xC }
+  - { offset: 0x90FD1, size: 0x8, addend: 0x0, symName: '_$s21CapacitorSplashScreen0bC6ConfigV18launchShowDurationSivpfi', symObjAddr: 0x20D0, symBinAddr: 0x6178, symSize: 0x8 }
+  - { offset: 0x90FE9, size: 0x8, addend: 0x0, symName: '_$s21CapacitorSplashScreen0bC6ConfigV14launchAutoHideSbvpfi', symObjAddr: 0x20D8, symBinAddr: 0x6180, symSize: 0x8 }
+  - { offset: 0x91001, size: 0x8, addend: 0x0, symName: '_$s21CapacitorSplashScreen0bC8SettingsV12showDurationSivpfi', symObjAddr: 0x20F0, symBinAddr: 0x6188, symSize: 0x8 }
+  - { offset: 0x91019, size: 0x8, addend: 0x0, symName: '_$s21CapacitorSplashScreen0bC8SettingsV14fadeInDurationSivpfi', symObjAddr: 0x20F8, symBinAddr: 0x6190, symSize: 0x8 }
+  - { offset: 0x91031, size: 0x8, addend: 0x0, symName: '_$sSo28UIActivityIndicatorViewStyleVMa', symObjAddr: 0x2110, symBinAddr: 0x6198, symSize: 0x50 }
+  - { offset: 0x91045, size: 0x8, addend: 0x0, symName: '_$sypSgWOh', symObjAddr: 0x2160, symBinAddr: 0x61E8, symSize: 0x48 }
+  - { offset: 0x91064, size: 0x8, addend: 0x0, symName: '_$ss22__RawDictionaryStorageC4findys10_HashTableV6BucketV6bucket_Sb5foundtxSHRzlFSS_Tg5', symObjAddr: 0x21A8, symBinAddr: 0x6230, symSize: 0x64 }
+  - { offset: 0x910B2, size: 0x8, addend: 0x0, symName: '_$ss22__RawDictionaryStorageC4find_9hashValues10_HashTableV6BucketV6bucket_Sb5foundtx_SitSHRzlFSS_Tg5', symObjAddr: 0x220C, symBinAddr: 0x6294, symSize: 0xB4 }
+  - { offset: 0x91114, size: 0x8, addend: 0x0, symName: '_$ss29getContiguousArrayStorageType3fors01_bcD0CyxGmxm_tlFSo8UIWindowC_Ttg5', symObjAddr: 0x22C0, symBinAddr: 0x6348, symSize: 0x6C }
+  - { offset: 0x91141, size: 0x8, addend: 0x0, symName: '_$ss15ContiguousArrayV16_createNewBuffer14bufferIsUnique15minimumCapacity13growForAppendySb_SiSbtFSo8UIWindowC_Tg5', symObjAddr: 0x232C, symBinAddr: 0x63B4, symSize: 0x1C }
+  - { offset: 0x911A6, size: 0x8, addend: 0x0, symName: '_$ss22_ContiguousArrayBufferV20_consumeAndCreateNew14bufferIsUnique15minimumCapacity13growForAppendAByxGSb_SiSbtFSo8UIWindowC_Tg5', symObjAddr: 0x2348, symBinAddr: 0x63D0, symSize: 0x134 }
+  - { offset: 0x9129D, size: 0x8, addend: 0x0, symName: '_$ss12_ArrayBufferV19_getElementSlowPathyyXlSiFSo8UIWindowC_Tg5', symObjAddr: 0x247C, symBinAddr: 0x6504, symSize: 0x1C4 }
+  - { offset: 0x9134A, size: 0x8, addend: 0x0, symName: '_$sShyxSh5IndexVyx_GcigSo7UISceneC_Tg5', symObjAddr: 0x2640, symBinAddr: 0x66C8, symSize: 0x220 }
+  - { offset: 0x913FB, size: 0x8, addend: 0x0, symName: '_$s21CapacitorSplashScreen0bC6ConfigVWOc', symObjAddr: 0x2988, symBinAddr: 0x6A10, symSize: 0x3C }
+  - { offset: 0x9140F, size: 0x8, addend: 0x0, symName: '_$s21CapacitorSplashScreen0bC6ConfigVWOh', symObjAddr: 0x29C4, symBinAddr: 0x6A4C, symSize: 0x34 }
+  - { offset: 0x91423, size: 0x8, addend: 0x0, symName: '_$sSo7UISceneCSo8NSObjectCSH10ObjectiveCWl', symObjAddr: 0x29F8, symBinAddr: 0x6A80, symSize: 0x54 }
+  - { offset: 0x91437, size: 0x8, addend: 0x0, symName: '_$sSh5IndexV8_VariantOySo7UISceneC__GWOe', symObjAddr: 0x2A8C, symBinAddr: 0x6B14, symSize: 0xC }
+  - { offset: 0x9144B, size: 0x8, addend: 0x0, symName: '_$s21CapacitorSplashScreen0bC0C04hideB033_26EF4FFD113A553014DD920E8E40B91BLL15fadeOutDuration08isLaunchB0ySi_SbtFyyScMYccfU_yycfU_TA', symObjAddr: 0x2ABC, symBinAddr: 0x6B44, symSize: 0x1C }
+  - { offset: 0x9145F, size: 0x8, addend: 0x0, symName: '_$s21CapacitorSplashScreen0bC0C04hideB033_26EF4FFD113A553014DD920E8E40B91BLL15fadeOutDuration08isLaunchB0ySi_SbtFyyScMYccfU_ySbcfU0_TA', symObjAddr: 0x2AD8, symBinAddr: 0x6B60, symSize: 0x20 }
+  - { offset: 0x91491, size: 0x8, addend: 0x0, symName: '_$s21CapacitorSplashScreen0bC0C04showB033_26EF4FFD113A553014DD920E8E40B91BLL8settings10completion08isLaunchB0yAA0bC8SettingsV_yycSbtFyyScMYccfU_TA', symObjAddr: 0x2B48, symBinAddr: 0x6BD0, symSize: 0x18 }
+  - { offset: 0x914A5, size: 0x8, addend: 0x0, symName: '_$s21CapacitorSplashScreen0bC0C04showB033_26EF4FFD113A553014DD920E8E40B91BLL8settings10completion08isLaunchB0yAA0bC8SettingsV_yycSbtFyyScMYccfU_yycfU_TA', symObjAddr: 0x2B60, symBinAddr: 0x6BE8, symSize: 0x1C }
+  - { offset: 0x914B9, size: 0x8, addend: 0x0, symName: '_$s21CapacitorSplashScreen0bC0C04showB033_26EF4FFD113A553014DD920E8E40B91BLL8settings10completion08isLaunchB0yAA0bC8SettingsV_yycSbtFyyScMYccfU_ySbcfU0_TA', symObjAddr: 0x2B80, symBinAddr: 0x6C08, symSize: 0x34 }
+  - { offset: 0x914CD, size: 0x8, addend: 0x0, symName: '_$s21CapacitorSplashScreen0bC0C04showB033_26EF4FFD113A553014DD920E8E40B91BLL8settings10completion08isLaunchB0yAA0bC8SettingsV_yycSbtFyyScMYccfU_ySbcfU0_yyScMYccfU_TA', symObjAddr: 0x2BE0, symBinAddr: 0x6C68, symSize: 0x40 }
+  - { offset: 0x91515, size: 0x8, addend: 0x0, symName: '_$sypSgWOd', symObjAddr: 0x2C20, symBinAddr: 0x6CA8, symSize: 0x50 }
+  - { offset: 0x91529, size: 0x8, addend: 0x0, symName: '_$sS2SSysWl', symObjAddr: 0x2C70, symBinAddr: 0x6CF8, symSize: 0x40 }
+  - { offset: 0x9153D, size: 0x8, addend: 0x0, symName: '_$sypWOc', symObjAddr: 0x2CB0, symBinAddr: 0x6D38, symSize: 0x3C }
+  - { offset: 0x91585, size: 0x8, addend: 0x0, symName: '_$s21CapacitorSplashScreen0bC0C12showOnLaunchyyF', symObjAddr: 0x8C, symBinAddr: 0x4144, symSize: 0x4C }
+  - { offset: 0x9161C, size: 0x8, addend: 0x0, symName: '_$s21CapacitorSplashScreen0bC0C12showOnLaunchyyFyycfU_', symObjAddr: 0xD8, symBinAddr: 0x4190, symSize: 0x4 }
+  - { offset: 0x91643, size: 0x8, addend: 0x0, symName: '_$s21CapacitorSplashScreen0bC0C4show8settings10completionyAA0bC8SettingsV_yyctF', symObjAddr: 0xDC, symBinAddr: 0x4194, symSize: 0x8 }
+  - { offset: 0x91777, size: 0x8, addend: 0x0, symName: '_$sSlsE5first7ElementQzSgvgShySo7UISceneCG_Tg5', symObjAddr: 0x177C, symBinAddr: 0x5834, symSize: 0x118 }
+  - { offset: 0x91A3E, size: 0x8, addend: 0x0, symName: '_$s21CapacitorSplashScreen0bC0C4hide8settingsyAA0bC8SettingsV_tF', symObjAddr: 0xE4, symBinAddr: 0x419C, symSize: 0x230 }
+  - { offset: 0x91AD3, size: 0x8, addend: 0x0, symName: '_$s21CapacitorSplashScreen0bC0C04showB033_26EF4FFD113A553014DD920E8E40B91BLL8settings10completion08isLaunchB0yAA0bC8SettingsV_yycSbtF', symObjAddr: 0x314, symBinAddr: 0x43CC, symSize: 0x27C }
+  - { offset: 0x91B51, size: 0x8, addend: 0x0, symName: '_$s21CapacitorSplashScreen0bC0C04showB033_26EF4FFD113A553014DD920E8E40B91BLL8settings10completion08isLaunchB0yAA0bC8SettingsV_yycSbtFyyScMYccfU_', symObjAddr: 0x590, symBinAddr: 0x4648, symSize: 0x490 }
+  - { offset: 0x91E27, size: 0x8, addend: 0x0, symName: '_$s21CapacitorSplashScreen0bC0C04showB033_26EF4FFD113A553014DD920E8E40B91BLL8settings10completion08isLaunchB0yAA0bC8SettingsV_yycSbtFyyScMYccfU_ySbcfU0_', symObjAddr: 0xA4C, symBinAddr: 0x4B04, symSize: 0x370 }
+  - { offset: 0x92006, size: 0x8, addend: 0x0, symName: '_$s21CapacitorSplashScreen0bC0C10buildViews33_26EF4FFD113A553014DD920E8E40B91BLLyyF', symObjAddr: 0xDF8, symBinAddr: 0x4EB0, symSize: 0x36C }
+  - { offset: 0x92157, size: 0x8, addend: 0x0, symName: '_$s21CapacitorSplashScreen0bC0C8tearDown33_26EF4FFD113A553014DD920E8E40B91BLLyyF', symObjAddr: 0x1164, symBinAddr: 0x521C, symSize: 0xC0 }
+  - { offset: 0x9222D, size: 0x8, addend: 0x0, symName: '_$s21CapacitorSplashScreen0bC0C06updateB11ImageBounds33_26EF4FFD113A553014DD920E8E40B91BLLyyF', symObjAddr: 0x1224, symBinAddr: 0x52DC, symSize: 0x558 }
+  - { offset: 0x92743, size: 0x8, addend: 0x0, symName: '_$s21CapacitorSplashScreen0bC0C12observeValue10forKeyPath2of6change7contextySSSg_ypSgSDySo05NSKeye6ChangeG0aypGSgSvSgtF', symObjAddr: 0x1894, symBinAddr: 0x594C, symSize: 0x4 }
+  - { offset: 0x927CB, size: 0x8, addend: 0x0, symName: '_$s21CapacitorSplashScreen0bC0C12observeValue10forKeyPath2of6change7contextySSSg_ypSgSDySo05NSKeye6ChangeG0aypGSgSvSgtFTo', symObjAddr: 0x1898, symBinAddr: 0x5950, symSize: 0x74 }
+  - { offset: 0x92800, size: 0x8, addend: 0x0, symName: '_$s21CapacitorSplashScreen0bC0C04hideB033_26EF4FFD113A553014DD920E8E40B91BLL15fadeOutDuration08isLaunchB0ySi_SbtF', symObjAddr: 0x190C, symBinAddr: 0x59C4, symSize: 0x2F0 }
+  - { offset: 0x92940, size: 0x8, addend: 0x0, symName: '_$s21CapacitorSplashScreen0bC0CACycfC', symObjAddr: 0x1F6C, symBinAddr: 0x6024, symSize: 0x20 }
+  - { offset: 0x92954, size: 0x8, addend: 0x0, symName: '_$s21CapacitorSplashScreen0bC0CACycfc', symObjAddr: 0x1F8C, symBinAddr: 0x6044, symSize: 0x2C }
+  - { offset: 0x929AD, size: 0x8, addend: 0x0, symName: '_$s21CapacitorSplashScreen0bC0CACycfcTo', symObjAddr: 0x1FB8, symBinAddr: 0x6070, symSize: 0x2C }
+  - { offset: 0x92A0C, size: 0x8, addend: 0x0, symName: '_$s21CapacitorSplashScreen0bC0CfD', symObjAddr: 0x1FE4, symBinAddr: 0x609C, symSize: 0x30 }
+  - { offset: 0x92A36, size: 0x8, addend: 0x0, symName: '_$s21CapacitorSplashScreen0bC0C10parentView6configACSo6UIViewC_AA0bC6ConfigVtcfcTf4ggn_n', symObjAddr: 0x2860, symBinAddr: 0x68E8, symSize: 0x128 }
+  - { offset: 0x92C32, size: 0x8, addend: 0x0, symName: '_$s21CapacitorSplashScreen0bC6ConfigVwCP', symObjAddr: 0x0, symBinAddr: 0x6DC0, symSize: 0x2C }
+  - { offset: 0x92C4A, size: 0x8, addend: 0x0, symName: '_$s21CapacitorSplashScreen0bC6ConfigVwCP', symObjAddr: 0x0, symBinAddr: 0x6DC0, symSize: 0x2C }
+  - { offset: 0x92C5E, size: 0x8, addend: 0x0, symName: '_$s21CapacitorSplashScreen0bC6ConfigVwxx', symObjAddr: 0x2C, symBinAddr: 0x6DEC, symSize: 0x28 }
+  - { offset: 0x92C72, size: 0x8, addend: 0x0, symName: '_$s21CapacitorSplashScreen0bC6ConfigVwcp', symObjAddr: 0x54, symBinAddr: 0x6E14, symSize: 0x64 }
+  - { offset: 0x92C86, size: 0x8, addend: 0x0, symName: '_$s21CapacitorSplashScreen0bC6ConfigVwca', symObjAddr: 0xB8, symBinAddr: 0x6E78, symSize: 0x8C }
+  - { offset: 0x92C9A, size: 0x8, addend: 0x0, symName: ___swift_memcpy64_8, symObjAddr: 0x144, symBinAddr: 0x6F04, symSize: 0x14 }
+  - { offset: 0x92CAE, size: 0x8, addend: 0x0, symName: '_$s21CapacitorSplashScreen0bC6ConfigVwta', symObjAddr: 0x158, symBinAddr: 0x6F18, symSize: 0x74 }
+  - { offset: 0x92CC2, size: 0x8, addend: 0x0, symName: '_$s21CapacitorSplashScreen0bC6ConfigVwet', symObjAddr: 0x1CC, symBinAddr: 0x6F8C, symSize: 0x5C }
+  - { offset: 0x92CD6, size: 0x8, addend: 0x0, symName: '_$s21CapacitorSplashScreen0bC6ConfigVwst', symObjAddr: 0x228, symBinAddr: 0x6FE8, symSize: 0x64 }
+  - { offset: 0x92CEA, size: 0x8, addend: 0x0, symName: '_$s21CapacitorSplashScreen0bC6ConfigVMa', symObjAddr: 0x28C, symBinAddr: 0x704C, symSize: 0x10 }
+  - { offset: 0x92DBF, size: 0x8, addend: 0x0, symName: '_$s21CapacitorSplashScreen0bC6PluginC4loadyyF', symObjAddr: 0x0, symBinAddr: 0x705C, symSize: 0x14C }
+  - { offset: 0x9307F, size: 0x8, addend: 0x0, symName: '_$s21CapacitorSplashScreen0bC6PluginCfETo', symObjAddr: 0xA74, symBinAddr: 0x7AB0, symSize: 0x10 }
+  - { offset: 0x930AE, size: 0x8, addend: 0x0, symName: '_$s21CapacitorSplashScreen0bC6PluginC4showyySo13CAPPluginCallCFyycfU_TA', symObjAddr: 0xC3C, symBinAddr: 0x7C44, symSize: 0x10 }
+  - { offset: 0x930E0, size: 0x8, addend: 0x0, symName: '_$s21CapacitorSplashScreen0bC6PluginCMa', symObjAddr: 0xC4C, symBinAddr: 0x7C54, symSize: 0x20 }
+  - { offset: 0x931D2, size: 0x8, addend: 0x0, symName: '_$s21CapacitorSplashScreen0bC6PluginC4loadyyF', symObjAddr: 0x0, symBinAddr: 0x705C, symSize: 0x14C }
+  - { offset: 0x932B4, size: 0x8, addend: 0x0, symName: '_$s21CapacitorSplashScreen0bC6PluginC4loadyyFTo', symObjAddr: 0x14C, symBinAddr: 0x71A8, symSize: 0x28 }
+  - { offset: 0x93345, size: 0x8, addend: 0x0, symName: '_$s21CapacitorSplashScreen0bC6PluginC4showyySo13CAPPluginCallCF', symObjAddr: 0x174, symBinAddr: 0x71D0, symSize: 0x114 }
+  - { offset: 0x93430, size: 0x8, addend: 0x0, symName: '_$s21CapacitorSplashScreen0bC6PluginC4showyySo13CAPPluginCallCFTo', symObjAddr: 0x288, symBinAddr: 0x72E4, symSize: 0x50 }
+  - { offset: 0x93444, size: 0x8, addend: 0x0, symName: '_$s21CapacitorSplashScreen0bC6PluginC4hideyySo13CAPPluginCallCF', symObjAddr: 0x2D8, symBinAddr: 0x7334, symSize: 0x9C }
+  - { offset: 0x934FB, size: 0x8, addend: 0x0, symName: '_$s21CapacitorSplashScreen0bC6PluginC4hideyySo13CAPPluginCallCFTo', symObjAddr: 0x374, symBinAddr: 0x73D0, symSize: 0x50 }
+  - { offset: 0x93529, size: 0x8, addend: 0x0, symName: '_$s21CapacitorSplashScreen0bC6PluginC06splashC6Config33_FD585EE12CE798D26CCD6CC2AAAA23ADLLAA0bcF0VyF', symObjAddr: 0x3C4, symBinAddr: 0x7420, symSize: 0x400 }
+  - { offset: 0x93631, size: 0x8, addend: 0x0, symName: '_$s21CapacitorSplashScreen0bC6PluginC6bridge8pluginId0F4NameAC0A017CAPBridgeProtocol_p_S2StcfC', symObjAddr: 0x7C4, symBinAddr: 0x7820, symSize: 0xB4 }
+  - { offset: 0x93645, size: 0x8, addend: 0x0, symName: '_$s21CapacitorSplashScreen0bC6PluginC6bridge8pluginId0F4NameAC0A017CAPBridgeProtocol_p_S2Stcfc', symObjAddr: 0x878, symBinAddr: 0x78D4, symSize: 0xC0 }
+  - { offset: 0x936D8, size: 0x8, addend: 0x0, symName: '_$s21CapacitorSplashScreen0bC6PluginC6bridge8pluginId0F4NameAC0A017CAPBridgeProtocol_p_S2StcfcTo', symObjAddr: 0x938, symBinAddr: 0x7994, symSize: 0x68 }
+  - { offset: 0x93715, size: 0x8, addend: 0x0, symName: '_$s21CapacitorSplashScreen0bC6PluginCACycfc', symObjAddr: 0x9C0, symBinAddr: 0x79FC, symSize: 0x3C }
+  - { offset: 0x93748, size: 0x8, addend: 0x0, symName: '_$s21CapacitorSplashScreen0bC6PluginCACycfcTo', symObjAddr: 0x9FC, symBinAddr: 0x7A38, symSize: 0x48 }
+  - { offset: 0x9377D, size: 0x8, addend: 0x0, symName: '_$s21CapacitorSplashScreen0bC6PluginCfD', symObjAddr: 0xA44, symBinAddr: 0x7A80, symSize: 0x30 }
+  - { offset: 0x937A0, size: 0x8, addend: 0x0, symName: '_$s21CapacitorSplashScreen0bC6PluginC06splashC8Settings33_FD585EE12CE798D26CCD6CC2AAAA23ADLL4fromAA0bcF0VSo13CAPPluginCallC_tFTf4nd_n', symObjAddr: 0xAB8, symBinAddr: 0x7AC0, symSize: 0x160 }
+  - { offset: 0x93898, size: 0x8, addend: 0x0, symName: ___swift_noop_void_return, symObjAddr: 0x2C, symBinAddr: 0x7C74, symSize: 0x4 }
+  - { offset: 0x938AC, size: 0x8, addend: 0x0, symName: ___swift_memcpy25_8, symObjAddr: 0x30, symBinAddr: 0x7C78, symSize: 0x14 }
+  - { offset: 0x938C0, size: 0x8, addend: 0x0, symName: '_$s21CapacitorSplashScreen0bC8SettingsVwet', symObjAddr: 0x44, symBinAddr: 0x7C8C, symSize: 0x54 }
+  - { offset: 0x938D4, size: 0x8, addend: 0x0, symName: '_$s21CapacitorSplashScreen0bC8SettingsVwst', symObjAddr: 0x98, symBinAddr: 0x7CE0, symSize: 0x48 }
+  - { offset: 0x938E8, size: 0x8, addend: 0x0, symName: '_$s21CapacitorSplashScreen0bC8SettingsVMa', symObjAddr: 0xE0, symBinAddr: 0x7D28, symSize: 0x10 }
+...

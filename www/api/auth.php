@@ -12,7 +12,8 @@ ini_set('error_log', __DIR__ . '/logs/php-error.log');
 
 // Set headers
 header('Content-Type: application/json; charset=utf-8');
-header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Origin: https://www.leo-sushi-berlin.de');
+header('Access-Control-Allow-Credentials: true');
 header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type, Authorization');
 
@@ -37,78 +38,95 @@ if (!$input) {
     $input = [];
 }
 
-try {
-    switch ($action) {
-        case 'register':
-            if ($method === 'POST') {
-                registerUser($input);
-            } else {
-                http_response_code(405);
-                echo json_encode(['success' => false, 'message' => 'Method not allowed']);
-            }
-            break;
-            
-        case 'login':
-            if ($method === 'POST') {
-                loginUser($input);
-            } else {
-                http_response_code(405);
-                echo json_encode(['success' => false, 'message' => 'Method not allowed']);
-            }
-            break;
-            
-        case 'verify-email':
-            if ($method === 'POST') {
-                verifyEmail($input);
-            } else {
-                http_response_code(405);
-                echo json_encode(['success' => false, 'message' => 'Method not allowed']);
-            }
-            break;
-            
-        case 'me':
-            if ($method === 'GET') {
-                getCurrentUser();
-            } else {
-                http_response_code(405);
-                echo json_encode(['success' => false, 'message' => 'Method not allowed']);
-            }
-            break;
-            
-        case 'request-password-reset':
-            if ($method === 'POST') {
-                requestPasswordReset($input);
-            } else {
-                http_response_code(405);
-                echo json_encode(['success' => false, 'message' => 'Method not allowed']);
-            }
-            break;
-
-        case 'reset-password':
-            if ($method === 'POST') {
-                resetPassword($input);
-            } else {
-                http_response_code(405);
-                echo json_encode(['success' => false, 'message' => 'Method not allowed']);
-            }
-            break;
-            
-        default:
-            http_response_code(404);
-            echo json_encode([
-                'success' => false,
-                'message' => 'Action not found. Available: register, login, verify-email, me, request-password-reset, reset-password',
-                'action' => $action
-            ]);
+function handleAuthRequest($method, $action, $input) {
+    global $conn; // Ensure connection is available if used globally, though functions below use getDbConnection()
+    
+    try {
+        switch ($action) {
+            case 'register':
+                if ($method === 'POST') {
+                    registerUser($input);
+                } else {
+                    http_response_code(405);
+                    echo json_encode(['success' => false, 'message' => 'Method not allowed']);
+                }
+                break;
+                
+            case 'login':
+                if ($method === 'POST') {
+                    loginUser($input);
+                } else {
+                    http_response_code(405);
+                    echo json_encode(['success' => false, 'message' => 'Method not allowed']);
+                }
+                break;
+                
+            case 'verify-email':
+                if ($method === 'POST') {
+                    verifyEmail($input);
+                } else {
+                    http_response_code(405);
+                    echo json_encode(['success' => false, 'message' => 'Method not allowed']);
+                }
+                break;
+                
+            case 'me':
+                if ($method === 'GET') {
+                    getCurrentUser();
+                } else {
+                    http_response_code(405);
+                    echo json_encode(['success' => false, 'message' => 'Method not allowed']);
+                }
+                break;
+                
+            case 'request-password-reset':
+                if ($method === 'POST') {
+                    requestPasswordReset($input);
+                } else {
+                    http_response_code(405);
+                    echo json_encode(['success' => false, 'message' => 'Method not allowed']);
+                }
+                break;
+    
+            case 'reset-password':
+                if ($method === 'POST') {
+                    resetPassword($input);
+                } else {
+                    http_response_code(405);
+                    echo json_encode(['success' => false, 'message' => 'Method not allowed']);
+                }
+                break;
+                
+            default:
+                http_response_code(404);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Action not found. Available: register, login, verify-email, me, request-password-reset, reset-password',
+                    'action' => $action
+                ]);
+        }
+    } catch (Exception $e) {
+        http_response_code(500);
+        echo json_encode([
+            'success' => false,
+            'message' => 'Server error: ' . $e->getMessage(),
+            'file' => $e->getFile(),
+            'line' => $e->getLine()
+        ]);
     }
-} catch (Exception $e) {
-    http_response_code(500);
-    echo json_encode([
-        'success' => false,
-        'message' => 'Server error: ' . $e->getMessage(),
-        'file' => $e->getFile(),
-        'line' => $e->getLine()
-    ]);
+}
+
+// Only execute if accessed directly (not included)
+if (basename($_SERVER['PHP_SELF']) === 'auth.php') {
+    // Get action from query string or path
+    $action = $_GET['action'] ?? '';
+    // Get request body
+    $input = json_decode(file_get_contents('php://input'), true);
+    if (!$input) {
+        $input = [];
+    }
+    
+    handleAuthRequest($method, $action, $input);
 }
 
 /**
@@ -332,6 +350,14 @@ function loginUser($input) {
 
         // Generate token
         $token = generateToken($user['id']);
+        
+        // Set session for cart sync and other features
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+        $_SESSION['user_id'] = $user['id'];
+        $_SESSION['user_email'] = $user['email'];
+        $_SESSION['logged_in'] = true;
         
         echo json_encode([
             'success' => true,

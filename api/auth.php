@@ -12,7 +12,8 @@ ini_set('error_log', __DIR__ . '/logs/php-error.log');
 
 // Set headers
 header('Content-Type: application/json; charset=utf-8');
-header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Origin: https://www.leo-sushi-berlin.de');
+header('Access-Control-Allow-Credentials: true');
 header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type, Authorization');
 
@@ -349,6 +350,14 @@ function loginUser($input) {
 
         // Generate token
         $token = generateToken($user['id']);
+        
+        // Set session for cart sync and other features
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+        $_SESSION['user_id'] = $user['id'];
+        $_SESSION['user_email'] = $user['email'];
+        $_SESSION['logged_in'] = true;
         
         echo json_encode([
             'success' => true,
