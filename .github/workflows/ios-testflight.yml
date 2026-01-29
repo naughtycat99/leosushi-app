@@ -23,8 +23,15 @@ jobs:
       - name: Build web assets
         run: npm run build
       
-      - name: Add iOS platform
-        run: npx cap add ios || true
+      - name: Add iOS platform (if not exists)
+        run: |
+          if [ ! -d "ios" ]; then
+            echo "Adding iOS platform..."
+            npx cap add ios
+          else
+            echo "iOS platform already exists"
+          fi
+        shell: bash
       
       - name: Sync Capacitor iOS
         run: npx cap sync ios
