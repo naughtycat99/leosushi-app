@@ -11,14 +11,16 @@ const config = {
   },
   plugins: {
     SplashScreen: {
-      launchShowDuration: 2000,
+      launchShowDuration: 0,
       launchAutoHide: true,
       backgroundColor: "#0b0b0c",
       androidSplashResourceName: "splash",
       androidScaleType: "CENTER_CROP",
       showSpinner: false,
       splashFullScreen: true,
-      splashImmersive: true
+      splashImmersive: true,
+      // Ẩn splash screen ngay lập tức
+      showSplash: false
     },
     StatusBar: {
       style: 'dark',

@@ -7251,6 +7251,19 @@ function setupIntroScreen() {
     return;
   }
 
+  // Check if running in mobile app (Capacitor)
+  const isMobileApp = window.Capacitor && window.Capacitor.isNativePlatform();
+  
+  if (isMobileApp) {
+    // In mobile app: Skip intro screen completely
+    console.log('📱 Mobile app detected - skipping intro screen');
+    introScreen.style.display = 'none';
+    document.body.style.overflow = '';
+    setupPageLoadAnimations();
+    return;
+  }
+
+  // Web version: Show intro screen
   // Ensure body and all content is visible from the start
   document.body.style.visibility = 'visible';
   document.body.style.opacity = '1';
