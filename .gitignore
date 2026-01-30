@@ -41,7 +41,7 @@ api.zip
 App.app/
 Products/
 dSYMs/
-Info.plist
+# Info.plist - KHÔNG ignore file này, cần cho build!
 *.xcarchive
 
 
