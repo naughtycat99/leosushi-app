@@ -4,6 +4,44 @@
 (function() {
   console.log('📱 Mobile Cart Fix loaded');
 
+  // Global click handler to catch ANY element with WARENKORB text
+  document.addEventListener('click', function(e) {
+    const target = e.target;
+    const text = target.textContent || target.innerText || '';
+    
+    // Check if clicked element or its parent contains WARENKORB
+    if (text.toUpperCase().includes('WARENKORB')) {
+      console.log('🛒 WARENKORB element clicked:', target);
+      e.preventDefault();
+      e.stopPropagation();
+      e.stopImmediatePropagation();
+      
+      // Open cart
+      if (typeof window.openCart === 'function') {
+        window.openCart();
+      } else if (typeof window.toggleCart === 'function') {
+        window.toggleCart();
+      } else {
+        // Fallback
+        const cartSidebar = document.getElementById('cartSidebar');
+        const cartOverlay = document.getElementById('cartOverlay');
+        
+        if (cartSidebar) {
+          cartSidebar.classList.add('active');
+          cartSidebar.style.display = 'block';
+          cartSidebar.style.transform = 'translateX(0)';
+        }
+        if (cartOverlay) {
+          cartOverlay.classList.add('active');
+          cartOverlay.style.display = 'block';
+        }
+        document.body.classList.add('cart-open');
+      }
+      
+      return false;
+    }
+  }, true); // Use capture phase
+
   // Wait for DOM to be ready
   function initMobileCartFix() {
     // Find ALL cart buttons and links
@@ -108,4 +146,5 @@
   setTimeout(initMobileCartFix, 1000);
   setTimeout(initMobileCartFix, 2000);
   setTimeout(initMobileCartFix, 3000);
+  setTimeout(initMobileCartFix, 5000);
 })();
