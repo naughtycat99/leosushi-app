@@ -1,32 +1,13 @@
-/* Mobile App UI Enhancements */
-/* For Leo Sushi iOS & Android App - WEB UI MODE */
-
-/* Root variables for app theme */
-:root {
-    --app-bg-dark: #0b0b0c;
-    --app-gold: #e5cf8e;
-}
+/* Mobile App Technical Fixes ONLY */
+/* App will look IDENTICAL to mobile web - no visual changes */
 
 /* 
- * WE ARE USING STANDARD MOBILE WEB UI 
- * No elements should be hidden on the App anymore.
- * The App will look identical to the Mobile Website.
+ * ONLY technical fixes for iOS/Android compatibility
+ * NO visual style changes
  */
 
-/* Adjust Site Header for App Mode - handle safe area for iOS */
-body.is-capacitor-app .site-header {
-    background: rgba(11, 11, 12, 0.95);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    border-bottom: 1px solid rgba(229, 207, 142, 0.1);
-    position: sticky;
-    top: 0;
-    padding-top: env(safe-area-inset-top, 0px);
-}
-
-/* iOS-specific fixes for consistent rendering */
+/* iOS safe area support - technical fix only */
 body.is-capacitor-app {
-    background-color: var(--app-bg-dark);
     /* Fix iOS bounce scroll */
     overscroll-behavior-y: none;
     /* Fix iOS font rendering */
@@ -34,6 +15,8 @@ body.is-capacitor-app {
     -moz-osx-font-smoothing: grayscale;
     /* Fix iOS tap highlight */
     -webkit-tap-highlight-color: transparent;
+    /* Add safe area padding at top */
+    padding-top: env(safe-area-inset-top, 0px);
 }
 
 /* Fix iOS safe area at bottom (for home indicator) */
@@ -42,11 +25,11 @@ body.is-capacitor-app .fixed-order-btn {
     padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 10px);
 }
 
-/* Fix iOS input zoom */
+/* Fix iOS input zoom - prevent auto-zoom on focus */
 body.is-capacitor-app input,
 body.is-capacitor-app textarea,
 body.is-capacitor-app select {
-    font-size: 16px !important; /* Prevent iOS zoom on focus */
+    font-size: 16px !important;
 }
 
 /* Fix iOS scrolling momentum */
@@ -56,7 +39,8 @@ body.is-capacitor-app .modal-content {
     -webkit-overflow-scrolling: touch;
 }
 
-/* Hide only "Download App" sections if they exist inside the app itself */
-body.is-capacitor-app .download-app-section {
+/* Hide "Download App" banners inside the app */
+body.is-capacitor-app .download-app-section,
+body.is-capacitor-app .app-download-banner {
     display: none !important;
 }
