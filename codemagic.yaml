@@ -31,15 +31,9 @@ workflows:
             cp -r android/AppIcons/Assets.xcassets/AppIcon.appiconset ios/App/App/Assets.xcassets/
             echo "App icons copied successfully"
           fi
-      - name: Fetch signing files
-        script: |
-          app-store-connect fetch-signing-files "com.leosushi.app" \
-            --type APP_STORE \
-            --create
-      - name: Use signing files
+      - name: Set up code signing
         script: |
           keychain initialize
-          app-store-connect certificates
           xcode-project use-profiles
       - name: Build iOS app
         script: |
