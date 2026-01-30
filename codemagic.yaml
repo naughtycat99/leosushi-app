@@ -24,6 +24,10 @@ workflows:
       - name: Capacitor sync
         script: |
           npx cap sync ios
+      - name: Install CocoaPods dependencies
+        script: |
+          cd ios/App
+          pod install
       - name: Copy App Icons
         script: |
           if [ -d "android/AppIcons/Assets.xcassets/AppIcon.appiconset" ]; then
@@ -34,6 +38,9 @@ workflows:
       - name: Set up code signing
         script: |
           keychain initialize
+          app-store-connect fetch-signing-files "$CM_BUNDLE_ID" \
+            --type IOS_APP_STORE \
+            --create
           xcode-project use-profiles
       - name: Build iOS app
         script: |
