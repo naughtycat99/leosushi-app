@@ -21,6 +21,9 @@ workflows:
       - name: Install dependencies
         script: |
           npm install
+      - name: Add iOS platform
+        script: |
+          npx cap add ios || echo "iOS platform already exists"
       - name: Capacitor sync
         script: |
           npx cap sync ios
