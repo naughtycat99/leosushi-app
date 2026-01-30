@@ -1,5 +1,5 @@
 /* Mobile App UI Enhancements */
-/* For Leo Sushi Android App - WEB UI MODE */
+/* For Leo Sushi iOS & Android App - WEB UI MODE */
 
 /* Root variables for app theme */
 :root {
@@ -13,7 +13,7 @@
  * The App will look identical to the Mobile Website.
  */
 
-/* Adjust Site Header for App Mode - just handle safe area */
+/* Adjust Site Header for App Mode - handle safe area for iOS */
 body.is-capacitor-app .site-header {
     background: rgba(11, 11, 12, 0.95);
     backdrop-filter: blur(10px);
@@ -24,12 +24,39 @@ body.is-capacitor-app .site-header {
     padding-top: env(safe-area-inset-top, 0px);
 }
 
+/* iOS-specific fixes for consistent rendering */
+body.is-capacitor-app {
+    background-color: var(--app-bg-dark);
+    /* Fix iOS bounce scroll */
+    overscroll-behavior-y: none;
+    /* Fix iOS font rendering */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    /* Fix iOS tap highlight */
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* Fix iOS safe area at bottom (for home indicator) */
+body.is-capacitor-app .bottom-nav,
+body.is-capacitor-app .fixed-order-btn {
+    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 10px);
+}
+
+/* Fix iOS input zoom */
+body.is-capacitor-app input,
+body.is-capacitor-app textarea,
+body.is-capacitor-app select {
+    font-size: 16px !important; /* Prevent iOS zoom on focus */
+}
+
+/* Fix iOS scrolling momentum */
+body.is-capacitor-app .menu-container,
+body.is-capacitor-app .cart-sidebar,
+body.is-capacitor-app .modal-content {
+    -webkit-overflow-scrolling: touch;
+}
+
 /* Hide only "Download App" sections if they exist inside the app itself */
 body.is-capacitor-app .download-app-section {
     display: none !important;
-}
-
-/* Adjust body background */
-body.is-capacitor-app {
-    background-color: var(--app-bg-dark);
 }
