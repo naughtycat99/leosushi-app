@@ -25,6 +25,12 @@ body.is-capacitor-app .fixed-order-btn {
     padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 10px);
 }
 
+/* Hide floating cart button in app - bottom nav already has WARENKORB */
+body.is-capacitor-app .fixed-order-btn,
+body.is-capacitor-app #fixedOrderBtn {
+    display: none !important;
+}
+
 /* Fix iOS input zoom - prevent auto-zoom on focus */
 body.is-capacitor-app input,
 body.is-capacitor-app textarea,
