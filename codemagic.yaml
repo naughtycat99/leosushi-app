@@ -10,6 +10,7 @@ workflows:
       vars:
         XCODE_WORKSPACE: "ios/App/App.xcworkspace"
         XCODE_SCHEME: "App"
+        CM_BUNDLE_ID: "com.leosushi.app"
         APP_STORE_CONNECT_KEY_IDENTIFIER: $APP_STORE_CONNECT_KEY_IDENTIFIER
         APP_STORE_CONNECT_ISSUER_ID: $APP_STORE_CONNECT_ISSUER_ID
         APP_STORE_CONNECT_PRIVATE_KEY: $APP_STORE_CONNECT_PRIVATE_KEY
@@ -38,7 +39,7 @@ workflows:
       - name: Set up code signing
         script: |
           keychain initialize
-          app-store-connect fetch-signing-files "$CM_BUNDLE_ID" \
+          app-store-connect fetch-signing-files "com.leosushi.app" \
             --type IOS_APP_STORE \
             --create
           xcode-project use-profiles
