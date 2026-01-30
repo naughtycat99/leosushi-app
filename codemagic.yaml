@@ -5,11 +5,15 @@ workflows:
     instance_type: mac_mini_m1
     environment:
       ios_signing:
-        distribution_type: ad_hoc
+        distribution_type: app_store
         bundle_identifier: com.leosushi.app
       vars:
         XCODE_WORKSPACE: "ios/App/App.xcworkspace"
         XCODE_SCHEME: "App"
+        APP_STORE_CONNECT_KEY_IDENTIFIER: $APP_STORE_CONNECT_KEY_IDENTIFIER
+        APP_STORE_CONNECT_ISSUER_ID: $APP_STORE_CONNECT_ISSUER_ID
+        APP_STORE_CONNECT_PRIVATE_KEY: $APP_STORE_CONNECT_PRIVATE_KEY
+        CERTIFICATE_PRIVATE_KEY: $CERTIFICATE_PRIVATE_KEY
       node: 18
       xcode: latest
       cocoapods: default
@@ -20,8 +24,22 @@ workflows:
       - name: Capacitor sync
         script: |
           npx cap sync ios
-      - name: Set up code signing settings on Xcode project
+      - name: Copy App Icons
         script: |
+          if [ -d "android/AppIcons/Assets.xcassets/AppIcon.appiconset" ]; then
+            echo "Copying app icons..."
+            cp -r android/AppIcons/Assets.xcassets/AppIcon.appiconset ios/App/App/Assets.xcassets/
+            echo "App icons copied successfully"
+          fi
+      - name: Fetch signing files
+        script: |
+          app-store-connect fetch-signing-files "com.leosushi.app" \
+            --type APP_STORE \
+            --create
+      - name: Use signing files
+        script: |
+          keychain initialize
+          app-store-connect certificates
           xcode-project use-profiles
       - name: Build iOS app
         script: |
