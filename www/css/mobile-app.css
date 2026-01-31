@@ -19,30 +19,27 @@ body.is-capacitor-app {
     padding-top: env(safe-area-inset-top, 0px);
 }
 
-/* Fix iOS safe area at bottom (for home indicator) */
-body.is-capacitor-app .bottom-nav {
-    padding-bottom: env(safe-area-inset-bottom, 0px);
+/* Hide bottom navigation in app - use web's floating button instead */
+body.is-capacitor-app .bottom-nav,
+body.is-capacitor-app [class*="bottom-nav"],
+body.is-capacitor-app [class*="bottomNav"] {
+    display: none !important;
 }
 
-/* Hide floating cart button in app - bottom nav already has WARENKORB */
+/* Show floating cart button in app (web default) */
 body.is-capacitor-app .fixed-order-btn,
 body.is-capacitor-app #fixedOrderBtn {
-    display: none !important;
-    visibility: hidden !important;
-    opacity: 0 !important;
-    pointer-events: none !important;
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    pointer-events: auto !important;
+    /* Add safe area padding at bottom */
+    bottom: calc(16px + env(safe-area-inset-bottom, 0px)) !important;
 }
 
-/* Fix cart sidebar - add padding at bottom to avoid bottom nav overlap */
+/* Fix cart sidebar - no need extra padding since no bottom nav */
 body.is-capacitor-app .cart-sidebar {
-    padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px)) !important;
-}
-
-/* Fix cart footer (checkout buttons) - add padding to avoid bottom nav */
-body.is-capacitor-app .cart-footer,
-body.is-capacitor-app .cart-actions {
-    padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px)) !important;
-    margin-bottom: 0 !important;
+    padding-bottom: env(safe-area-inset-bottom, 0px) !important;
 }
 
 /* Fix iOS input zoom - prevent auto-zoom on focus */
