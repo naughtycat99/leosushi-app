@@ -30,12 +30,14 @@ jobs:
       
       - name: Clean iOS build (force fresh build)
         run: |
-          echo "🧹 Cleaning iOS build cache..."
+          echo "🧹 Cleaning iOS build cache and old files..."
           rm -rf ios/App/build
           rm -rf ios/App/App.xcworkspace/xcuserdata
           rm -rf ios/App/App.xcodeproj/xcuserdata
           rm -rf ~/Library/Developer/Xcode/DerivedData/*
-          echo "✅ iOS cache cleaned!"
+          # CRITICAL: Remove old public folder to force fresh copy
+          rm -rf ios/App/App/public
+          echo "✅ iOS cache and old files cleaned!"
       
       - name: Sync Capacitor
         run: npx cap sync ios
