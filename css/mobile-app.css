@@ -20,15 +20,29 @@ body.is-capacitor-app {
 }
 
 /* Fix iOS safe area at bottom (for home indicator) */
-body.is-capacitor-app .bottom-nav,
-body.is-capacitor-app .fixed-order-btn {
-    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 10px);
+body.is-capacitor-app .bottom-nav {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
 /* Hide floating cart button in app - bottom nav already has WARENKORB */
 body.is-capacitor-app .fixed-order-btn,
 body.is-capacitor-app #fixedOrderBtn {
     display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+}
+
+/* Fix cart sidebar - add padding at bottom to avoid bottom nav overlap */
+body.is-capacitor-app .cart-sidebar {
+    padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px)) !important;
+}
+
+/* Fix cart footer (checkout buttons) - add padding to avoid bottom nav */
+body.is-capacitor-app .cart-footer,
+body.is-capacitor-app .cart-actions {
+    padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px)) !important;
+    margin-bottom: 0 !important;
 }
 
 /* Fix iOS input zoom - prevent auto-zoom on focus */
