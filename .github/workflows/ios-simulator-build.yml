@@ -31,14 +31,20 @@ jobs:
       - name: Sync Capacitor
         run: npx cap sync ios
       
-      - name: Copy App Icons
+      - name: Copy App Icons (AFTER sync to prevent overwrite)
         run: |
-          if [ -d "android/AppIcons/Assets.xcassets/AppIcon.appiconset" ]; then
-            echo "Copying app icons..."
-            cp -r android/AppIcons/Assets.xcassets/AppIcon.appiconset ios/App/App/Assets.xcassets/
-            echo "App icons copied successfully"
+          echo "📱 Copying app icons to iOS project..."
+          if [ -d "android/AppIcons/Assets.xcassets/AppIcon.appiconset/_" ]; then
+            # Remove default Capacitor icons
+            rm -rf ios/App/App/Assets.xcassets/AppIcon.appiconset/*
+            # Copy all icon files including Contents.json
+            cp -r android/AppIcons/Assets.xcassets/AppIcon.appiconset/* ios/App/App/Assets.xcassets/AppIcon.appiconset/
+            echo "✅ App icons copied successfully!"
+            echo "📋 Icon files:"
+            ls -la ios/App/App/Assets.xcassets/AppIcon.appiconset/
           else
-            echo "Warning: App icons not found at android/AppIcons/Assets.xcassets/AppIcon.appiconset"
+            echo "❌ ERROR: App icons not found at android/AppIcons/Assets.xcassets/AppIcon.appiconset/_"
+            exit 1
           fi
       
       - name: Build for Simulator
@@ -76,6 +82,8 @@ jobs:
           echo "📦 Download App.app.zip from Artifacts"
           echo "🌐 Upload to https://appetize.io/upload to test"
           echo ""
-          echo "📱 Cart button fix included in this build:"
-          echo "   - js/mobile-cart-fix.js enhanced"
-          echo "   - menu.html includes the fix"
+          echo "📱 Includes:"
+          echo "   ✅ LEO SUSHI app icons"
+          echo "   ✅ Cart button fix"
+          echo "   ✅ Mobile app CSS fixes"
+          echo "   ✅ All latest code"
