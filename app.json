@@ -1,0 +1,15 @@
+{
+  "expo": {
+    "extra": {
+      "eas": {
+        "projectId": "7080f964-3494-4f87-95d6-e454459bf269"
+      }
+    },
+    "ios": {
+      "bundleIdentifier": "com.atmica.leosushiapp",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    }
+  }
+}
