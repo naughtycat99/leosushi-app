@@ -36,11 +36,30 @@ jobs:
           rm -rf ios/App/App.xcodeproj/xcuserdata
           rm -rf ~/Library/Developer/Xcode/DerivedData/*
           # CRITICAL: Remove old public folder to force fresh copy
+          echo "📁 Removing old public folder..."
           rm -rf ios/App/App/public
           echo "✅ iOS cache and old files cleaned!"
       
       - name: Sync Capacitor
-        run: npx cap sync ios
+        run: |
+          echo "🔄 Syncing Capacitor to iOS..."
+          npx cap sync ios
+          echo "✅ Capacitor sync completed!"
+      
+      - name: Verify mobile-app.js (no bottom nav)
+        run: |
+          echo "🔍 Verifying mobile-app.js has correct code..."
+          if grep -q "bottom-nav-bar" ios/App/App/public/js/mobile-app.js; then
+            echo "❌ ERROR: mobile-app.js still has bottom nav code!"
+            exit 1
+          fi
+          if grep -q "No custom bottom bar injection" ios/App/App/public/js/mobile-app.js; then
+            echo "✅ mobile-app.js is correct (no bottom nav)"
+          else
+            echo "⚠️ WARNING: mobile-app.js may not be correct"
+            cat ios/App/App/public/js/mobile-app.js
+            exit 1
+          fi
       
       - name: Copy App Icons (AFTER sync to prevent overwrite)
         run: |
