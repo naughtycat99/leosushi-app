@@ -28,6 +28,15 @@ jobs:
       - name: Install dependencies
         run: npm ci
       
+      - name: Clean iOS build (force fresh build)
+        run: |
+          echo "🧹 Cleaning iOS build cache..."
+          rm -rf ios/App/build
+          rm -rf ios/App/App.xcworkspace/xcuserdata
+          rm -rf ios/App/App.xcodeproj/xcuserdata
+          rm -rf ~/Library/Developer/Xcode/DerivedData/*
+          echo "✅ iOS cache cleaned!"
+      
       - name: Sync Capacitor
         run: npx cap sync ios
       
