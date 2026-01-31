@@ -1,0 +1,134 @@
+name: iOS Simulator - Clean Build
+
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: 'Branch to build'
+        required: true
+        default: 'main'
+
+jobs:
+  build-clean:
+    name: iOS Simulator Clean Build
+    runs-on: macos-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ github.event.inputs.branch }}
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Verify source files (before sync)
+        run: |
+          echo "🔍 Checking source files in root..."
+          echo "📄 js/mobile-app.js:"
+          if grep -q "bottom-nav-bar" js/mobile-app.js; then
+            echo "❌ ERROR: Root mobile-app.js has bottom nav!"
+            exit 1
+          fi
+          if grep -q "No custom bottom bar injection" js/mobile-app.js; then
+            echo "✅ Root mobile-app.js is clean"
+          else
+            echo "❌ ERROR: Root mobile-app.js is not correct!"
+            cat js/mobile-app.js
+            exit 1
+          fi
+      
+      - name: Delete entire iOS folder (nuclear clean)
+        run: |
+          echo "💣 NUCLEAR CLEAN: Deleting entire ios/ folder..."
+          rm -rf ios/
+          echo "✅ iOS folder deleted!"
+      
+      - name: Add iOS platform fresh
+        run: |
+          echo "📱 Adding iOS platform from scratch..."
+          npx cap add ios
+          echo "✅ iOS platform added!"
+      
+      - name: Verify synced files (after sync)
+        run: |
+          echo "🔍 Verifying synced mobile-app.js..."
+          if [ ! -f "ios/App/App/public/js/mobile-app.js" ]; then
+            echo "❌ ERROR: mobile-app.js not found after sync!"
+            exit 1
+          fi
+          
+          if grep -q "bottom-nav-bar" ios/App/App/public/js/mobile-app.js; then
+            echo "❌ ERROR: Synced mobile-app.js has bottom nav!"
+            cat ios/App/App/public/js/mobile-app.js
+            exit 1
+          fi
+          
+          if grep -q "No custom bottom bar injection" ios/App/App/public/js/mobile-app.js; then
+            echo "✅ Synced mobile-app.js is correct!"
+          else
+            echo "❌ ERROR: Synced mobile-app.js is not correct!"
+            cat ios/App/App/public/js/mobile-app.js
+            exit 1
+          fi
+      
+      - name: Copy App Icons
+        run: |
+          echo "📱 Copying app icons..."
+          if [ -d "android/AppIcons/Assets.xcassets/AppIcon.appiconset/_" ]; then
+            rm -rf ios/App/App/Assets.xcassets/AppIcon.appiconset/*
+            cp -r android/AppIcons/Assets.xcassets/AppIcon.appiconset/* ios/App/App/Assets.xcassets/AppIcon.appiconset/
+            echo "✅ App icons copied!"
+          else
+            echo "❌ ERROR: App icons not found!"
+            exit 1
+          fi
+      
+      - name: Build for Simulator
+        run: |
+          cd ios/App
+          xcodebuild \
+            -workspace App.xcworkspace \
+            -scheme App \
+            -configuration Debug \
+            -sdk iphonesimulator \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGN_ENTITLEMENTS="" \
+            DEVELOPMENT_TEAM=""
+      
+      - name: Package Simulator App
+        run: |
+          cd ios/App/build/Build/Products/Debug-iphonesimulator
+          zip -r App.app.zip App.app
+          mv App.app.zip $GITHUB_WORKSPACE/
+      
+      - name: Upload Simulator App
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-simulator-clean
+          path: App.app.zip
+          retention-days: 7
+      
+      - name: Build Summary
+        run: |
+          echo "### ✅ iOS Simulator Clean Build Success!" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Build Method:** Nuclear clean + fresh iOS platform" >> $GITHUB_STEP_SUMMARY
+          echo "**Verified:** No bottom nav code" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "📦 **Download:** ios-simulator-clean artifact" >> $GITHUB_STEP_SUMMARY
+          echo "🌐 **Test on:** https://appetize.io/upload" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "✅ **Expected UI:**" >> $GITHUB_STEP_SUMMARY
+          echo "- Floating cart button (bottom right)" >> $GITHUB_STEP_SUMMARY
+          echo "- NO bottom navigation bar" >> $GITHUB_STEP_SUMMARY
+          echo "- Same as web mobile" >> $GITHUB_STEP_SUMMARY
