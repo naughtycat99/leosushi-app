@@ -599,6 +599,30 @@ function setupCart() {
   const fixedOrderBtn = document.getElementById('fixedOrderBtn');
   console.log('Cart elements found:', { toggle, sidebar, overlay, close, checkout, fixedOrderBtn });
 
+  // Attach event listener for Add to Cart confirm button
+  const confirmBtn = document.getElementById('addToCartConfirmBtn');
+  if (confirmBtn) {
+    console.log('✅ Found addToCartConfirmBtn, attaching listener');
+    // Remove old listeners to be safe (though this runs once)
+    const newBtn = confirmBtn.cloneNode(true);
+    confirmBtn.parentNode.replaceChild(newBtn, confirmBtn);
+
+    newBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      console.log('🔘 Add to Cart button clicked via listener');
+
+      // Ensure saveNote is available
+      if (typeof window.saveNote === 'function') {
+        window.saveNote();
+      } else {
+        console.error('❌ saveNote function not found!');
+        alert('Fehler: Funktion nicht verfügbar. Bitte laden Sie die Seite neu.');
+      }
+    });
+  } else {
+    console.warn('⚠️ addToCartConfirmBtn not found in DOM');
+  }
+
   function openCart() {
     // Don't open cart if order was just completed (to prevent reopening after success notification)
     if (sessionStorage.getItem('orderJustCompleted') === 'true') {
