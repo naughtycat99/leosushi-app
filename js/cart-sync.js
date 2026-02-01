@@ -3,7 +3,7 @@
  * Đồng bộ giỏ hàng giữa các thiết bị khi user đăng nhập
  */
 
-(function() {
+(function () {
   console.log('🔄 Cart Sync Module loaded');
 
   // Check if user is logged in
@@ -37,13 +37,14 @@
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'X-Leo-Client-ID': 'leosushi-client-app-v1'
         },
         credentials: 'include',
         body: JSON.stringify({ cart })
       });
 
       const data = await response.json();
-      
+
       if (data.success) {
         console.log('✅ Cart synced to server successfully');
         localStorage.setItem('cartLastSynced', Date.now().toString());
@@ -69,11 +70,15 @@
 
       const response = await fetch(`${getApiUrl()}/cart-sync.php?action=get`, {
         method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Leo-Client-ID': 'leosushi-client-app-v1'
+        },
         credentials: 'include'
       });
 
       const data = await response.json();
-      
+
       if (data.success && data.cart) {
         const serverCart = data.cart;
         const localCart = JSON.parse(localStorage.getItem('leoCart') || '[]');
@@ -91,7 +96,7 @@
             console.log('✅ Using server cart (newer or local is empty)');
             localStorage.setItem('leoCart', JSON.stringify(serverCart));
             localStorage.setItem('cartLastSynced', Date.now().toString());
-            
+
             // Update UI
             if (typeof window.updateCartUI === 'function') {
               window.updateCartUI();
@@ -128,7 +133,7 @@
       });
 
       const data = await response.json();
-      
+
       if (data.success) {
         console.log('✅ Cart cleared on server');
         localStorage.removeItem('cartLastSynced');
@@ -151,9 +156,9 @@
 
     // Sync cart to server when cart changes
     const originalSetItem = localStorage.setItem;
-    localStorage.setItem = function(key, value) {
+    localStorage.setItem = function (key, value) {
       originalSetItem.apply(this, arguments);
-      
+
       if (key === 'leoCart' && isUserLoggedIn()) {
         // Debounce sync to avoid too many requests
         clearTimeout(window.cartSyncTimeout);
@@ -164,13 +169,13 @@
     };
 
     // Listen for login event
-    window.addEventListener('userLoggedIn', function() {
+    window.addEventListener('userLoggedIn', function () {
       console.log('👤 User logged in, loading cart from server');
       loadCartFromServer();
     });
 
     // Listen for logout event
-    window.addEventListener('userLoggedOut', function() {
+    window.addEventListener('userLoggedOut', function () {
       console.log('👤 User logged out, clearing cart sync');
       localStorage.removeItem('cartLastSynced');
     });

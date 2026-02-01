@@ -77,17 +77,64 @@ function getClientIP() {
  * Set security headers
  */
 function setSecurityHeaders() {
+    // 1. Strict Access Control (Block unauthorized external access)
+    // Allow if Origin matches legitimate domains OR if trusted Client-ID header is present
+    
+    $allowedOrigins = [
+        'https://www.leo-sushi-berlin.de',
+        'https://leo_sushi_berlin.de', 
+        'capacitor://localhost', // iOS
+        'http://localhost',       // Android / Dev
+        'http://127.0.0.1'       // Dev
+    ];
+    
+    $origin = $_SERVER['HTTP_ORIGIN'] ?? '';
+    // Handle specific ports for localhost (e.g. localhost:3000)
+    if (empty($origin) && isset($_SERVER['HTTP_REFERER'])) {
+        $referer = parse_url($_SERVER['HTTP_REFERER']);
+        $origin = ($referer['scheme'] ?? 'http') . '://' . ($referer['host'] ?? '');
+        if (isset($referer['port'])) $origin .= ':' . $referer['port'];
+    }
+
+    // Check custom header (Shared Secret for App/Web)
+    $clientId = $_SERVER['HTTP_X_LEO_CLIENT_ID'] ?? '';
+    $trustedClient = ($clientId === 'leosushi-client-app-v1');
+    
+    // Check if Origin is allowed (loose match for localhost to allow ports)
+    $originAllowed = false;
+    foreach ($allowedOrigins as $allowed) {
+        if ($origin === $allowed || strpos($origin, 'http://localhost') === 0 || strpos($origin, 'http://127.0.0.1') === 0) {
+            $originAllowed = true;
+            break;
+        }
+    }
+    
+    // Strict Blocking Rule:
+    // If NOT whitelisted Origin AND NOT trusted Client-ID -> BLOCK
+    // Note: We allow empty origin for local CLI/Cron jobs if remote IP is local
+    $isLocalRequest = ($_SERVER['REMOTE_ADDR'] === '127.0.0.1' || $_SERVER['REMOTE_ADDR'] === '::1');
+    
+    if (!$originAllowed && !$trustedClient && !$isLocalRequest) {
+        // Log blocked attempt (optional)
+        // error_log("Blocked API Access: IP={$_SERVER['REMOTE_ADDR']} Origin=$origin ClientID=$clientId");
+        
+        http_response_code(403);
+        header('Content-Type: application/json');
+        echo json_encode(['success' => false, 'message' => 'Forbidden: Access denied from this source.']);
+        exit;
+    }
+
     if (!ENABLE_SECURITY_HEADERS) {
         return;
     }
     
-    // CORS headers for mobile App (Capacitor)
-    header('Access-Control-Allow-Origin: *');
+    // CORS headers
+    header('Access-Control-Allow-Origin: ' . ($origin ? $origin : '*'));
     header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
-    header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With');
+    header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With, X-Leo-Client-ID');
+    header('Access-Control-Allow-Credentials: true');
     
     // Prevent clickjacking
-
     header('X-Frame-Options: DENY');
     
     // XSS protection
@@ -100,7 +147,6 @@ function setSecurityHeaders() {
     header('Referrer-Policy: strict-origin-when-cross-origin');
     
     // Content Security Policy
-    // Allow both HTTP and HTTPS for development/production transition
     $csp = "default-src 'self' http: https:; " .
            "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://www.paypal.com https://fonts.googleapis.com; " .
            "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " .

@@ -187,6 +187,14 @@ function createReview($input) {
 
 // Entry point for direct access
 if (basename($_SERVER['PHP_SELF']) === 'reviews.php') {
+    // Load centralized security middleware
+    require_once __DIR__ . '/middleware-security.php';
+    
+    // Apply security checks (Headers, CORS, Origin, Rate Limit)
+    applySecurityMiddleware();
+    
+    // Headers are now handled by middleware
+    header('Content-Type: application/json; charset=utf-8');
     $method = $_SERVER['REQUEST_METHOD'];
     $path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
     $pathParts = array_filter(explode('/', trim($path, '/')));

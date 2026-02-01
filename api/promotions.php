@@ -4,11 +4,14 @@
  * Access via: api/promotions.php?action=send
  */
 
-// Set headers
+// Load centralized security middleware
+require_once __DIR__ . '/middleware-security.php';
+
+// Apply security checks (Headers, CORS, Origin, Rate Limit)
+applySecurityMiddleware();
+
+// Headers are now handled by middleware
 header('Content-Type: application/json; charset=utf-8');
-header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type, Authorization');
 
 // Handle preflight
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {

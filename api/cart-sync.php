@@ -4,13 +4,14 @@
  * Đồng bộ giỏ hàng giữa các thiết bị
  */
 
-require_once 'bootstrap.php';
+require_once __DIR__ . '/bootstrap.php';
+// Load centralized security middleware
+require_once __DIR__ . '/middleware-security.php';
+
+// Apply security checks (Headers, CORS, Origin, Rate Limit)
+applySecurityMiddleware();
 
 header('Content-Type: application/json; charset=utf-8');
-header('Access-Control-Allow-Origin: https://www.leo-sushi-berlin.de');
-header('Access-Control-Allow-Credentials: true');
-header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type, Authorization');
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(200);

@@ -10,12 +10,15 @@ ini_set('display_errors', 0);
 ini_set('log_errors', 1);
 ini_set('error_log', __DIR__ . '/logs/php-error.log');
 
-// Set headers
+// Load centralized security middleware
+require_once __DIR__ . '/middleware-security.php';
+
+// Apply security checks (Headers, CORS, Origin, Rate Limit)
+applySecurityMiddleware();
+
+// Headers are now handled by middleware
+// Explicit Content-Type if possibly overwritten, but middleware sets generic ones
 header('Content-Type: application/json; charset=utf-8');
-header('Access-Control-Allow-Origin: https://www.leo-sushi-berlin.de');
-header('Access-Control-Allow-Credentials: true');
-header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type, Authorization');
 
 // Handle preflight
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
