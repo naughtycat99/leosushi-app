@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="de">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -13,6 +14,7 @@
             background: linear-gradient(180deg, #09090a, #0b0b0c 30%, #0b0b0c 70%, #0a0a0b);
             min-height: 100vh;
         }
+
         .profile-wrapper {
             max-width: 1400px;
             margin: 0 auto;
@@ -21,24 +23,29 @@
             grid-template-columns: 280px 1fr;
             gap: 30px;
         }
+
         @media (max-width: 968px) {
             .profile-wrapper {
                 grid-template-columns: 1fr;
                 gap: 20px;
             }
+
             .profile-sidebar {
                 order: 2;
             }
+
             .profile-main {
                 order: 1;
             }
         }
+
         /* Sidebar Navigation */
         .profile-sidebar {
             position: sticky;
             top: 100px;
             height: fit-content;
         }
+
         .profile-nav {
             background: linear-gradient(135deg, rgba(18, 18, 20, 0.95), rgba(15, 15, 17, 0.95));
             backdrop-filter: blur(20px);
@@ -47,6 +54,7 @@
             padding: 24px 0;
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
         }
+
         .profile-nav-item {
             display: flex;
             align-items: center;
@@ -58,39 +66,47 @@
             border-left: 3px solid transparent;
             font-weight: 500;
         }
+
         .profile-nav-item:hover {
             background: rgba(229, 207, 142, 0.1);
             color: var(--gold);
             border-left-color: var(--gold);
         }
+
         .profile-nav-item.active {
             background: rgba(229, 207, 142, 0.15);
             color: var(--gold);
             border-left-color: var(--gold);
             font-weight: 600;
         }
+
         .profile-nav-item span:first-child {
             font-size: 20px;
             width: 24px;
             text-align: center;
         }
+
         /* Main Content */
         .profile-main {
             min-height: 600px;
         }
+
         .profile-header {
             margin-bottom: 30px;
         }
+
         .profile-header h1 {
             font-size: 32px;
             font-weight: 700;
             margin-bottom: 8px;
             color: var(--gold);
         }
+
         .profile-header p {
             font-size: 14px;
             color: rgba(255, 255, 255, 0.6);
         }
+
         .profile-card {
             background: linear-gradient(135deg, rgba(18, 18, 20, 0.95), rgba(15, 15, 17, 0.95));
             backdrop-filter: blur(20px);
@@ -100,6 +116,7 @@
             margin-bottom: 24px;
             box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3);
         }
+
         .profile-section-title {
             font-size: 20px;
             font-weight: 600;
@@ -111,18 +128,22 @@
             padding-bottom: 12px;
             border-bottom: 1px solid rgba(229, 207, 142, 0.2);
         }
+
         .profile-section-title span {
             font-size: 24px;
         }
+
         .profile-form {
             display: grid;
             gap: 24px;
         }
+
         .form-group {
             display: flex;
             flex-direction: column;
             gap: 10px;
         }
+
         .form-group label {
             font-size: 13px;
             font-weight: 600;
@@ -130,6 +151,7 @@
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
+
         .form-group input,
         .form-group textarea {
             background: rgba(255, 255, 255, 0.03);
@@ -141,6 +163,7 @@
             transition: all 0.3s ease;
             font-family: inherit;
         }
+
         .form-group input:focus,
         .form-group textarea:focus {
             outline: none;
@@ -148,25 +171,30 @@
             background: rgba(255, 255, 255, 0.06);
             box-shadow: 0 0 0 3px rgba(229, 207, 142, 0.1);
         }
+
         .form-group input:hover:not(:disabled),
         .form-group textarea:hover:not(:disabled) {
             border-color: rgba(229, 207, 142, 0.3);
             background: rgba(255, 255, 255, 0.04);
         }
+
         .form-group input:disabled {
             opacity: 0.5;
             cursor: not-allowed;
         }
+
         .form-row {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 20px;
         }
+
         @media (max-width: 768px) {
             .form-row {
                 grid-template-columns: 1fr;
             }
         }
+
         .btn-save {
             background: linear-gradient(135deg, var(--gold), var(--gold-2));
             color: #1a1a1a;
@@ -183,6 +211,7 @@
             position: relative;
             overflow: hidden;
         }
+
         .btn-save::before {
             content: '';
             position: absolute;
@@ -193,21 +222,26 @@
             background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
             transition: left 0.5s;
         }
+
         .btn-save:hover::before {
             left: 100%;
         }
+
         .btn-save:hover {
             transform: translateY(-3px);
             box-shadow: 0 8px 24px rgba(229, 207, 142, 0.4);
         }
+
         .btn-save:active {
             transform: translateY(-1px);
         }
+
         .btn-save:disabled {
             opacity: 0.5;
             cursor: not-allowed;
             transform: none;
         }
+
         .back-link {
             display: inline-flex;
             align-items: center;
@@ -217,14 +251,17 @@
             margin-bottom: 20px;
             transition: all 0.2s;
         }
+
         .back-link:hover {
             opacity: 0.8;
         }
+
         .loading {
             text-align: center;
             padding: 80px 40px;
             color: rgba(255, 255, 255, 0.5);
         }
+
         .loading::before {
             content: '';
             display: inline-block;
@@ -236,9 +273,13 @@
             animation: spin 0.8s linear infinite;
             margin-bottom: 20px;
         }
+
         @keyframes spin {
-            to { transform: rotate(360deg); }
+            to {
+                transform: rotate(360deg);
+            }
         }
+
         .error-message {
             background: linear-gradient(135deg, rgba(255, 0, 0, 0.1), rgba(239, 68, 68, 0.05));
             border: 1px solid rgba(255, 0, 0, 0.3);
@@ -251,6 +292,7 @@
             gap: 12px;
             font-weight: 500;
         }
+
         .success-message {
             background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(5, 150, 105, 0.05));
             border: 1px solid rgba(16, 185, 129, 0.3);
@@ -263,6 +305,7 @@
             gap: 12px;
             font-weight: 500;
         }
+
         .btn-view-orders {
             display: inline-flex;
             align-items: center;
@@ -277,6 +320,7 @@
             text-decoration: none;
             transition: all 0.2s ease;
         }
+
         .btn-view-orders:hover {
             background: var(--gold);
             color: #1a1a1a;
@@ -285,6 +329,7 @@
         }
     </style>
 </head>
+
 <body>
     <!-- Header -->
     <header class="site-header">
@@ -301,8 +346,12 @@
                 <a href="book-table" style="color: var(--gold); font-weight: 600;">Reservieren</a>
                 <!-- Auth Links (shown when not logged in) -->
                 <div class="auth-links" id="authLinks">
-                    <a href="#" onclick="event.preventDefault(); if(window.openAuthModal) window.openAuthModal('login');" class="auth-link login-link">Anmelden</a>
-                    <a href="#" onclick="event.preventDefault(); if(window.openAuthModal) window.openAuthModal('register');" class="auth-link register-link">Registrieren</a>
+                    <a href="#"
+                        onclick="event.preventDefault(); if(window.openAuthModal) window.openAuthModal('login');"
+                        class="auth-link login-link">Anmelden</a>
+                    <a href="#"
+                        onclick="event.preventDefault(); if(window.openAuthModal) window.openAuthModal('register');"
+                        class="auth-link register-link">Registrieren</a>
                 </div>
                 <!-- User Menu (shown when logged in) -->
                 <div class="user-menu-wrapper" id="userMenuWrapper" style="display: none;">
@@ -338,7 +387,8 @@
                     <span class="cart-badge" id="cartBadge">0</span>
                 </button>
             </nav>
-            <button class="burger" aria-label="Menü öffnen" id="burger" aria-controls="primaryNav" aria-expanded="false">
+            <button class="burger" aria-label="Menü öffnen" id="burger" aria-controls="primaryNav"
+                aria-expanded="false">
                 <span></span><span></span><span></span>
             </button>
         </div>
@@ -386,7 +436,7 @@
                     </h2>
                     <form id="profileForm" class="profile-form">
                         <div id="messageContainer"></div>
-                        
+
                         <div class="form-row">
                             <div class="form-group">
                                 <label for="firstName">Vorname *</label>
@@ -401,7 +451,9 @@
                         <div class="form-group">
                             <label for="email">E-Mail-Adresse *</label>
                             <input type="email" id="email" name="email" required disabled>
-                            <small style="color: rgba(255, 255, 255, 0.5); font-size: 12px; margin-top: 4px; display: block;">E-Mail kann nicht geändert werden</small>
+                            <small
+                                style="color: rgba(255, 255, 255, 0.5); font-size: 12px; margin-top: 4px; display: block;">E-Mail
+                                kann nicht geändert werden</small>
                         </div>
 
                         <div class="form-group">
@@ -412,7 +464,9 @@
                         <div class="form-group">
                             <label for="birthday">🎂 Geburtstag</label>
                             <input type="date" id="birthday" name="birthday">
-                            <small style="color: rgba(255, 255, 255, 0.5); font-size: 12px; margin-top: 4px; display: block;">Wir senden Ihnen an Ihrem Geburtstag einen besonderen Gutschein!</small>
+                            <small
+                                style="color: rgba(255, 255, 255, 0.5); font-size: 12px; margin-top: 4px; display: block;">Wir
+                                senden Ihnen an Ihrem Geburtstag einen besonderen Gutschein!</small>
                         </div>
 
                         <div class="form-group">
@@ -448,9 +502,12 @@
                         <span>⭐</span> Meine Punkte
                     </h2>
                     <div style="margin-bottom: 24px;">
-                        <div style="background: linear-gradient(135deg, rgba(229, 207, 142, 0.15), rgba(194, 163, 85, 0.1)); border: 1px solid rgba(229, 207, 142, 0.3); border-radius: 12px; padding: 24px; text-align: center;">
-                            <h3 style="font-size: 48px; font-weight: 700; color: var(--gold); margin: 0 0 8px 0;" id="currentPointsDisplay">0</h3>
-                            <p style="color: rgba(255, 255, 255, 0.7); margin: 0; font-size: 14px;">Verfügbare Punkte</p>
+                        <div
+                            style="background: linear-gradient(135deg, rgba(229, 207, 142, 0.15), rgba(194, 163, 85, 0.1)); border: 1px solid rgba(229, 207, 142, 0.3); border-radius: 12px; padding: 24px; text-align: center;">
+                            <h3 style="font-size: 48px; font-weight: 700; color: var(--gold); margin: 0 0 8px 0;"
+                                id="currentPointsDisplay">0</h3>
+                            <p style="color: rgba(255, 255, 255, 0.7); margin: 0; font-size: 14px;">Verfügbare Punkte
+                            </p>
                         </div>
                     </div>
 
@@ -536,17 +593,21 @@
                     <div class="footer-social">
                         <a href="#" class="social-link" aria-label="Facebook">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                                <path
+                                    d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
                             </svg>
                         </a>
                         <a href="#" class="social-link" aria-label="Instagram">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+                                <path
+                                    d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" />
                             </svg>
                         </a>
-                        <a href="https://www.openstreetmap.org/?mlat=52.5505&mlon=13.4304&zoom=16" target="_blank" class="social-link" aria-label="OpenStreetMap">
+                        <a href="https://www.openstreetmap.org/?mlat=52.5505&mlon=13.4304&zoom=16" target="_blank"
+                            class="social-link" aria-label="OpenStreetMap">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M12 0C8.74 0 5.97 1.47 4 3.74c2.26 2.26 4.26 4.26 8 8 3.74-3.74 5.74-5.74 8-8C18.03 1.47 15.26 0 12 0zm0 2c5.51 0 10 4.49 10 10s-4.49 10-10 10S2 17.51 2 12 6.49 2 12 2zm0 3c-3.87 0-7 3.13-7 7s3.13 7 7 7 7-3.13 7-7-3.13-7-7-7zm0 3c2.21 0 4 1.79 4 4s-1.79 4-4 4-4-1.79-4-4 1.79-4 4-4z"/>
+                                <path
+                                    d="M12 0C8.74 0 5.97 1.47 4 3.74c2.26 2.26 4.26 4.26 8 8 3.74-3.74 5.74-5.74 8-8C18.03 1.47 15.26 0 12 0zm0 2c5.51 0 10 4.49 10 10s-4.49 10-10 10S2 17.51 2 12 6.49 2 12 2zm0 3c-3.87 0-7 3.13-7 7s3.13 7 7 7 7-3.13 7-7-3.13-7-7-7zm0 3c2.21 0 4 1.79 4 4s-1.79 4-4 4-4-1.79-4-4 1.79-4 4-4z" />
                             </svg>
                         </a>
                     </div>
@@ -558,7 +619,11 @@
     <script>
         // API base URL is auto-detected by js/api.js from current location
         // Only override for localhost development
-        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+        // Check if running in Capacitor (iOS uses capacitor:// protocol, Android may use http://localhost but with X-Requested-With header)
+        const isCapacitorInfo = window.location.protocol === 'capacitor:' || window.location.search.includes('mock-app');
+
+        // Only override for localhost development if NOT in Capacitor
+        if (!isCapacitorInfo && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
             window.API_BASE_URL = window.location.origin + (window.location.pathname.includes('/leosushi') ? '/leosushi/api' : '/api');
             window.API_PHP_BASE_URL = window.API_BASE_URL;
         }
@@ -571,7 +636,7 @@
     <script src="js/customer.js"></script>
     <script src="js/notifications.js"></script>
     <script src="script.js"></script>
-    
+
     <script>
         let currentUser = null;
         let customerData = null;
@@ -580,7 +645,7 @@
         async function loadProfile() {
             const loadingMessage = document.getElementById('loadingMessage');
             const profileContent = document.getElementById('profileContent');
-            
+
             try {
                 // Check if user is logged in
                 if (!window.getCurrentUser || typeof window.getCurrentUser !== 'function') {
@@ -610,7 +675,7 @@
                         headers: { 'Content-Type': 'application/json' }
                     });
                     const customerResult = await response.json();
-                    
+
                     if (customerResult && customerResult.success && customerResult.data) {
                         customerData = customerResult.data;
                         console.log('✅ Loaded customer data from API:', customerData);
@@ -618,7 +683,7 @@
                 } catch (e) {
                     console.log('Could not load customer from API:', e);
                 }
-                
+
                 // Fallback: Try localStorage (saved from previous orders)
                 if (!customerData || !customerData.phone) {
                     try {
@@ -643,7 +708,7 @@
                         console.log('Could not load from localStorage:', e);
                     }
                 }
-                
+
                 // 2. If not found, try to get from recent orders
                 if (!customerData || !customerData.phone) {
                     try {
@@ -660,7 +725,7 @@
                             headers: { 'Content-Type': 'application/json' }
                         });
                         const ordersResult = await response.json();
-                        
+
                         if (ordersResult && ordersResult.success && ordersResult.orders) {
                             // Find most recent order for this user
                             const userOrders = ordersResult.orders.filter(order => {
@@ -670,14 +735,14 @@
                                         try {
                                             const addr = JSON.parse(order.delivery_address);
                                             orderEmail = addr.email || '';
-                                        } catch (e) {}
+                                        } catch (e) { }
                                     } else {
                                         orderEmail = order.delivery_address.email || '';
                                     }
                                 }
                                 return orderEmail && orderEmail.toLowerCase() === currentUser.email.toLowerCase();
                             });
-                            
+
                             if (userOrders.length > 0) {
                                 const recentOrder = userOrders[0]; // Most recent
                                 let addr = {};
@@ -685,12 +750,12 @@
                                     if (typeof recentOrder.delivery_address === 'string') {
                                         try {
                                             addr = JSON.parse(recentOrder.delivery_address);
-                                        } catch (e) {}
+                                        } catch (e) { }
                                     } else {
                                         addr = recentOrder.delivery_address;
                                     }
                                 }
-                                
+
                                 customerData = {
                                     first_name: addr.firstName || customerData?.first_name || currentUser.firstName || '',
                                     last_name: addr.lastName || customerData?.last_name || currentUser.lastName || '',
@@ -709,7 +774,7 @@
                         console.log('Could not load customer from orders:', e);
                     }
                 }
-                
+
                 // 3. Fallback to user info from auth
                 if (!customerData) {
                     customerData = {
@@ -754,10 +819,10 @@
         // Save profile
         async function saveProfile(event) {
             event.preventDefault();
-            
+
             const saveBtn = document.getElementById('saveBtn');
             const messageContainer = document.getElementById('messageContainer');
-            
+
             saveBtn.disabled = true;
             saveBtn.textContent = '💾 Wird gespeichert...';
             messageContainer.innerHTML = '';
@@ -817,13 +882,13 @@
                 if (window.saveCustomerInfo && typeof window.saveCustomerInfo === 'function') {
                     const result = await window.saveCustomerInfo(formData);
                 }
-                
+
                 messageContainer.innerHTML = `
                     <div class="success-message">
                         ✅ Profil erfolgreich aktualisiert!
                     </div>
                 `;
-                
+
                 // Show notification
                 if (window.addNotification && window.NOTIFICATION_TYPES) {
                     window.addNotification(
@@ -854,13 +919,13 @@
             item.addEventListener('click', (e) => {
                 e.preventDefault();
                 const section = item.getAttribute('data-section');
-                
+
                 // Update active state
                 document.querySelectorAll('.profile-nav-item').forEach(nav => {
                     nav.classList.remove('active');
                 });
                 item.classList.add('active');
-                
+
                 // Handle section switching (for future sections)
                 if (section === 'profile') {
                     document.getElementById('profileContent').style.display = 'block';
@@ -872,9 +937,9 @@
         async function loadPointsData() {
             try {
                 if (!currentUser || !currentUser.id) return;
-                
+
                 const customerId = currentUser.id || currentUser.email;
-                
+
                 // Load points balance
                 if (window.api && window.api.points) {
                     const pointsResult = await window.api.points.getPoints(customerId);
@@ -882,7 +947,7 @@
                         const points = pointsResult.points || 0;
                         document.getElementById('currentPointsDisplay').textContent = points;
                         document.getElementById('pointsSection').style.display = 'block';
-                        
+
                         // Load redemption rules
                         const rulesResult = await window.api.points.getRedemptionRules();
                         if (rulesResult && rulesResult.success) {
@@ -953,7 +1018,7 @@
 
                 if (window.api && window.api.points) {
                     const result = await window.api.points.redeemPoints(customerId, ruleId);
-                    
+
                     if (result && result.success) {
                         if (window.addNotification) {
                             window.addNotification(
@@ -962,7 +1027,7 @@
                                 `Ihr Rabattcode: ${result.promotion_code || 'N/A'}. Sie können ihn bei der nächsten Bestellung verwenden!`
                             );
                         }
-                        
+
                         // Reload points data
                         await loadPointsData();
                     } else {
@@ -997,5 +1062,5 @@
         });
     </script>
 </body>
-</html>
 
+</html>

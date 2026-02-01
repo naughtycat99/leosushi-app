@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="de">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -15,6 +16,7 @@
             background: linear-gradient(180deg, #09090a, #0b0b0c 30%, #0b0b0c 70%, #0a0a0b);
             min-height: 100vh;
         }
+
         .orders-wrapper {
             max-width: 1400px;
             margin: 0 auto;
@@ -23,24 +25,29 @@
             grid-template-columns: 280px 1fr;
             gap: 30px;
         }
+
         @media (max-width: 968px) {
             .orders-wrapper {
                 grid-template-columns: 1fr;
                 gap: 20px;
             }
+
             .orders-sidebar {
                 order: 2;
             }
+
             .orders-main {
                 order: 1;
             }
         }
+
         /* Sidebar Navigation */
         .orders-sidebar {
             position: sticky;
             top: 100px;
             height: fit-content;
         }
+
         .orders-nav {
             background: linear-gradient(135deg, rgba(18, 18, 20, 0.95), rgba(15, 15, 17, 0.95));
             backdrop-filter: blur(20px);
@@ -49,6 +56,7 @@
             padding: 24px 0;
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
         }
+
         .orders-nav-item {
             display: flex;
             align-items: center;
@@ -60,39 +68,47 @@
             border-left: 3px solid transparent;
             font-weight: 500;
         }
+
         .orders-nav-item:hover {
             background: rgba(229, 207, 142, 0.1);
             color: var(--gold);
             border-left-color: var(--gold);
         }
+
         .orders-nav-item.active {
             background: rgba(229, 207, 142, 0.15);
             color: var(--gold);
             border-left-color: var(--gold);
             font-weight: 600;
         }
+
         .orders-nav-item span:first-child {
             font-size: 20px;
             width: 24px;
             text-align: center;
         }
+
         /* Main Content */
         .orders-main {
             min-height: 600px;
         }
+
         .orders-header {
             margin-bottom: 30px;
         }
+
         .orders-header h1 {
             font-size: 32px;
             font-weight: 700;
             margin-bottom: 8px;
             color: var(--gold);
         }
+
         .orders-header p {
             font-size: 14px;
             color: rgba(255, 255, 255, 0.6);
         }
+
         .back-link {
             display: inline-flex;
             align-items: center;
@@ -102,9 +118,11 @@
             margin-bottom: 20px;
             transition: all 0.2s;
         }
+
         .back-link:hover {
             opacity: 0.8;
         }
+
         .orders-filter {
             display: flex;
             gap: 10px;
@@ -115,6 +133,7 @@
             border-radius: 12px;
             border: 1px solid rgba(229, 207, 142, 0.1);
         }
+
         .filter-btn {
             background: rgba(255, 255, 255, 0.03);
             border: 1px solid rgba(255, 255, 255, 0.1);
@@ -126,15 +145,18 @@
             font-size: 13px;
             font-weight: 500;
         }
+
         .filter-btn:hover {
             background: rgba(255, 255, 255, 0.06);
             border-color: rgba(229, 207, 142, 0.3);
         }
+
         .filter-btn.active {
             background: rgba(229, 207, 142, 0.15);
             border-color: var(--gold);
             color: var(--gold);
         }
+
         .order-card {
             background: linear-gradient(135deg, rgba(18, 18, 20, 0.95), rgba(15, 15, 17, 0.95));
             backdrop-filter: blur(20px);
@@ -145,11 +167,13 @@
             transition: all 0.2s ease;
             box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3);
         }
+
         .order-card:hover {
             border-color: rgba(229, 207, 142, 0.3);
             transform: translateY(-2px);
             box-shadow: 0 6px 28px rgba(0, 0, 0, 0.4);
         }
+
         .order-header {
             display: flex;
             justify-content: space-between;
@@ -158,6 +182,7 @@
             flex-wrap: wrap;
             gap: 12px;
         }
+
         .order-id {
             font-size: 22px;
             font-weight: 700;
@@ -167,6 +192,7 @@
             background-clip: text;
             letter-spacing: -0.5px;
         }
+
         .order-date {
             font-size: 14px;
             color: rgba(255, 255, 255, 0.6);
@@ -175,10 +201,12 @@
             align-items: center;
             gap: 6px;
         }
+
         .order-date::before {
             content: '📅';
             font-size: 12px;
         }
+
         .order-status {
             display: inline-flex;
             align-items: center;
@@ -190,26 +218,31 @@
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
+
         .order-status.pending {
             background: rgba(251, 191, 36, 0.2);
             color: #fbbf24;
             border: 1px solid rgba(251, 191, 36, 0.3);
         }
+
         .order-status.confirmed {
             background: rgba(16, 185, 129, 0.2);
             color: #10b981;
             border: 1px solid rgba(16, 185, 129, 0.3);
         }
+
         .order-status.completed {
             background: rgba(59, 130, 246, 0.2);
             color: #3b82f6;
             border: 1px solid rgba(59, 130, 246, 0.3);
         }
+
         .order-status.cancelled {
             background: rgba(239, 68, 68, 0.2);
             color: #ef4444;
             border: 1px solid rgba(239, 68, 68, 0.3);
         }
+
         .order-info {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -220,11 +253,13 @@
             border-radius: 12px;
             border: 1px solid rgba(255, 255, 255, 0.05);
         }
+
         .order-info-item {
             display: flex;
             flex-direction: column;
             gap: 6px;
         }
+
         .order-info-label {
             font-size: 11px;
             color: rgba(255, 255, 255, 0.5);
@@ -232,16 +267,19 @@
             letter-spacing: 0.5px;
             font-weight: 600;
         }
+
         .order-info-value {
             font-size: 15px;
             color: var(--text);
             font-weight: 600;
         }
+
         .order-items {
             margin-top: 24px;
             padding-top: 24px;
             border-top: 1px solid rgba(255, 255, 255, 0.1);
         }
+
         .order-items-title {
             font-size: 14px;
             font-weight: 600;
@@ -250,6 +288,7 @@
             letter-spacing: 0.5px;
             margin-bottom: 16px;
         }
+
         .order-item {
             display: flex;
             justify-content: space-between;
@@ -261,15 +300,18 @@
             border: 1px solid rgba(255, 255, 255, 0.05);
             transition: all 0.2s;
         }
+
         .order-item:hover {
             background: rgba(255, 255, 255, 0.04);
             border-color: rgba(229, 207, 142, 0.2);
         }
+
         .order-item-name {
             color: var(--text);
             font-weight: 500;
             flex: 1;
         }
+
         .order-item-qty {
             color: rgba(255, 255, 255, 0.5);
             margin: 0 12px;
@@ -278,11 +320,13 @@
             padding: 4px 10px;
             border-radius: 6px;
         }
+
         .order-item-price {
             color: var(--gold);
             font-weight: 700;
             font-size: 15px;
         }
+
         .order-total {
             margin-top: 24px;
             padding-top: 24px;
@@ -299,6 +343,7 @@
             padding-left: 32px;
             padding-right: 32px;
         }
+
         .order-total-label {
             font-size: 16px;
             font-weight: 600;
@@ -306,16 +351,19 @@
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
+
         .order-total-value {
             font-size: 22px;
             font-weight: 700;
             color: var(--gold);
         }
+
         .order-actions {
             display: flex;
             gap: 12px;
             flex-wrap: wrap;
         }
+
         .btn-review {
             background: linear-gradient(135deg, rgba(229, 207, 142, 0.15), rgba(229, 207, 142, 0.1));
             border: 1px solid rgba(229, 207, 142, 0.3);
@@ -330,17 +378,20 @@
             align-items: center;
             gap: 8px;
         }
+
         .btn-review:hover {
             background: linear-gradient(135deg, rgba(229, 207, 142, 0.25), rgba(229, 207, 142, 0.15));
             border-color: rgba(229, 207, 142, 0.5);
             transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(229, 207, 142, 0.2);
         }
+
         .btn-review:disabled {
             opacity: 0.6;
             cursor: not-allowed;
             transform: none;
         }
+
         /* Review Modal */
         .review-modal {
             display: none;
@@ -356,6 +407,7 @@
             justify-content: center;
             padding: 20px;
         }
+
         .review-modal-content {
             background: linear-gradient(135deg, rgba(18, 18, 20, 0.98), rgba(15, 15, 17, 0.98));
             backdrop-filter: blur(20px);
@@ -366,18 +418,21 @@
             width: 100%;
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
         }
+
         .review-modal-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin-bottom: 24px;
         }
+
         .review-modal-header h3 {
             font-size: 24px;
             font-weight: 700;
             color: var(--gold);
             margin: 0;
         }
+
         .review-modal-close {
             background: none;
             border: none;
@@ -392,12 +447,15 @@
             justify-content: center;
             transition: color 0.2s;
         }
+
         .review-modal-close:hover {
             color: var(--gold);
         }
+
         .review-form-group {
             margin-bottom: 24px;
         }
+
         .review-form-group label {
             display: block;
             color: rgba(255, 255, 255, 0.9);
@@ -405,11 +463,13 @@
             font-weight: 600;
             margin-bottom: 12px;
         }
+
         .star-rating-container {
             display: flex;
             gap: 8px;
             margin-bottom: 12px;
         }
+
         .star-rating-btn {
             background: none;
             border: none;
@@ -419,9 +479,11 @@
             transition: all 0.2s;
             line-height: 1;
         }
+
         .star-rating-btn:hover {
             transform: scale(1.2);
         }
+
         .review-comment {
             width: 100%;
             min-height: 120px;
@@ -434,16 +496,19 @@
             font-family: inherit;
             resize: vertical;
         }
+
         .review-comment:focus {
             outline: none;
             border-color: var(--gold);
             background: rgba(255, 255, 255, 0.08);
         }
+
         .review-modal-actions {
             display: flex;
             gap: 12px;
             justify-content: flex-end;
         }
+
         .btn-review-submit {
             background: linear-gradient(135deg, var(--gold), var(--gold-2));
             border: none;
@@ -455,15 +520,18 @@
             cursor: pointer;
             transition: all 0.2s ease;
         }
+
         .btn-review-submit:hover {
             transform: translateY(-2px);
             box-shadow: 0 6px 20px rgba(229, 207, 142, 0.4);
         }
+
         .btn-review-submit:disabled {
             opacity: 0.6;
             cursor: not-allowed;
             transform: none;
         }
+
         .btn-review-cancel {
             background: rgba(255, 255, 255, 0.05);
             border: 1px solid rgba(255, 255, 255, 0.2);
@@ -475,10 +543,12 @@
             cursor: pointer;
             transition: all 0.2s ease;
         }
+
         .btn-review-cancel:hover {
             background: rgba(255, 255, 255, 0.1);
             border-color: rgba(255, 255, 255, 0.3);
         }
+
         .empty-state {
             text-align: center;
             padding: 100px 20px;
@@ -488,22 +558,26 @@
             border-radius: 20px;
             backdrop-filter: blur(10px);
         }
+
         .empty-state-icon {
             font-size: 80px;
             margin-bottom: 24px;
             opacity: 0.4;
             filter: grayscale(0.5);
         }
+
         .empty-state h3 {
             font-size: 24px;
             font-weight: 600;
             color: rgba(255, 255, 255, 0.8);
             margin-bottom: 12px;
         }
+
         .empty-state p {
             font-size: 16px;
             margin-bottom: 24px;
         }
+
         .empty-state a {
             display: inline-block;
             padding: 12px 24px;
@@ -513,15 +587,18 @@
             font-weight: 600;
             transition: all 0.3s ease;
         }
+
         .empty-state a:hover {
             transform: translateY(-2px);
             box-shadow: 0 8px 24px rgba(229, 207, 142, 0.4);
         }
+
         .loading {
             text-align: center;
             padding: 100px 40px;
             color: rgba(255, 255, 255, 0.5);
         }
+
         .loading::before {
             content: '';
             display: inline-block;
@@ -533,9 +610,13 @@
             animation: spin 0.8s linear infinite;
             margin-bottom: 24px;
         }
+
         @keyframes spin {
-            to { transform: rotate(360deg); }
+            to {
+                transform: rotate(360deg);
+            }
         }
+
         /* Order Tracking Map Styles */
         .order-tracking-map-container {
             margin-top: 20px;
@@ -545,10 +626,12 @@
             height: 400px;
             background: rgba(255, 255, 255, 0.02);
         }
+
         .order-tracking-map {
             width: 100%;
             height: 100%;
         }
+
         .track-order-btn {
             background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(59, 130, 246, 0.1));
             border: 1px solid rgba(59, 130, 246, 0.3);
@@ -564,12 +647,14 @@
             gap: 8px;
             margin-top: 12px;
         }
+
         .track-order-btn:hover {
             background: linear-gradient(135deg, rgba(59, 130, 246, 0.25), rgba(59, 130, 246, 0.15));
             border-color: rgba(59, 130, 246, 0.5);
             transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
         }
+
         .tracking-info {
             margin-top: 12px;
             padding: 12px;
@@ -579,12 +664,21 @@
             font-size: 13px;
             color: rgba(255, 255, 255, 0.8);
         }
+
         @keyframes pulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.1); }
+
+            0%,
+            100% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.1);
+            }
         }
     </style>
 </head>
+
 <body>
     <!-- Header -->
     <header class="site-header">
@@ -662,12 +756,15 @@
             </div>
 
             <div class="orders-filter">
-            <button class="filter-btn active" data-status="all" onclick="filterOrders('all')">Alle</button>
-            <button class="filter-btn" data-status="pending" onclick="filterOrders('pending')">Ausstehend</button>
-            <button class="filter-btn" data-status="confirmed" onclick="filterOrders('confirmed')">Bestätigt</button>
-            <button class="filter-btn" data-status="completed" onclick="filterOrders('completed')">Abgeschlossen</button>
-            <button class="filter-btn" data-status="cancelled" onclick="filterOrders('cancelled')">Storniert</button>
-        </div>
+                <button class="filter-btn active" data-status="all" onclick="filterOrders('all')">Alle</button>
+                <button class="filter-btn" data-status="pending" onclick="filterOrders('pending')">Ausstehend</button>
+                <button class="filter-btn" data-status="confirmed"
+                    onclick="filterOrders('confirmed')">Bestätigt</button>
+                <button class="filter-btn" data-status="completed"
+                    onclick="filterOrders('completed')">Abgeschlossen</button>
+                <button class="filter-btn" data-status="cancelled"
+                    onclick="filterOrders('cancelled')">Storniert</button>
+            </div>
 
             <div id="loadingMessage" class="loading">
                 <p>Lade Bestellungen...</p>
@@ -681,7 +778,11 @@
     <script>
         // API base URL is auto-detected by js/api.js from current location
         // Only override for localhost development
-        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+        // Check if running in Capacitor (iOS uses capacitor:// protocol, Android may use http://localhost but with X-Requested-With header)
+        const isCapacitorInfo = window.location.protocol === 'capacitor:' || window.location.search.includes('mock-app');
+
+        // Only override for localhost development if NOT in Capacitor
+        if (!isCapacitorInfo && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
             window.API_BASE_URL = window.location.origin + (window.location.pathname.includes('/leosushi') ? '/leosushi/api' : '/api');
             window.API_PHP_BASE_URL = window.API_BASE_URL;
         }
@@ -694,7 +795,7 @@
     <!-- Leaflet JS for OpenStreetMap -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="js/order-tracking.js"></script>
-    
+
     <script>
         let currentUser = null;
         let allOrders = [];
@@ -736,7 +837,7 @@
         async function loadOrders() {
             const loadingMessage = document.getElementById('loadingMessage');
             const ordersList = document.getElementById('ordersList');
-            
+
             try {
                 // Check if user is logged in
                 if (!window.getCurrentUser || typeof window.getCurrentUser !== 'function') {
@@ -765,16 +866,16 @@
                         'Content-Type': 'application/json'
                     }
                 });
-                
+
                 const result = await response.json();
-                
+
                 if (result && result.success && result.orders) {
                     // Filter orders by user email
                     allOrders = result.orders.filter(order => {
-                        const orderEmail = order.delivery_address?.email || 
-                                         (typeof order.delivery_address === 'string' ? JSON.parse(order.delivery_address).email : null) ||
-                                         order.delivery?.address?.email || 
-                                         order.customer?.email || '';
+                        const orderEmail = order.delivery_address?.email ||
+                            (typeof order.delivery_address === 'string' ? JSON.parse(order.delivery_address).email : null) ||
+                            order.delivery?.address?.email ||
+                            order.customer?.email || '';
                         return orderEmail && orderEmail.toLowerCase() === currentUser.email.toLowerCase();
                     });
 
@@ -803,20 +904,20 @@
         // Filter orders
         function filterOrders(status) {
             currentFilter = status;
-            
+
             // Update active button
             document.querySelectorAll('.filter-btn').forEach(btn => {
                 btn.classList.remove('active');
             });
             document.querySelector(`[data-status="${status}"]`).classList.add('active');
-            
+
             renderOrders();
         }
 
         // Render orders
         function renderOrders() {
             const ordersList = document.getElementById('ordersList');
-            
+
             // Filter orders
             let filteredOrders = allOrders;
             if (currentFilter !== 'all') {
@@ -840,7 +941,7 @@
                 const orderIdShort = orderId.toString().replace(/^(LEO-|ORD-)/, '').slice(-8);
                 const status = order.status || 'pending';
                 const date = order.date || order.created_at || order.createdAt || new Date().toISOString();
-                
+
                 // Parse items (could be JSON string or object)
                 let items = [];
                 if (order.items) {
@@ -854,7 +955,7 @@
                         items = order.items;
                     }
                 }
-                
+
                 // Parse summary (could be JSON string or object)
                 let summary = {};
                 if (order.summary) {
@@ -868,11 +969,11 @@
                         summary = order.summary;
                     }
                 }
-                
+
                 const total = summary.total || order.order_total || '0,00 €';
-                const serviceType = order.service_type === 'delivery' ? 'Lieferung' : 
-                                  order.service_type === 'pickup' ? 'Abholung' : 'Reservierung';
-                
+                const serviceType = order.service_type === 'delivery' ? 'Lieferung' :
+                    order.service_type === 'pickup' ? 'Abholung' : 'Reservierung';
+
                 // Parse delivery_address (could be JSON string or object)
                 let address = {};
                 if (order.delivery_address) {
@@ -888,7 +989,7 @@
                 } else if (order.delivery?.address) {
                     address = order.delivery.address;
                 }
-                
+
                 const estimatedTime = order.estimated_time || order.estimatedTime || null;
 
                 return `
@@ -961,20 +1062,20 @@
                     </div>
                 `;
             }).join('');
-            
+
             // Check which orders already have reviews
             checkExistingReviews();
         }
-        
+
         // Check existing reviews for orders
         async function checkExistingReviews() {
             try {
                 if (!window.api || !window.api.reviews) return;
-                
+
                 const response = await window.api.reviews.list(100, 'approved');
                 if (response.success && response.reviews) {
                     const reviewedOrderIds = new Set(response.reviews.map(r => r.order_id).filter(Boolean));
-                    
+
                     // Hide review button for orders that already have reviews
                     document.querySelectorAll('.btn-review').forEach(btn => {
                         const orderId = btn.getAttribute('data-order-id');
@@ -990,7 +1091,7 @@
                 console.error('Error checking existing reviews:', error);
             }
         }
-        
+
         // Open review modal
         function openReviewModal(orderId, orderIdShort) {
             currentReviewOrderId = orderId;
@@ -1000,14 +1101,14 @@
             document.getElementById('reviewComment').value = '';
             updateStarDisplay(5);
         }
-        
+
         // Close review modal
         function closeReviewModal() {
             document.getElementById('reviewModal').style.display = 'none';
             currentReviewOrderId = null;
             currentReviewOrderIdShort = null;
         }
-        
+
         // Update star display
         function updateStarDisplay(rating) {
             const stars = document.querySelectorAll('.star-rating-btn');
@@ -1021,37 +1122,37 @@
                 }
             });
         }
-        
+
         // Submit review
         async function submitReview() {
             const rating = parseInt(document.getElementById('reviewRating').value);
             const comment = document.getElementById('reviewComment').value.trim();
-            
+
             if (!rating || rating < 1 || rating > 5) {
                 alert('Bitte wählen Sie eine Bewertung von 1 bis 5 Sternen.');
                 return;
             }
-            
+
             if (!currentUser || !currentUser.id) {
                 alert('Bitte melden Sie sich an, um eine Bewertung abzugeben.');
                 return;
             }
-            
+
             try {
                 const submitBtn = document.getElementById('submitReviewBtn');
                 submitBtn.disabled = true;
                 submitBtn.textContent = 'Wird gesendet...';
-                
+
                 const reviewData = {
                     customer_id: currentUser.id,
                     order_id: currentReviewOrderId,
                     rating: rating,
                     comment: comment
                 };
-                
+
                 if (window.api && window.api.reviews) {
                     const response = await window.api.reviews.create(reviewData);
-                    
+
                     if (response.success) {
                         alert('Vielen Dank für Ihre Bewertung! Sie wird nach der Überprüfung veröffentlicht.');
                         closeReviewModal();
@@ -1071,7 +1172,7 @@
                 submitBtn.textContent = 'Bewertung absenden';
             }
         }
-        
+
         let currentReviewOrderId = null;
         let currentReviewOrderIdShort = null;
         let activeTrackingOrders = new Map(); // Track which orders have active tracking
@@ -1081,19 +1182,19 @@
             const mapContainer = document.getElementById(`trackingMap_${orderId}`);
             const trackingInfo = document.getElementById(`trackingInfo_${orderId}`);
             const btn = event.target;
-            
+
             if (mapContainer.style.display === 'none') {
                 // Show map
                 mapContainer.style.display = 'block';
                 btn.textContent = '🗺️ Tracking ausblenden';
-                
+
                 // Initialize map if not already initialized
                 if (!activeTrackingOrders.has(orderId)) {
                     setTimeout(() => {
                         if (typeof window.initOrderTrackingMap === 'function') {
                             window.initOrderTrackingMap(`map_${orderId}`, orderData);
                             activeTrackingOrders.set(orderId, true);
-                            
+
                             // Start real-time tracking
                             if (typeof window.startOrderTracking === 'function') {
                                 window.startOrderTracking(orderId, (updatedOrder) => {
@@ -1107,7 +1208,7 @@
                                             'completed': 'Zugestellt',
                                             'cancelled': 'Storniert'
                                         }[status] || status;
-                                        
+
                                         trackingInfo.innerHTML = `
                                             <strong>Status:</strong> ${statusText}<br>
                                             ${updatedOrder.estimated_time ? `<strong>Geschätzte Zeit:</strong> ${updatedOrder.estimated_time}` : ''}
@@ -1122,7 +1223,7 @@
                 // Hide map
                 mapContainer.style.display = 'none';
                 btn.textContent = '🗺️ Bestellung verfolgen';
-                
+
                 // Stop tracking
                 if (typeof window.stopOrderTracking === 'function') {
                     window.stopOrderTracking();
@@ -1135,7 +1236,7 @@
             loadOrders();
         });
     </script>
-    
+
     <!-- Review Modal -->
     <div class="review-modal" id="reviewModal" onclick="if(event.target.id === 'reviewModal') closeReviewModal()">
         <div class="review-modal-content" onclick="event.stopPropagation()">
@@ -1143,51 +1244,54 @@
                 <h3>⭐ Bewertung abgeben</h3>
                 <button class="review-modal-close" onclick="closeReviewModal()" aria-label="Schließen">×</button>
             </div>
-            
+
             <div class="review-form-group">
                 <label>Ihre Bewertung</label>
                 <div class="star-rating-container">
-                    <button class="star-rating-btn" onclick="document.getElementById('reviewRating').value = '1'; updateStarDisplay(1);">☆</button>
-                    <button class="star-rating-btn" onclick="document.getElementById('reviewRating').value = '2'; updateStarDisplay(2);">☆</button>
-                    <button class="star-rating-btn" onclick="document.getElementById('reviewRating').value = '3'; updateStarDisplay(3);">☆</button>
-                    <button class="star-rating-btn" onclick="document.getElementById('reviewRating').value = '4'; updateStarDisplay(4);">☆</button>
-                    <button class="star-rating-btn" onclick="document.getElementById('reviewRating').value = '5'; updateStarDisplay(5);">☆</button>
+                    <button class="star-rating-btn"
+                        onclick="document.getElementById('reviewRating').value = '1'; updateStarDisplay(1);">☆</button>
+                    <button class="star-rating-btn"
+                        onclick="document.getElementById('reviewRating').value = '2'; updateStarDisplay(2);">☆</button>
+                    <button class="star-rating-btn"
+                        onclick="document.getElementById('reviewRating').value = '3'; updateStarDisplay(3);">☆</button>
+                    <button class="star-rating-btn"
+                        onclick="document.getElementById('reviewRating').value = '4'; updateStarDisplay(4);">☆</button>
+                    <button class="star-rating-btn"
+                        onclick="document.getElementById('reviewRating').value = '5'; updateStarDisplay(5);">☆</button>
                 </div>
                 <input type="hidden" id="reviewRating" value="5">
-                <small style="color: rgba(255,255,255,0.5); font-size: 12px;">Klicken Sie auf die Sterne, um Ihre Bewertung auszuwählen</small>
+                <small style="color: rgba(255,255,255,0.5); font-size: 12px;">Klicken Sie auf die Sterne, um Ihre
+                    Bewertung auszuwählen</small>
             </div>
-            
+
             <div class="review-form-group">
                 <label for="reviewComment">Ihr Kommentar (optional)</label>
-                <textarea 
-                    id="reviewComment" 
-                    class="review-comment" 
-                    placeholder="Teilen Sie uns Ihre Erfahrung mit..."
-                    maxlength="500"
-                ></textarea>
+                <textarea id="reviewComment" class="review-comment" placeholder="Teilen Sie uns Ihre Erfahrung mit..."
+                    maxlength="500"></textarea>
                 <small style="color: rgba(255,255,255,0.5); font-size: 12px; display: block; margin-top: 8px;">
                     <span id="reviewCommentCount">0</span> / 500 Zeichen
                 </small>
             </div>
-            
+
             <div class="review-modal-actions">
                 <button class="btn-review-cancel" onclick="closeReviewModal()">Abbrechen</button>
-                <button class="btn-review-submit" id="submitReviewBtn" onclick="submitReview()">Bewertung absenden</button>
+                <button class="btn-review-submit" id="submitReviewBtn" onclick="submitReview()">Bewertung
+                    absenden</button>
             </div>
         </div>
     </div>
-    
+
     <script>
         // Update character count
-        document.getElementById('reviewComment')?.addEventListener('input', function() {
+        document.getElementById('reviewComment')?.addEventListener('input', function () {
             document.getElementById('reviewCommentCount').textContent = this.value.length;
         });
-        
+
         // Initialize star display
         if (document.getElementById('reviewRating')) {
             updateStarDisplay(5);
         }
     </script>
 </body>
-</html>
 
+</html>

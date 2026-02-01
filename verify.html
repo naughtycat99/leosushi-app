@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="de">
+
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -9,12 +10,30 @@
     <link rel="icon" href="assets/logo.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=Inter:wght@300;400;600&display=swap"
+        rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="styles-luxe.css">
     <!-- API Configuration -->
     <script>
-        window.API_BASE_URL = 'http://localhost:3000/api';
+        // Check if running in Capacitor (iOS uses capacitor:// protocol)
+        const isCapacitorInfo = window.location.protocol === 'capacitor:' || window.location.search.includes('mock-app');
+
+        // Default to production
+        let apiBase = 'https://www.leo-sushi-berlin.de/api';
+
+        // Development override
+        if (!isCapacitorInfo && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
+            apiBase = 'http://localhost:3000/api';
+        } else if (isCapacitorInfo) {
+            apiBase = 'https://www.leo-sushi-berlin.de/api';
+        } else {
+            apiBase = window.location.origin + (window.location.pathname.includes('/leosushi') ? '/leosushi/api' : '/api');
+        }
+
+        window.API_BASE_URL = apiBase;
+        window.API_PHP_BASE_URL = apiBase;
     </script>
     <script src="js/api.js"></script>
     <!-- EmailJS for sending emails -->
@@ -28,6 +47,7 @@
             padding: 20px;
             background: linear-gradient(135deg, #0b0b0c 0%, #1a1a1c 100%);
         }
+
         .verify-card {
             background: rgba(255, 255, 255, 0.05);
             backdrop-filter: blur(20px);
@@ -39,31 +59,38 @@
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
             text-align: center;
         }
+
         .verify-icon {
             font-size: 64px;
             margin-bottom: 24px;
         }
+
         .verify-title {
             font-family: 'Playfair Display', serif;
             font-size: 32px;
             color: var(--gold);
             margin-bottom: 16px;
         }
+
         .verify-message {
             color: rgba(255, 255, 255, 0.9);
             font-size: 16px;
             line-height: 1.6;
             margin-bottom: 32px;
         }
+
         .verify-success {
             color: #10b981;
         }
+
         .verify-error {
             color: #ef4444;
         }
+
         .verify-loading {
             color: var(--gold);
         }
+
         .btn-primary {
             padding: 16px 32px;
             background: linear-gradient(135deg, var(--gold) 0%, #d4af37 100%);
@@ -77,10 +104,12 @@
             text-decoration: none;
             display: inline-block;
         }
+
         .btn-primary:hover {
             transform: translateY(-2px);
             box-shadow: 0 8px 20px rgba(212, 175, 55, 0.3);
         }
+
         .spinner {
             border: 3px solid rgba(255, 255, 255, 0.1);
             border-top: 3px solid var(--gold);
@@ -90,12 +119,19 @@
             animation: spin 1s linear infinite;
             margin: 0 auto 24px;
         }
+
         @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
         }
     </style>
 </head>
+
 <body>
     <div class="verify-container">
         <div class="verify-card">
@@ -104,14 +140,14 @@
                 <h1 class="verify-title">E-Mail wird bestätigt...</h1>
                 <p class="verify-message verify-loading">Bitte warten Sie einen Moment.</p>
             </div>
-            
+
             <div id="successState" style="display: none;">
                 <div class="verify-icon">✅</div>
                 <h1 class="verify-title">E-Mail bestätigt!</h1>
                 <p class="verify-message verify-success" id="successMessage"></p>
                 <a href="menu.html" class="btn-primary">Zum Menü</a>
             </div>
-            
+
             <div id="errorState" style="display: none;">
                 <div class="verify-icon">❌</div>
                 <h1 class="verify-title">Fehler</h1>
@@ -128,18 +164,18 @@
         const urlParams = new URLSearchParams(window.location.search);
         const token = urlParams.get('token');
         const email = urlParams.get('email');
-        
+
         // Verify email
         async function verify() {
             if (!token || !email) {
                 showError('Ungültiger Verifizierungslink.');
                 return;
             }
-            
+
             // Wait for Firebase and auth.js to load
             let attempts = 0;
             const maxAttempts = 50;
-            
+
             function waitAndVerify() {
                 if (typeof verifyEmail !== 'undefined' && typeof window.api !== 'undefined') {
                     verifyEmail(token, email).then(result => {
@@ -156,27 +192,27 @@
                     showError('Fehler beim Laden. Bitte laden Sie die Seite neu.');
                 }
             }
-            
+
             waitAndVerify();
         }
-        
+
         function showSuccess(message) {
             document.getElementById('loadingState').style.display = 'none';
             document.getElementById('errorState').style.display = 'none';
             document.getElementById('successState').style.display = 'block';
             document.getElementById('successMessage').textContent = message;
         }
-        
+
         function showError(message) {
             document.getElementById('loadingState').style.display = 'none';
             document.getElementById('successState').style.display = 'none';
             document.getElementById('errorState').style.display = 'block';
             document.getElementById('errorMessage').textContent = message;
         }
-        
+
         // Start verification on page load
         verify();
     </script>
 </body>
-</html>
 
+</html>

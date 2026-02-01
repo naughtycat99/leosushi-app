@@ -26,7 +26,11 @@
   <script>
     // API base URL is auto-detected by js/api.js from current location
     // Only override for localhost development
-    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+    // Check if running in Capacitor (iOS uses capacitor:// protocol, Android may use http://localhost but with X-Requested-With header)
+    const isCapacitorInfo = window.location.protocol === 'capacitor:' || window.location.search.includes('mock-app');
+
+    // Only override for localhost development if NOT in Capacitor
+    if (!isCapacitorInfo && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
       window.API_BASE_URL = window.location.origin + (window.location.pathname.includes('/leosushi') ? '/leosushi/api' : '/api');
       window.API_PHP_BASE_URL = window.API_BASE_URL;
     }
