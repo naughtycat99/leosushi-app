@@ -4,7 +4,11 @@
 // Auto-detect base URL from current location (supports both HTTP and HTTPS)
 function getBaseURL() {
   // Check if running in Capacitor app
-  const isCapacitor = window.Capacitor && window.Capacitor.isNativePlatform();
+  // 1. Check window.Capacitor object
+  // 2. Check protocol (capacitor:// for iOS)
+  const isCapacitor = (window.Capacitor && window.Capacitor.isNativePlatform()) ||
+    window.location.protocol === 'capacitor:' ||
+    window.location.protocol === 'ionic:'; // Android sometimes
 
   if (isCapacitor) {
     // ALWAYS use production API URL for Capacitor apps

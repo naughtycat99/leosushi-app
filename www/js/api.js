@@ -3,26 +3,24 @@
 
 // Auto-detect base URL from current location (supports both HTTP and HTTPS)
 function getBaseURL() {
-  // If explicitly set, use it
+  // Check if running in Capacitor app
+  // 1. Check window.Capacitor object
+  // 2. Check protocol (capacitor:// for iOS)
+  const isCapacitor = (window.Capacitor && window.Capacitor.isNativePlatform()) ||
+    window.location.protocol === 'capacitor:' ||
+    window.location.protocol === 'ionic:'; // Android sometimes
+
+  if (isCapacitor) {
+    // ALWAYS use production API URL for Capacitor apps
+    // This ensures API calls work even when app uses local files
+    console.log('🔧 Capacitor detected: Using production API URL');
+    return 'https://www.leo-sushi-berlin.de/api';
+  }
+
+  // If explicitly set, use it (for web development)
   if (window.API_PHP_BASE_URL) {
     return window.API_PHP_BASE_URL;
   }
-
-  // Check if running in Capacitor app
-  const isCapacitor = window.Capacitor && window.Capacitor.isNativePlatform();
-
-  if (isCapacitor) {
-    // In Capacitor app, use server URL from config or default production URL
-    // You should set this in capacitor.config.js -> server.url
-    const capacitorConfig = window.Capacitor?.getConfig?.();
-    if (capacitorConfig?.server?.url) {
-      // If server.url is set, API is on same domain
-      return capacitorConfig.server.url + '/api';
-    }
-    // Fallback: use production API URL
-    return 'https://www.leo-sushi-berlin.de/api'; // Đường dẫn API chính thức
-  }
-
 
   // Auto-detect from current location (web browser)
   const protocol = window.location.protocol; // 'http:' or 'https:'
