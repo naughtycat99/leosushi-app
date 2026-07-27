@@ -68,11 +68,11 @@ workflows:
       - name: Add iOS platform (if needed)
         script: |
           set -e
-          if [ ! -d "ios" ]; then
-            echo "iOS folder not found, adding platform..."
+          if [ ! -d "ios/App" ]; then
+            echo "iOS App folder not found, adding platform..."
             npx cap add ios
           else
-            echo "iOS folder exists, skipping add platform."
+            echo "iOS App folder exists, skipping add platform."
           fi
 
       - name: Capacitor Sync
