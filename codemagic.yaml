@@ -224,6 +224,9 @@ workflows:
           set -e
           set -x
 
+          # Create new certificate and provisioning profile automatically
+          app-store-connect fetch-signing-files "com.leosushi.berlin" --type IOS_APP_STORE --create
+          
           # Cài đặt provisioning profiles từ Codemagic
           xcode-project use-profiles
           
