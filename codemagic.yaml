@@ -8,9 +8,6 @@ workflows:
       xcode: latest
       node: 20
       cocoapods: default
-      ios_signing:
-        distribution_type: app_store
-        bundle_identifier: com.leosushi.berlin
     triggering:
       events:
         - push
@@ -217,14 +214,27 @@ workflows:
           }
           EOF
           
+      - name: Fetch Apple Certificates
+        script: |
+          set -e
+          set -x
+          
+          echo "=== Tự động cài đặt chứng chỉ thủ công ==="
+          keychain initialize
+          keychain add-certificates --certificate ios/signing/leo_sushi_distribution.p12 --certificate-password "ivd06Bjp"
+          
+          PROVISIONING_PROFILE_DIR="$HOME/Library/MobileDevice/Provisioning Profiles"
+          mkdir -p "$PROVISIONING_PROFILE_DIR"
+          cp "ios/signing/LEO_Shipper_App_Store.mobileprovision" "$PROVISIONING_PROFILE_DIR/"
+          
+          # Áp dụng giấy phép vào Xcode
+          xcode-project use-profiles
+
       - name: Build iOS App
         script: |
           set -e
           set -x
           
-          # Áp dụng giấy phép vào Xcode
-          xcode-project use-profiles
-
           # Set build number
           cd ios/App
           if [ -n "$BUILD_NUMBER" ]; then
@@ -237,13 +247,12 @@ workflows:
           cd ../..
           
           cd ios
-          # Build archive using Codemagic automatic signing
+          # Build archive
           xcodebuild archive \
             -workspace "App/App.xcworkspace" \
             -scheme "App" \
             -archivePath "App.xcarchive" \
-            -destination "generic/platform=iOS" \
-            CODE_SIGN_STYLE=Automatic
+            -destination "generic/platform=iOS"
           
           # Export IPA
           xcodebuild -exportArchive \
