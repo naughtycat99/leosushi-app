@@ -224,6 +224,10 @@ workflows:
           set -e
           set -x
 
+          echo "=== Debugging App Store Connect ==="
+          app-store-connect profiles list || true
+          app-store-connect certificates list || true
+
           # Cài đặt provisioning profiles từ Codemagic
           xcode-project use-profiles
           
