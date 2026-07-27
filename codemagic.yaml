@@ -8,6 +8,9 @@ workflows:
       xcode: latest
       node: 20
       cocoapods: default
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.leosushi.berlin
       groups:
         - app_store_connect
     triggering:
@@ -216,25 +219,14 @@ workflows:
           }
           EOF
           
-          echo "=== App icons generated successfully ==="
-          ls -la "$ICON_DIR"
-      
-      - name: Fetch Apple Certificates
-        script: |
-          set -e
-          set -x
-          echo "=== TẢI CHỨNG CHỈ VÀ GIẤY PHÉP TỪ APPLE ==="
-          # Lấy chính xác giấy phép phân phối cho com.leosushi.berlin
-          app-store-connect fetch-signing-files "com.leosushi.berlin" --type IOS_APP_STORE --create
-          
-          # Áp dụng giấy phép vào Xcode
-          xcode-project use-profiles
-
       - name: Build iOS App
         script: |
           set -e
           set -x
           
+          # Áp dụng giấy phép vào Xcode
+          xcode-project use-profiles
+
           # Set build number
           cd ios/App
           if [ -n "$BUILD_NUMBER" ]; then
@@ -247,12 +239,13 @@ workflows:
           cd ../..
           
           cd ios
-          # Build archive using MANUAL signing explicitly so it respects the fetched profiles
+          # Build archive using Codemagic automatic signing
           xcodebuild archive \
             -workspace "App/App.xcworkspace" \
             -scheme "App" \
             -archivePath "App.xcarchive" \
-            -destination "generic/platform=iOS"
+            -destination "generic/platform=iOS" \
+            CODE_SIGN_STYLE=Automatic
           
           # Export IPA
           xcodebuild -exportArchive \
