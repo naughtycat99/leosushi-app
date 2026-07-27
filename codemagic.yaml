@@ -219,52 +219,46 @@ workflows:
           echo "=== App icons generated successfully ==="
           ls -la "$ICON_DIR"
       
+      - name: Fetch Apple Certificates
+        script: |
+          set -e
+          set -x
+          echo "=== TẢI CHỨNG CHỈ VÀ GIẤY PHÉP TỪ APPLE ==="
+          # Lấy chính xác giấy phép phân phối cho com.leosushi.berlin
+          app-store-connect fetch-signing-files "com.leosushi.berlin" --type IOS_APP_STORE --create
+          
+          # Áp dụng giấy phép vào Xcode
+          xcode-project use-profiles
+
       - name: Build iOS App
         script: |
           set -e
           set -x
-
-          echo "=== Debugging App Store Connect ==="
-          app-store-connect profiles list || true
-          app-store-connect certificates list || true
-
-          # Cài đặt provisioning profiles từ Codemagic
-          xcode-project use-profiles
           
-          # Set build number to Codemagic build number (ensures unique build for each upload)
+          # Set build number
           cd ios/App
-          # Use BUILD_NUMBER from Codemagic, or generate from timestamp if not available
           if [ -n "$BUILD_NUMBER" ]; then
             BUILD_NUM=$BUILD_NUMBER
           else
             BUILD_NUM=$(date +%Y%m%d%H%M)
           fi
           echo "Setting build number to: $BUILD_NUM"
-          
-          # Update Info.plist with new build number
           /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $BUILD_NUM" "App/Info.plist"
-          /usr/libexec/PlistBuddy -c "Print :CFBundleVersion" "App/Info.plist"
           cd ../..
           
           cd ios
-          # Build archive using Codemagic automatic signing
+          # Build archive using MANUAL signing explicitly so it respects the fetched profiles
           xcodebuild archive \
             -workspace "App/App.xcworkspace" \
             -scheme "App" \
             -archivePath "App.xcarchive" \
-            -destination "generic/platform=iOS" \
-            CODE_SIGN_STYLE=Automatic
-
-          # Export IPA using Codemagic export options
+            -destination "generic/platform=iOS"
+          
+          # Export IPA
           xcodebuild -exportArchive \
             -archivePath "App.xcarchive" \
             -exportPath "build/ios/ipa" \
             -exportOptionsPlist "../ExportOptions.plist"
-          
-          # Debug: List output files
-          echo "=== Listing export output ==="
-          ls -la build/ios/ipa || echo "Export folder not found"
-          find . -name "*.ipa" -type f 2>/dev/null || echo "No IPA files found"
     
     artifacts:
       - "ios/build/ios/ipa/*.ipa"
