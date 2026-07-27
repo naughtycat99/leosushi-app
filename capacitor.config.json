@@ -2,6 +2,14 @@
     "appId": "com.leosushi.berlin",
     "appName": "LEO Shipper",
     "webDir": "www",
+    "server": {
+        "url": "https://www.leo-sushi-berlin.de/delivery.html",
+        "cleartext": false,
+        "allowNavigation": [
+            "https://www.leo-sushi-berlin.de/*",
+            "https://leo-sushi-berlin.de/*"
+        ]
+    },
     "android": {
         "backgroundColor": "#0b0b0c",
         "webContentsDebuggingEnabled": true,
