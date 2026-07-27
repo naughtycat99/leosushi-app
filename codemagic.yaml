@@ -70,7 +70,16 @@ workflows:
           set -e
           if [ ! -d "ios/App" ]; then
             echo "iOS App folder not found, adding platform..."
+            # Save signing files if they exist
+            if [ -d "ios/signing" ]; then
+              cp -r ios/signing /tmp/signing_backup
+              rm -rf ios
+            fi
             npx cap add ios
+            # Restore signing files
+            if [ -d "/tmp/signing_backup" ]; then
+              cp -r /tmp/signing_backup ios/signing
+            fi
           else
             echo "iOS App folder exists, skipping add platform."
           fi
