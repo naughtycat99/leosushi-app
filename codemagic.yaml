@@ -11,6 +11,7 @@ workflows:
       groups:
         - shipper_cert
         - profile
+        - shipper_profile
     triggering:
       events:
         - push
