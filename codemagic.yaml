@@ -8,11 +8,9 @@ workflows:
       xcode: latest
       node: 20
       cocoapods: default
-      ios_signing:
-        distribution_type: app_store
-        bundle_identifier: com.leosushi.berlin
       groups:
-        - app_store_connect
+        - shipper_cert
+        - profile
     triggering:
       events:
         - push
