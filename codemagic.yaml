@@ -227,7 +227,10 @@ workflows:
           set -e
           set -x
 
-          # Cài đặt provisioning profiles từ Codemagic
+          # Generate and fetch provisioning profiles from Codemagic (create if missing)
+          app-store-connect fetch-signing-files "com.leosushi.berlin" --type IOS_APP_STORE --create
+
+          # Apply provisioning profiles to the Xcode project
           xcode-project use-profiles
           
           # Set build number to Codemagic build number (ensures unique build for each upload)
