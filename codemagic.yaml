@@ -28,7 +28,7 @@ workflows:
       - name: Install dependencies
         script: |
           set -e
-          npm install
+          npm install --legacy-peer-deps
 
       - name: Build Web Assets
         script: |
