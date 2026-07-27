@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Tisch Reservieren - LEO SUSHI</title>
+    <meta name="description" content="Reservieren Sie einen Tisch bei LEO SUSHI">
+    <meta name="theme-color" content="#0b0b0c">
+    <link rel="icon" href="assets/logo.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=Inter:wght@300;400;600&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="styles.css?v=20260408">
+    <link rel="stylesheet" href="styles-luxe.css?v=20260408">
+    <link rel="stylesheet" href="menu-order.css?v=20260408">
+    <link rel="stylesheet" href="css/mobile-app.css?v=20260408">
+    <!-- API Configuration -->
+    <script>
+        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+            window.API_BASE_URL = window.location.origin + (window.location.pathname.includes('/leosushi') ? '/leosushi/api' : '/api');
+            window.API_PHP_BASE_URL = window.API_BASE_URL;
+        }
+    </script>
+    <style>
+        :root {
+            --gold: #e5cf8e;
+            --gold-2: #c2a355;
+            --dark-bg: #0b0b0c;
+            --panel-bg: rgba(255, 255, 255, 0.03);
+            --border-color: rgba(229, 207, 142, 0.2);
+        }
+
+        body {
+            background: var(--dark-bg);
+            color: #fff;
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+        }
+
+        .reservation-page {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 60px 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Ambient Background */
+        .reservation-bg {
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+            background: radial-gradient(circle at 20% 20%, rgba(229, 207, 142, 0.05) 0%, transparent 40%),
+                        radial-gradient(circle at 80% 80%, rgba(194,163,85, 0.05) 0%, transparent 40%);
+        }
+
+        .reservation-container {
+            width: 100%;
+            max-width: 700px;
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--gold);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 30px;
+            transition: all 0.3s ease;
+            opacity: 0.8;
+        }
+
+        .back-link:hover {
+            opacity: 1;
+            transform: translateX(-4px);
+        }
+
+        .reservation-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .reservation-header h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(32px, 5vw, 48px);
+            margin: 0 0 12px;
+            background: linear-gradient(135deg, #fff 0%, var(--gold) 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .reservation-header p {
+            font-size: 16px;
+            color: rgba(255, 255, 255, 0.6);
+            margin: 0;
+            letter-spacing: 0.02em;
+        }
+
+        .reservation-card {
+            background: linear-gradient(145deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%);
+            border: 1px solid var(--border-color);
+            border-radius: 24px;
+            padding: 40px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(20px);
+        }
+
+        @media (max-width: 580px) {
+            .reservation-card {
+                padding: 25px;
+            }
+        }
+
+        .form-section {
+            margin-bottom: 35px;
+        }
+
+        .form-section:last-of-type {
+            margin-bottom: 10px;
+        }
+
+        .section-title {
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.2em;
+            color: var(--gold);
+            margin: 0 0 24px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .section-title::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: linear-gradient(90deg, rgba(229, 207, 142, 0.2), transparent);
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 580px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .form-group label {
+            font-size: 14px;
+            font-weight: 500;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .form-group label .required {
+            color: #ff4d4d;
+            margin-left: 2px;
+        }
+
+        /* Re-using payment-input style for premium look */
+        .premium-input {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 14px 18px;
+            color: #fff;
+            font-size: 15px;
+            font-family: inherit;
+            transition: all 0.3s ease;
+        }
+
+        .premium-input:focus {
+            outline: none;
+            border-color: var(--gold);
+            background: rgba(255, 255, 255, 0.08);
+            box-shadow: 0 0 0 4px rgba(229, 207, 142, 0.1);
+        }
+
+        .premium-input::placeholder {
+            color: rgba(255, 255, 255, 0.3);
+        }
+
+        select.premium-input {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23e5cf8e' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 14px center;
+            background-size: 18px;
+            padding-right: 45px;
+        }
+
+        .premium-input option {
+            background-color: #1a1a1c;
+            color: #fff;
+            padding: 10px;
+        }
+
+        textarea.premium-input {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 18px;
+            border: none;
+            border-radius: 14px;
+            background: linear-gradient(135deg, var(--gold) 0%, var(--gold-2) 100%);
+            color: #0b0b0c;
+            font-size: 16px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            margin-top: 10px;
+            box-shadow: 0 10px 25px -5px rgba(229, 207, 142, 0.4);
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px -5px rgba(229, 207, 142, 0.5);
+            filter: brightness(1.1);
+        }
+
+        .submit-btn:active {
+            transform: translateY(0);
+        }
+
+        .form-footer-info {
+            text-align: center;
+            margin-top: 25px;
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.4);
+            line-height: 1.6;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="reservation-bg"></div>
+
+    <div class="reservation-page">
+        <div class="reservation-container">
+            <a href="/" class="back-link">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+                Zurück zur Startseite
+            </a>
+
+            <div class="reservation-header">
+                <h1>Tisch Reservieren</h1>
+                <p>Genießen Sie erstklassige vietnamesische Küche</p>
+            </div>
+
+            <div class="reservation-card">
+                <form id="reservationForm" onsubmit="handleReservation(event); return false;">
+                    <!-- Branch Selection -->
+                    <div class="form-section">
+                        <h3 class="section-title">Filiale</h3>
+                        <div class="form-group">
+                            <label for="reserveBranch">Bitte wählen Sie eine Filiale <span class="required">*</span></label>
+                            <select id="reserveBranch" class="premium-input" required onchange="updateReservationBranch()">
+                                <option value="" disabled selected>Filiale wählen</option>
+                                <option value="branch_flora">Leo Sushi - Florastraße (13187 Berlin)</option>
+                                <option value="branch_haupt">Leo Sushi - Hauptstraße (13158 Berlin)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Customer Information -->
+                    <div class="form-section">
+                        <h3 class="section-title">Ihre Kontaktdaten</h3>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="reserveFirstName">Vorname <span class="required">*</span></label>
+                                <input type="text" id="reserveFirstName" class="premium-input" placeholder="z.B. Max" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="reserveLastName">Nachname <span class="required">*</span></label>
+                                <input type="text" id="reserveLastName" class="premium-input" placeholder="z.B. Mustermann" required>
+                            </div>
+                        </div>
+                        <div class="form-grid" style="margin-top: 20px;">
+                            <div class="form-group">
+                                <label for="reserveEmail">E-Mail-Adresse <span class="required">*</span></label>
+                                <input type="email" id="reserveEmail" class="premium-input" placeholder="max@example.com" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="reservePhone">Telefonnummer <span class="required">*</span></label>
+                                <input type="tel" id="reservePhone" class="premium-input" placeholder="0176 12345678" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Reservation Details -->
+                    <div class="form-section">
+                        <h3 class="section-title">Reservierungsdetails</h3>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="reserveDate">Datum <span class="required">*</span></label>
+                                <input type="date" id="reserveDate" class="premium-input" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="reserveTime">Uhrzeit <span class="required">*</span></label>
+                                <select id="reserveTime" class="premium-input" required>
+                                    <option value="" disabled selected>Zeit wählen</option>
+                                    <!-- Options will be generated by setupReservationTimeOptions() -->
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-grid" style="margin-top: 20px;">
+                            <div class="form-group">
+                                <label for="reserveGuests">Anzahl Personen <span class="required">*</span></label>
+                                <select id="reserveGuests" class="premium-input" required>
+                                    <option value="1">1 Person</option>
+                                    <option value="2" selected>2 Personen</option>
+                                    <option value="3">3 Personen</option>
+                                    <option value="4">4 Personen</option>
+                                    <option value="5">5 Personen</option>
+                                    <option value="6">6 Personen</option>
+                                    <option value="7">7 Personen</option>
+                                    <option value="8">8 Personen</option>
+                                    <option value="9">9 Personen</option>
+                                    <option value="10">10 Personen</option>
+                                    <option value="11">11 Personen</option>
+                                    <option value="12">12 Personen</option>
+                                    <option value="13">13 Personen</option>
+                                    <option value="14">14 Personen</option>
+                                    <option value="15">15 Personen</option>
+                                    <option value="16">16 Personen</option>
+                                    <option value="17">17 Personen</option>
+                                    <option value="18">18 Personen</option>
+                                    <option value="19">19 Personen</option>
+                                    <option value="20">20 Personen</option>
+                                </select>
+                            </div>
+                            <input type="hidden" id="reservationCustomerCode" value="">
+                        </div>
+                        <div class="form-group" style="margin-top: 20px;">
+                            <label for="reserveNote">Besondere Wünsche (optional)</label>
+                            <textarea id="reserveNote" class="premium-input" placeholder="z.B. Fensterplatz, Allergien, Geburtstagsfeier..."></textarea>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="submit-btn" id="submitBtn">Reservierung abschließen</button>
+                    
+                    <p class="form-footer-info">
+                        Mit dem Absenden Ihrer Reservierung erklären Sie sich mit unserer <a href="datenschutz.html" style="color: var(--gold);">Datenschutzerklärung</a> einverstanden. Sie erhalten in Kürze eine Bestätigungs-E-Mail.
+                    </p>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Load scripts -->
+    <script src="js/config.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/auth-mysql.js"></script>
+    <script src="js/notifications.js"></script>
+    <script src="js/database-helpers.js"></script>
+    <script src="js/reservation.js"></script>
+    <script src="js/customer.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            console.log('🔄 Reservation page specialized setup starting...');
+
+            // Set minimum date to today
+            const dateInput = document.getElementById('reserveDate');
+            if (dateInput) {
+                const today = new Date().toISOString().split('T')[0];
+                dateInput.setAttribute('min', today);
+                dateInput.value = today;
+            }
+
+            // High-priority: Setup 15-min time slots with rollover logic
+            if (typeof initReservationDateTime === 'function') {
+                initReservationDateTime();
+            } else if (typeof setupReservationTimeOptions === 'function') {
+                setupReservationTimeOptions();
+            }
+
+            // Auto-fill user info if logged in
+            if (typeof autoFillReservationInfo === 'function') {
+                await autoFillReservationInfo();
+            }
+            
+            // Re-setup time options after auto-fill in case date changed
+            if (typeof setupReservationTimeOptions === 'function') {
+                setupReservationTimeOptions();
+            }
+
+            // Initialize branch selector
+            initReservationBranch();
+
+            console.log('✅ Reservation page setup complete');
+        });
+
+        function initReservationBranch() {
+            const branchSelect = document.getElementById('reserveBranch');
+            if (!branchSelect) return;
+            
+            try {
+                const savedBranch = localStorage.getItem('leoSelectedBranch');
+                if (savedBranch) {
+                    const parsed = JSON.parse(savedBranch);
+                    if (parsed && parsed.id) {
+                        branchSelect.value = parsed.id;
+                    }
+                }
+            } catch (e) {
+                console.error('Error parsing branch from localStorage:', e);
+            }
+        }
+
+        function updateReservationBranch() {
+            const branchSelect = document.getElementById('reserveBranch');
+            if (!branchSelect || !branchSelect.value) return;
+            
+            const branchId = branchSelect.value;
+            let branchName = '';
+            let branchAddress = '';
+            
+            if (branchId === 'branch_flora') {
+                branchName = 'Leo Sushi - Florastraße';
+                branchAddress = 'Florastraße 10A, 13187 Berlin';
+            } else if (branchId === 'branch_haupt') {
+                branchName = 'Leo Sushi - Hauptstraße';
+                branchAddress = 'Hauptstraße 29a, 13158 Berlin';
+            }
+            
+            const branchInfo = { id: branchId, name: branchName, address: branchAddress };
+            localStorage.setItem('leoSelectedBranch', JSON.stringify(branchInfo));
+        }
+    </script>
+</body>
+
+</html>

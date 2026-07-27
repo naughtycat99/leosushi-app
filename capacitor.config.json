@@ -1,0 +1,38 @@
+{
+    "appId": "com.leosushi.berlin",
+    "appName": "LEO Shipper",
+    "webDir": "www",
+    "android": {
+        "backgroundColor": "#0b0b0c",
+        "webContentsDebuggingEnabled": true,
+        "allowMixedContent": true
+    },
+    "ios": {
+        "contentInset": "never",
+        "backgroundColor": "#0b0b0c",
+        "preferredContentMode": "mobile",
+        "allowsLinkPreview": true,
+        "scrollEnabled": true,
+        "limitsNavigationsToAppBoundDomains": false,
+        "webContentsDebuggingEnabled": true
+    },
+    "plugins": {
+        "SplashScreen": {
+            "launchShowDuration": 8000,
+            "launchAutoHide": true,
+            "backgroundColor": "#0b0b0c",
+            "showSpinner": false
+        },
+        "StatusBar": {
+            "style": "dark",
+            "backgroundColor": "#0b0b0c"
+        },
+        "Keyboard": {
+            "resize": "body",
+            "style": "dark"
+        },
+        "CapacitorHttp": {
+            "enabled": true
+        }
+    }
+}

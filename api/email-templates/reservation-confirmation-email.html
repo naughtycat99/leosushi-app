@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ihre Tischreservierung bei LEO SUSHI</title>
+  <style>
+    body { font-family: 'Inter', Arial, sans-serif; background: #0b0b0c; color: #f1f1f1; margin: 0; padding: 0; }
+    .wrapper { max-width: 640px; margin: 0 auto; padding: 32px 16px; }
+    .card { background: linear-gradient(145deg, #111113, #0c0c0d); border: 1px solid rgba(212,175,55,0.4); border-radius: 20px; padding: 32px; box-shadow: 0 20px 60px rgba(0,0,0,0.45); }
+    .logo { text-align: center; font-family: 'Playfair Display', serif; font-size: 28px; color: #d4af37; margin-bottom: 24px; }
+    .title { font-size: 22px; font-weight: 600; margin-bottom: 16px; color: #fff; text-align: center; }
+    .text { font-size: 15px; line-height: 1.6; color: rgba(255,255,255,0.85); margin-bottom: 20px; }
+    .info-box { background: rgba(255,255,255,0.04); border: 1px solid rgba(212,175,55,0.3); border-radius: 16px; padding: 16px 20px; margin-bottom: 20px; }
+    .info-row { display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 6px; color: rgba(255,255,255,0.8); }
+    .footer { margin-top: 32px; text-align: center; font-size: 12px; color: rgba(255,255,255,0.4); }
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+    <div class="card">
+      <div class="logo">LEO SUSHI</div>
+      <div class="title">Reservierungsbestätigung ✅</div>
+      <p class="text">
+        Hallo {{NAME}},<br>
+        vielen Dank für Ihre Reservierung bei LEO SUSHI. Wir freuen uns, Ihnen mitteilen zu können, dass Ihre Tischreservierung bestätigt wurde.
+      </p>
+
+      <div class="info-box">
+        <div class="info-row"><span>Reservierungs-Nr.:</span><strong>{{RESERVATION_ID}}</strong></div>
+        <div class="info-row"><span>Datum:</span><strong>{{RES_DATE}}</strong></div>
+        <div class="info-row"><span>Uhrzeit:</span><strong>{{RES_TIME}} Uhr</strong></div>
+        <div class="info-row"><span>Personen:</span><strong>{{GUESTS}}</strong></div>
+      </div>
+
+      <p class="text">
+        Wir freuen uns auf Ihren Besuch!<br>
+        Für Rückfragen erreichen Sie uns telefonisch oder per E-Mail.
+      </p>
+
+      <div class="footer">© {{YEAR}} LEO SUSHI. Alle Rechte vorbehalten.</div>
+    </div>
+  </div>
+</body>
+</html>

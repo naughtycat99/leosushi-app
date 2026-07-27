@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>API Debug Tool - LEO SUSHI</title>
+    <style>
+        body { font-family: monospace; background: #1a1a1a; color: #00ff00; padding: 20px; line-height: 1.5; }
+        .success { color: #00ff00; }
+        .error { color: #ff0000; font-weight: bold; }
+        .warning { color: #ffff00; }
+        .info { color: #00ffff; }
+        hr { border: 0; border-top: 1px dashed #444; margin: 20px 0; }
+        pre { background: #000; padding: 10px; border-radius: 5px; overflow-x: auto; max-height: 300px; border: 1px solid #333; }
+        .btn { background: #444; color: white; border: none; padding: 10px 20px; cursor: pointer; border-radius: 5px; margin-right: 10px; }
+        .btn:hover { background: #666; }
+    </style>
+</head>
+<body>
+    <h1>🔍 LEO SUSHI - API Debug Tool (ROOT)</h1>
+    <div id="env-info"></div>
+    <hr>
+    <button class="btn" onclick="runTests()">🚀 Chạy kiểm tra</button>
+    <button class="btn" onclick="location.href='admin.html'">🔙 Quay lại Admin</button>
+    <hr>
+    <div id="results"></div>
+
+    <script>
+        const results = document.getElementById('results');
+        const envInfo = document.getElementById('envInfo');
+
+        function log(message, type = 'info') {
+            const div = document.createElement('div');
+            div.className = type;
+            div.innerHTML = `[${new Date().toLocaleTimeString()}] ${message}`;
+            results.appendChild(div);
+            window.scrollTo(0, document.body.scrollHeight);
+        }
+
+        async function testEndpoint(name, url, options = {}) {
+            log(`Đang kiểm tra: <b>${name}</b>...`, 'info');
+            log(`URL: ${url}`, 'info');
+            try {
+                const start = performance.now();
+                const response = await fetch(url, options);
+                const end = performance.now();
+                const duration = Math.round(end - start);
+
+                const status = response.status;
+                const contentType = response.headers.get('content-type');
+                
+                log(`Kết quả: HTTP ${status} (${duration}ms)`, status === 200 ? 'success' : 'error');
+                
+                if (contentType && contentType.includes('application/json')) {
+                    const data = await response.json();
+                    log(`Phản hồi JSON: <pre>${JSON.stringify(data, null, 2)}</pre>`, 'success');
+                    return { success: true, data };
+                } else {
+                    const text = await response.text();
+                    log(`Cảnh báo: Phản hồi không phải JSON!`, 'warning');
+                    log(`Nội dung (trích đoạn): <pre>${text.substring(0, 500)}</pre>`, 'info');
+                    return { success: false, status };
+                }
+            } catch (err) {
+                log(`❌ Lỗi kết nối: ${err.message}`, 'error');
+                return { success: false, error: err };
+            }
+        }
+
+        async function runTests() {
+            results.innerHTML = '';
+            log('Bắt đầu chẩn đoán API...', 'info');
+
+            // 1. Kiểm tra Base URL
+            const protocol = window.location.protocol;
+            const host = window.location.host;
+            const path = window.location.pathname.replace('debug-api.html', 'api');
+            const apiBase = `${protocol}//${host}${path}`;
+            log(`API Base tự động: <b>${apiBase}</b>`);
+
+            await testEndpoint('Kiểm tra quyền truy cập thư mục API', apiBase + '/');
+
+            hr();
+            
+            // 2. Kiểm tra các Endpoint PHP cụ thể
+            await testEndpoint('Kiểm tra orders.php (Trực tiếp)', apiBase + '/orders.php?action=list&limit=1');
+            
+            hr();
+            
+            await testEndpoint('Kiểm tra bootstrap.php', apiBase + '/bootstrap.php');
+
+            hr();
+
+            await testEndpoint('Kiểm tra Router (V1 Data Orders)', apiBase.replace('/api', '') + '/api/index.php?route=v1/data/orders');
+
+            log('<hr>✅ Chẩn đoán hoàn tất.', 'info');
+        }
+
+        // Show initial info
+        const displayInfo = () => {
+            document.getElementById('env-info').innerHTML = `
+                <b>Hostname:</b> ${window.location.hostname}<br>
+                <b>Base Path:</b> ${window.location.pathname}<br>
+                <b>Detected API:</b> ${window.location.origin}${window.location.pathname.replace('debug-api.html', 'api')}<br>
+                <span class="warning">LƯU Ý: Đã cập nhật .htaccess để hỗ trợ đường dẫn thư mục con.</span>
+            `;
+        };
+        displayInfo();
+    </script>
+</body>
+</html>

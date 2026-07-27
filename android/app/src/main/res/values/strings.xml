@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Leo Sushi</string>
+    <string name="title_activity_main">Leo Sushi</string>
+    <string name="package_name">com.leosushi.app</string>
+    <string name="custom_url_scheme">com.leosushi.app</string>
+</resources>

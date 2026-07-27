@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>Neue Tischreservierung - LEO SUSHI</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 20px auto;
+            background-color: #ffffff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .header {
+            background-color: #d4af37;
+            color: #000000;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+
+        .content {
+            padding: 30px;
+            color: #333333;
+            line-height: 1.6;
+        }
+
+        .order-info {
+            background-color: #f9f9f9;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            border-left: 4px solid #d4af37;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            border-bottom: 1px dashed #eee;
+            padding-bottom: 8px;
+        }
+
+        .info-row:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .info-label {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .info-value {
+            font-weight: 600;
+            color: #000;
+            text-align: right;
+        }
+
+        .footer {
+            background-color: #333333;
+            color: #ffffff;
+            padding: 20px;
+            text-align: center;
+            font-size: 12px;
+        }
+
+        .btn {
+            display: inline-block;
+            background-color: #d4af37;
+            color: #000000;
+            padding: 12px 25px;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: 600;
+            margin-top: 20px;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+            background: #fff3e0;
+            color: #e65100;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Neue Tischreservierung 📅</h1>
+        </div>
+        <div class="content">
+            <p>Es ist eine neue Tischreservierung eingegangen.</p>
+
+            <div class="order-info">
+                <div class="info-row">
+                    <span class="info-label">Reservierungs-Nr.:</span>
+                    <span class="info-value">{{RESERVATION_ID}}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Status:</span>
+                    <span class="info-value">
+                        <span class="badge">Neu (Ausstehend)</span>
+                    </span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Datum:</span>
+                    <span class="info-value">{{RES_DATE}}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Uhrzeit:</span>
+                    <span class="info-value">{{RES_TIME}} Uhr</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Personen:</span>
+                    <span class="info-value">{{GUESTS}}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Kunde:</span>
+                    <span class="info-value">{{CUSTOMER_NAME}}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Telefon:</span>
+                    <span class="info-value"><a href="tel:{{PHONE}}" style="text-decoration: none; color: inherit;">{{PHONE}}</a></span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">E-Mail:</span>
+                    <span class="info-value">{{EMAIL}}</span>
+                </div>
+                {{NOTE_SECTION}}
+            </div>
+
+            <div style="text-align: center;">
+                <a href="https://www.leo-sushi-berlin.de/admin.html" class="btn">Zum Admin-Panel</a>
+            </div>
+        </div>
+        <div class="footer">
+            &copy; {{YEAR}} LEO SUSHI Admin System
+        </div>
+    </div>
+</body>
+
+</html>

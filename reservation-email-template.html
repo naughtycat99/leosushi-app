@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; 
+            line-height: 1.6; 
+            color: #2c3e50; 
+            background: #f5f7fa;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        .email-wrapper { 
+            max-width: 600px; 
+            margin: 0 auto; 
+            background: #ffffff;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+        .header { 
+            background: linear-gradient(135deg, #C2A355 0%, #D2B365 50%, #E5CF8E 100%); 
+            color: #1a1a1a; 
+            padding: 50px 30px; 
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        .header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            animation: shimmer 3s infinite;
+        }
+        @keyframes shimmer {
+            0%, 100% { transform: translate(0, 0) rotate(0deg); }
+            50% { transform: translate(20px, 20px) rotate(180deg); }
+        }
+        .header h1 { 
+            font-size: 32px; 
+            font-weight: 800; 
+            margin: 0;
+            letter-spacing: 1px;
+            position: relative;
+            z-index: 1;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .header p {
+            font-size: 16px;
+            font-weight: 500;
+            margin: 12px 0 0 0;
+            position: relative;
+            z-index: 1;
+            opacity: 0.9;
+        }
+        .content { 
+            padding: 35px 30px; 
+            background: #ffffff;
+        }
+        .reservation-datetime-box { 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%); 
+            color: #ffffff; 
+            padding: 35px 25px; 
+            border-radius: 16px; 
+            text-align: center; 
+            font-weight: 600;
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.35);
+            position: relative;
+            overflow: hidden;
+            margin: 0 0 30px 0;
+        }
+        .reservation-datetime-box::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, transparent 70%);
+        }
+        .reservation-datetime-box .date-label {
+            font-size: 14px;
+            font-weight: 600;
+            opacity: 0.98;
+            letter-spacing: 0.5px;
+            position: relative;
+            z-index: 1;
+            margin-bottom: 15px;
+        }
+        .reservation-datetime-box .datetime-value {
+            font-size: 36px;
+            margin: 15px 0;
+            font-weight: 800;
+            text-shadow: 0 3px 8px rgba(0,0,0,0.25);
+            position: relative;
+            z-index: 1;
+            letter-spacing: 1px;
+            line-height: 1.3;
+        }
+        .reservation-datetime-box .guests-info {
+            margin: 20px 0 0 0;
+            font-size: 16px;
+            font-weight: 500;
+            opacity: 0.98;
+            line-height: 1.7;
+            position: relative;
+            z-index: 1;
+        }
+        .reservation-id-section {
+            text-align: center;
+            padding: 25px 0;
+            border-bottom: 3px solid #e9ecef;
+            margin-bottom: 30px;
+            background: linear-gradient(to bottom, transparent, #f8f9fa);
+            border-radius: 0 0 12px 12px;
+        }
+        .reservation-id-section h2 {
+            font-size: 26px;
+            color: #1a1a1a;
+            margin: 0 0 10px 0;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+        }
+        .reservation-id-section .reservation-time {
+            color: #6c757d;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        .restaurant-info-box {
+            background: linear-gradient(135deg, #C2A355 0%, #D2B365 50%, #E5CF8E 100%); 
+            color: #1a1a1a; 
+            padding: 30px 25px; 
+            border-radius: 16px; 
+            text-align: center; 
+            font-weight: 600;
+            box-shadow: 0 8px 25px rgba(194, 163, 85, 0.35);
+            margin: 0 0 30px 0;
+            position: relative;
+            overflow: hidden;
+        }
+        .restaurant-info-box::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 70%);
+        }
+        .restaurant-info-box h3 {
+            font-size: 20px;
+            font-weight: 700;
+            margin: 0 0 20px 0;
+            position: relative;
+            z-index: 1;
+        }
+        .restaurant-info-box p {
+            margin: 10px 0;
+            font-size: 16px;
+            font-weight: 500;
+            position: relative;
+            z-index: 1;
+            line-height: 1.8;
+        }
+        .restaurant-info-box .address {
+            font-size: 18px;
+            font-weight: 700;
+            margin: 15px 0;
+            position: relative;
+            z-index: 1;
+        }
+        .restaurant-info-box .phone {
+            font-size: 20px;
+            font-weight: 800;
+            margin: 15px 0;
+            position: relative;
+            z-index: 1;
+            letter-spacing: 1px;
+        }
+        .order-info { 
+            background: linear-gradient(to bottom, #ffffff 0%, #f8f9fa 100%); 
+            padding: 25px 22px; 
+            margin: 0 0 22px 0; 
+            border-left: 5px solid #C2A355; 
+            border-radius: 12px;
+            box-shadow: 0 3px 12px rgba(0,0,0,0.06);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .order-info:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 18px rgba(0,0,0,0.1);
+        }
+        .order-info h3 { 
+            color: #1a1a1a; 
+            font-size: 19px; 
+            font-weight: 700; 
+            margin: 0 0 18px 0;
+            padding-bottom: 12px;
+            border-bottom: 2px solid #e9ecef;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .order-info p { 
+            margin: 10px 0; 
+            color: #495057;
+            font-size: 15px;
+            line-height: 1.7;
+        }
+        .order-info strong { 
+            color: #1a1a1a; 
+            font-weight: 600;
+            min-width: 120px;
+            display: inline-block;
+        }
+        .divider {
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #e9ecef 20%, #e9ecef 80%, transparent);
+            margin: 30px 0;
+        }
+        .footer { 
+            text-align: center; 
+            padding: 40px 25px; 
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+            color: #ffffff;
+        }
+        .footer p { 
+            margin: 10px 0;
+            font-size: 14px;
+            color: #adb5bd;
+            line-height: 1.8;
+        }
+        .footer strong {
+            color: #C2A355;
+            font-size: 18px;
+            display: block;
+            margin-bottom: 15px;
+            font-weight: 700;
+        }
+        .note-box {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 18px 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+        .note-box p {
+            margin: 0;
+            color: #856404;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        .note-box strong {
+            color: #856404;
+            font-weight: 700;
+        }
+        
+        /* Mobile Responsive Styles */
+        @media only screen and (max-width: 600px) {
+            .email-wrapper {
+                width: 100% !important;
+                max-width: 100% !important;
+            }
+            .header {
+                padding: 35px 20px !important;
+            }
+            .header h1 {
+                font-size: 26px !important;
+            }
+            .header p {
+                font-size: 14px !important;
+            }
+            .content {
+                padding: 25px 18px !important;
+            }
+            .reservation-datetime-box {
+                padding: 25px 18px !important;
+                margin: 0 0 25px 0 !important;
+                border-radius: 14px !important;
+            }
+            .reservation-datetime-box .datetime-value {
+                font-size: 28px !important;
+            }
+            .reservation-datetime-box .guests-info {
+                font-size: 14px !important;
+            }
+            .restaurant-info-box {
+                padding: 25px 18px !important;
+                margin: 0 0 25px 0 !important;
+                border-radius: 14px !important;
+            }
+            .restaurant-info-box h3 {
+                font-size: 18px !important;
+            }
+            .restaurant-info-box .address {
+                font-size: 16px !important;
+            }
+            .restaurant-info-box .phone {
+                font-size: 18px !important;
+            }
+            .order-info {
+                padding: 20px 18px !important;
+                margin: 0 0 18px 0 !important;
+                border-radius: 10px !important;
+            }
+            .order-info h3 {
+                font-size: 17px !important;
+                margin: 0 0 15px 0 !important;
+            }
+            .order-info p {
+                font-size: 14px !important;
+                margin: 8px 0 !important;
+            }
+            .order-info strong {
+                min-width: 100px !important;
+                display: block !important;
+                margin-bottom: 4px !important;
+            }
+            .reservation-id-section {
+                padding: 20px 0 !important;
+                margin-bottom: 25px !important;
+            }
+            .reservation-id-section h2 {
+                font-size: 22px !important;
+            }
+            .reservation-id-section .reservation-time {
+                font-size: 13px !important;
+            }
+            .footer {
+                padding: 30px 20px !important;
+            }
+            .footer strong {
+                font-size: 16px !important;
+                margin-bottom: 12px !important;
+            }
+            .footer p {
+                font-size: 13px !important;
+            }
+            .divider {
+                margin: 25px 0 !important;
+            }
+        }
+        
+        /* Dark mode support */
+        @media (prefers-color-scheme: dark) {
+            .email-wrapper {
+                background: #1a1a1a;
+            }
+            .content {
+                background: #1a1a1a;
+            }
+            .order-info {
+                background: linear-gradient(to bottom, #2d2d2d 0%, #252525 100%);
+                color: #e0e0e0;
+            }
+            .order-info h3,
+            .order-info strong {
+                color: #ffffff;
+            }
+            .order-info p {
+                color: #d0d0d0;
+            }
+            .reservation-id-section {
+                background: linear-gradient(to bottom, transparent, #252525);
+            }
+            .reservation-id-section h2 {
+                color: #ffffff;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="email-wrapper">
+        <div class="header">
+            <h1>🍣 LEO SUSHI</h1>
+            <p style="margin: 10px 0 0 0; font-size: 16px; font-weight: 500;">Reservierungsbestätigung</p>
+        </div>
+        
+        <div class="content">
+            <!-- Reservation ID Section -->
+            <div class="reservation-id-section">
+                <h2>Reservierungsnummer: {{reservation_id}}</h2>
+                <p class="reservation-time">Reserviert am: {{reservation_time}}</p>
+            </div>
+            
+            <!-- Reservation Date & Time - Highlighted -->
+            <div class="reservation-datetime-box">
+                <div class="date-label">📅 Ihre Reservierung</div>
+                <div class="datetime-value">{{reservation_datetime}}</div>
+                <div class="guests-info">👥 {{guests}} Person(en)</div>
+            </div>
+            
+            <div class="divider"></div>
+            
+            <!-- Restaurant Information - Important -->
+            <div class="restaurant-info-box">
+                <h3>📍 Unser Restaurant</h3>
+                <p class="address">{{restaurant_address}}</p>
+                <p class="phone">📞 {{restaurant_phone}}</p>
+                <p style="margin-top: 15px; font-size: 14px; opacity: 0.9;">Bitte kommen Sie pünktlich zu Ihrer Reservierung!</p>
+            </div>
+            
+            <!-- Customer Information -->
+            <div class="order-info">
+                <h3>👤 Ihre Kontaktdaten</h3>
+                <p><strong>Name:</strong> {{customer_name}}</p>
+                <p><strong>Telefon:</strong> {{customer_phone}}</p>
+                <p><strong>E-Mail:</strong> {{customer_email}}</p>
+            </div>
+            
+            <!-- Reservation Details -->
+            <div class="order-info">
+                <h3>📋 Reservierungsdetails</h3>
+                <p><strong>Datum:</strong> {{reservation_date}}</p>
+                <p><strong>Uhrzeit:</strong> {{reservation_time}}</p>
+                <p><strong>Anzahl Personen:</strong> {{guests}} Person(en)</p>
+                <p><strong>Tischnummer:</strong> {{table_number_display}}</p>
+            </div>
+            
+            {{note_display}}
+            
+            {{estimated_time_display}}
+        </div>
+        
+        <div class="footer">
+            <p><strong>LEO SUSHI</strong></p>
+            <p>{{restaurant_address}}</p>
+            <p>📞 Tel: {{restaurant_phone}}</p>
+            <p>✉️ E-Mail: {{restaurant_email}}</p>
+            <p style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #343a40; color: #6c757d; font-size: 12px;">
+                Wir freuen uns auf Ihren Besuch! 🎉
+            </p>
+        </div>
+    </div>
+</body>
+</html>
+

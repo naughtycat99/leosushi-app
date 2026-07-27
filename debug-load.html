@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>JS Load Test</title>
+</head>
+<body>
+    <h1>Testing JS Load...</h1>
+    <div id="result" style="padding: 20px; font-size: 24px;">Waiting for script...</div>
+    
+    <!-- Local script test -->
+    <script src="js/test-simple.js?v=1"></script>
+    
+    <!-- CDN script test -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    
+    <script>
+        window.addEventListener('load', function() {
+            var msg = "Status:<br>";
+            if (window.testJsLoaded) {
+                msg += "✅ Local JS: Loaded<br>";
+            } else {
+                msg += "❌ Local JS: FAILED<br>";
+            }
+            
+            if (window.jQuery) {
+                msg += "✅ CDN JQuery: Loaded<br>";
+            } else {
+                msg += "❌ CDN JQuery: FAILED<br>";
+            }
+            
+            document.getElementById('result').innerHTML = msg;
+        });
+    </script>
+</body>
+</html>

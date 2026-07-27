@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thanh toán PayPal - LEO SUSHI</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0b0b0c 0%, #1a1a1c 100%);
+            color: #fff;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 30px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            backdrop-filter: blur(10px);
+        }
+
+        .header h1 {
+            font-size: 36px;
+            color: #d4af37;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 16px;
+        }
+
+        .payment-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .payment-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            padding: 30px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .payment-card h3 {
+            color: #d4af37;
+            margin-bottom: 20px;
+            font-size: 24px;
+        }
+
+        .order-summary {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            padding: 30px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .order-summary h3 {
+            color: #d4af37;
+            margin-bottom: 20px;
+            font-size: 24px;
+        }
+
+        .summary-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .summary-item:last-child {
+            border-bottom: none;
+            font-size: 20px;
+            font-weight: 600;
+            color: #d4af37;
+            margin-top: 10px;
+            padding-top: 20px;
+            border-top: 2px solid rgba(212, 175, 55, 0.3);
+        }
+
+        .summary-label {
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .summary-value {
+            color: #fff;
+            font-weight: 600;
+        }
+
+        .payment-methods {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .payment-method {
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .payment-method:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: #d4af37;
+        }
+
+        .payment-method.selected {
+            background: rgba(212, 175, 55, 0.1);
+            border-color: #d4af37;
+        }
+
+        .payment-method-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 10px;
+        }
+
+        .payment-method-icon {
+            font-size: 32px;
+        }
+
+        .payment-method-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #d4af37;
+        }
+
+        .payment-method-desc {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 14px;
+            margin-left: 47px;
+        }
+
+        #paypal-button-container {
+            margin-top: 20px;
+            min-height: 50px;
+        }
+
+        .cash-payment-info {
+            background: rgba(212, 175, 55, 0.1);
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            border-radius: 8px;
+            padding: 16px;
+            margin-top: 20px;
+        }
+
+        .cash-payment-info h4 {
+            color: #d4af37;
+            margin-bottom: 8px;
+        }
+
+        .cash-payment-info p {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .btn {
+            padding: 14px 28px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #d4af37 0%, #b8941f 100%);
+            color: #0b0b0c;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(212, 175, 55, 0.3);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .status-message {
+            padding: 16px;
+            border-radius: 8px;
+            margin-top: 20px;
+            display: none;
+        }
+
+        .status-message.success {
+            background: rgba(34, 197, 94, 0.1);
+            border: 1px solid rgba(34, 197, 94, 0.3);
+            color: #86efac;
+            display: block;
+        }
+
+        .status-message.error {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #fca5a5;
+            display: block;
+        }
+
+        .status-message.info {
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            color: #93c5fd;
+            display: block;
+        }
+
+        .order-items {
+            margin-bottom: 20px;
+        }
+
+        .order-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .order-item:last-child {
+            border-bottom: none;
+        }
+
+        .item-name {
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .item-quantity {
+            color: rgba(255, 255, 255, 0.6);
+            margin-left: 10px;
+        }
+
+        .item-price {
+            color: #d4af37;
+            font-weight: 600;
+        }
+
+        @media (max-width: 768px) {
+            .payment-container {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>💳 Thanh toán trực tuyến</h1>
+            <p>Chọn phương thức thanh toán và hoàn tất đơn hàng của bạn</p>
+        </div>
+
+        <div class="payment-container">
+            <!-- Phương thức thanh toán -->
+            <div class="payment-card">
+                <h3>Phương thức thanh toán</h3>
+                
+                <div class="payment-methods">
+                    <div class="payment-method selected" id="paypalMethod" onclick="selectPaymentMethod('paypal')">
+                        <div class="payment-method-header">
+                            <div class="payment-method-icon">💳</div>
+                            <div class="payment-method-title">PayPal</div>
+                        </div>
+                        <div class="payment-method-desc">Thanh toán an toàn qua PayPal</div>
+                    </div>
+
+                    <div class="payment-method" id="cashMethod" onclick="selectPaymentMethod('cash')">
+                        <div class="payment-method-header">
+                            <div class="payment-method-icon">💵</div>
+                            <div class="payment-method-title">Tiền mặt</div>
+                        </div>
+                        <div class="payment-method-desc">Thanh toán khi nhận hàng</div>
+                    </div>
+                </div>
+
+                <!-- PayPal Button Container -->
+                <div id="paypal-button-container"></div>
+
+                <!-- Cash Payment Info -->
+                <div class="cash-payment-info" id="cashInfo" style="display: none;">
+                    <h4>💵 Thanh toán tiền mặt</h4>
+                    <p>Bạn sẽ thanh toán khi nhận hàng. Vui lòng chuẩn bị đúng số tiền theo tổng đơn hàng.</p>
+                    <button class="btn btn-primary" id="confirmCashBtn" onclick="confirmCashPayment()" style="display: none;">
+                        Xác nhận đơn hàng
+                    </button>
+                </div>
+
+                <!-- Status Messages -->
+                <div class="status-message" id="statusMessage"></div>
+            </div>
+
+            <!-- Tóm tắt đơn hàng -->
+            <div class="order-summary">
+                <h3>Tóm tắt đơn hàng</h3>
+                
+                <div class="order-items">
+                    <div class="order-item">
+                        <span class="item-name">Sushi Set A <span class="item-quantity">x2</span></span>
+                        <span class="item-price">€45.00</span>
+                    </div>
+                    <div class="order-item">
+                        <span class="item-name">Miso Soup <span class="item-quantity">x1</span></span>
+                        <span class="item-price">€5.50</span>
+                    </div>
+                    <div class="order-item">
+                        <span class="item-name">Green Tea <span class="item-quantity">x2</span></span>
+                        <span class="item-price">€6.00</span>
+                    </div>
+                </div>
+
+                <div class="summary-item">
+                    <span class="summary-label">Tạm tính:</span>
+                    <span class="summary-value">€56.50</span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">Phí giao hàng:</span>
+                    <span class="summary-value">€0.00</span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">Giảm giá:</span>
+                    <span class="summary-value">-€5.65</span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">Tổng cộng:</span>
+                    <span class="summary-value">€50.85</span>
+                </div>
+
+                <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid rgba(255, 255, 255, 0.1);">
+                    <h4 style="color: #d4af37; margin-bottom: 12px;">Thông tin giao hàng</h4>
+                    <div style="color: rgba(255, 255, 255, 0.8); font-size: 14px; line-height: 1.8;">
+                        <div><strong>Nguyễn Văn A</strong></div>
+                        <div>123 Main Street, 13187 Berlin</div>
+                        <div>+49 123 456789</div>
+                        <div>nguyenvana@example.com</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let selectedPaymentMethod = 'paypal';
+
+        function selectPaymentMethod(method) {
+            selectedPaymentMethod = method;
+            
+            // Update UI
+            document.querySelectorAll('.payment-method').forEach(el => el.classList.remove('selected'));
+            document.getElementById(method + 'Method').classList.add('selected');
+            
+            // Show/hide PayPal button
+            const paypalContainer = document.getElementById('paypal-button-container');
+            const cashInfo = document.getElementById('cashInfo');
+            const confirmCashBtn = document.getElementById('confirmCashBtn');
+            
+            if (method === 'paypal') {
+                paypalContainer.style.display = 'block';
+                cashInfo.style.display = 'none';
+                renderPayPalButtonMockup();
+            } else {
+                paypalContainer.style.display = 'none';
+                cashInfo.style.display = 'block';
+                confirmCashBtn.style.display = 'block';
+            }
+        }
+
+        // Render PayPal button mockup (giao diện mẫu)
+        function renderPayPalButtonMockup() {
+            const container = document.getElementById('paypal-button-container');
+            if (!container) return;
+            
+            container.innerHTML = `
+                <div style="
+                    background: linear-gradient(135deg, #0070ba 0%, #003087 100%);
+                    border-radius: 8px;
+                    padding: 16px;
+                    text-align: center;
+                    cursor: pointer;
+                    transition: all 0.3s;
+                    margin-top: 20px;
+                " 
+                onclick="handlePayPalMockup()"
+                onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(0, 112, 186, 0.3)'"
+                onmouseout="this.style.transform=''; this.style.boxShadow=''">
+                    <div style="display: flex; align-items: center; justify-content: center; gap: 10px; color: white; font-weight: 600;">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="white">
+                            <path d="M7.076 21.337H2.47a.641.641 0 0 1-.633-.74L4.944.901C5.026.382 5.474 0 5.998 0h7.46c2.57 0 4.578.543 5.69 1.81 1.01 1.15 1.304 2.42 1.012 4.287-.023.143-.047.288-.077.437-.983 5.05-4.349 6.797-8.647 6.797v2.137c0 .596-.452 1.203-1.054 1.203l-4.545.01c-.282 0-.524-.203-.585-.49l-1.77-7.89c-.032-.14-.048-.28-.048-.41 0-.62.503-1.127 1.123-1.127h2.76c.98 0 1.778.798 1.778 1.778s-.798 1.777-1.778 1.777H9.41l1.263 5.64h.01l.01-.01c.01.01.01.01.01.01l.01.01h.01l1.263-5.64h1.15c.98 0 1.778-.798 1.778-1.778s-.798-1.778-1.778-1.778h-2.76c-.62 0-1.123.507-1.123 1.127 0 .13.016.27.048.41l1.77 7.89c.061.287.303.49.585.49l4.545-.01c.602 0 1.054-.607 1.054-1.203V13.93c4.298 0 7.664-1.747 8.647-6.797.03-.149.054-.294.077-.437.292-1.867-.002-3.137-1.012-4.287-1.112-1.267-3.12-1.81-5.69-1.81H5.998c-.524 0-.972.382-1.054.901L2.837 20.597a.641.641 0 0 1 .633.74h4.606z"/>
+                        </svg>
+                        <span>Thanh toán với PayPal</span>
+                    </div>
+                </div>
+            `;
+        }
+
+        function handlePayPalMockup() {
+            showStatus('info', 'Đây là giao diện mẫu. Trong thực tế, đây sẽ là PayPal button thật.');
+            setTimeout(() => {
+                showStatus('success', 'Thanh toán thành công! (Demo)');
+            }, 2000);
+        }
+
+        function handlePayPalSuccess(details) {
+            // Demo function - không thực tế
+            showStatus('success', 'Thanh toán thành công! Đơn hàng của bạn đã được xác nhận. (Demo)');
+        }
+
+        function confirmCashPayment() {
+            // Demo function - không thực tế
+            showStatus('success', 'Đơn hàng đã được xác nhận! Bạn sẽ thanh toán khi nhận hàng. (Demo)');
+        }
+
+        function showStatus(type, message) {
+            const statusEl = document.getElementById('statusMessage');
+            statusEl.className = 'status-message ' + type;
+            statusEl.textContent = message;
+        }
+
+        // Auto-fill customer information
+        function loadAndDisplayCustomerInfo() {
+            let customerInfo = null;
+            
+            // Try to get from logged in user first
+            try {
+                const userStr = localStorage.getItem('leo_user');
+                if (userStr) {
+                    const user = JSON.parse(userStr);
+                    if (user && user.email) {
+                        customerInfo = {
+                            firstName: user.firstName || '',
+                            lastName: user.lastName || '',
+                            email: user.email || '',
+                            phone: user.phone || '',
+                            street: user.street || '',
+                            postal: user.postal || '',
+                            city: user.city || ''
+                        };
+                    }
+                }
+            } catch (e) {
+                console.log('Could not load from leo_user:', e);
+            }
+            
+            // If not found, try leoCustomers (saved from previous orders)
+            if (!customerInfo || !customerInfo.email) {
+                try {
+                    const savedCustomers = JSON.parse(localStorage.getItem('leoCustomers') || '{}');
+                    // Try to get the most recent customer info
+                    const customerKeys = Object.keys(savedCustomers);
+                    if (customerKeys.length > 0) {
+                        // Get the first available customer info
+                        const firstKey = customerKeys[0];
+                        const saved = savedCustomers[firstKey];
+                        if (saved) {
+                            customerInfo = {
+                                firstName: saved.firstName || '',
+                                lastName: saved.lastName || '',
+                                email: saved.email || '',
+                                phone: saved.phone || '',
+                                street: saved.street || '',
+                                postal: saved.postal || '',
+                                city: saved.city || ''
+                            };
+                        }
+                    }
+                } catch (e) {
+                    console.log('Could not load from leoCustomers:', e);
+                }
+            }
+            
+            // If still not found, try leoEarlyCustomerInfo
+            if (!customerInfo || !customerInfo.email) {
+                try {
+                    const earlyInfoStr = localStorage.getItem('leoEarlyCustomerInfo');
+                    if (earlyInfoStr) {
+                        const earlyInfo = JSON.parse(earlyInfoStr);
+                        if (earlyInfo) {
+                            customerInfo = {
+                                firstName: earlyInfo.firstName || '',
+                                lastName: earlyInfo.lastName || '',
+                                email: earlyInfo.email || '',
+                                phone: earlyInfo.phone || '',
+                                street: earlyInfo.street || '',
+                                postal: earlyInfo.postal || '',
+                                city: earlyInfo.city || ''
+                            };
+                        }
+                    }
+                } catch (e) {
+                    console.log('Could not load from leoEarlyCustomerInfo:', e);
+                }
+            }
+            
+            // Update delivery info display if customer info found
+            if (customerInfo && (customerInfo.firstName || customerInfo.email)) {
+                const deliveryInfoDiv = document.querySelector('.order-summary > div:last-child > div:last-child');
+                if (deliveryInfoDiv) {
+                    const fullName = `${customerInfo.firstName || ''} ${customerInfo.lastName || ''}`.trim() || 'Khách hàng';
+                    const address = customerInfo.street 
+                        ? `${customerInfo.street}${customerInfo.postal ? ', ' + customerInfo.postal : ''}${customerInfo.city ? ' ' + customerInfo.city : ''}`
+                        : (customerInfo.postal && customerInfo.city ? `${customerInfo.postal} ${customerInfo.city}` : '');
+                    
+                    deliveryInfoDiv.innerHTML = `
+                        <div><strong>${fullName}</strong></div>
+                        ${address ? `<div>${address}</div>` : ''}
+                        ${customerInfo.phone ? `<div>${customerInfo.phone}</div>` : ''}
+                        ${customerInfo.email ? `<div>${customerInfo.email}</div>` : ''}
+                    `;
+                }
+            }
+            
+            // Auto-fill form fields if they exist (for future form implementation)
+            autoFillFormFields(customerInfo);
+        }
+        
+        // Auto-fill form fields with customer info
+        function autoFillFormFields(customerInfo) {
+            if (!customerInfo) return;
+            
+            // Try to find and fill form fields (if form exists)
+            const fields = {
+                'customerFirstName': customerInfo.firstName,
+                'customerLastName': customerInfo.lastName,
+                'customerEmail': customerInfo.email,
+                'customerPhone': customerInfo.phone,
+                'deliveryStreet': customerInfo.street,
+                'deliveryPostal': customerInfo.postal,
+                'deliveryCity': customerInfo.city
+            };
+            
+            for (const [fieldId, value] of Object.entries(fields)) {
+                const field = document.getElementById(fieldId);
+                if (field && value && !field.value) {
+                    field.value = value;
+                    // Trigger input event for any listeners
+                    field.dispatchEvent(new Event('input', { bubbles: true }));
+                    field.dispatchEvent(new Event('change', { bubbles: true }));
+                }
+            }
+        }
+        
+        // Initialize PayPal mockup and load customer info on page load
+        window.addEventListener('load', function() {
+            if (selectedPaymentMethod === 'paypal') {
+                renderPayPalButtonMockup();
+            }
+            // Load and display customer information
+            loadAndDisplayCustomerInfo();
+        });
+    </script>
+</body>
+</html>
+

@@ -1,0 +1,27 @@
+  <!-- Bottom Navigation for Mobile -->
+    <div class="bottom-nav">
+        <button class="nav-item active" onclick="event.stopPropagation(); switchTab('orders'); updateNav(this)">
+            <i>📦</i>
+            <span>Đơn hàng</span>
+        </button>
+        <button class="nav-item" onclick="event.stopPropagation(); switchTab('stats'); updateNav(this)">
+            <i>📊</i>
+            <span>Thống kê</span>
+        </button>
+        <button class="nav-item" onclick="event.stopPropagation(); switchTab('reservations'); updateNav(this)">
+            <i>📅</i>
+            <span>Lịch đặt</span>
+        </button>
+        <button class="nav-item" onclick="event.stopPropagation(); switchTab('customers'); updateNav(this)">
+            <i>👥</i>
+            <span>Khách</span>
+        </button>
+        <button class="nav-item" onclick="event.stopPropagation(); toggleMoreMenu()">
+            <i>➕</i>
+            <span>Thêm</span>
+        </button>
+    </div>
+
+    <!-- Floating Action Buttons removed -->
+
+    <!-- M

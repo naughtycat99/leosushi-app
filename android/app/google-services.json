@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "207693587665",
+    "project_id": "leo-sushi-cef42",
+    "storage_bucket": "leo-sushi-cef42.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:207693587665:android:0a4c755d397164d35511f0",
+        "android_client_info": {
+          "package_name": "com.leosushi.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCmjU0YzU0map3lf7JS3xlIn4nGicKLcL0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

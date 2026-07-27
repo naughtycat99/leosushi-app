@@ -1,0 +1,156 @@
+
+=================== PAGE 15 BLOCKS ===================
+[224.0, 918.0, 1068.1, 1029.9]: Wok Dishes With Rice
+[242.7, 1072.0, 601.4, 1146.2]: 70 Roter Curry
+[606.0, 1084.0, 729.0, 1118.5]: (a,d,n,i) 6
+[320.0, 1150.0, 1375.1, 1238.3]: Kokosmilch, rotes Curry, verschiedenes Gemⁿse und Reis, dazu: | (Coconut milk, red curry, assorted vegetables and rice, with:)
+[320.0, 1237.0, 752.0, 1298.1]: A. Gebackener Tofu f
+[1120.0, 1237.0, 1235.8, 1490.1]: 11,90 | 12,90 | 14,90 | 13,90
+[1260.0, 1237.0, 1940.6, 1490.1]: b. HΣhnchenbrustfilet | d. Gegrilltes HΣhnchen-Brustfilet | g. Garnelen | h. Gegrillter Lachs
+[2060.0, 1237.0, 2175.8, 1554.1]: 12,90 | 13,90 | 13,90 | 15,90 | 13,90
+[320.0, 1301.0, 1032.6, 1554.1]: c. Gebackener HΣhnchenbrustfilet | e. Ente Kross | r. Marinierter Rindfleisch | i. Gebackene Seitan mit Sesam f
+[320.0, 1575.0, 1573.7, 1738.3]: (a,d,h,n) | Erdnuss | Cremige Kokosmilch-Erdnuss-So▀e, verschiedenes Gemⁿse und Reis, dazu: | (Creamy coconut-peanut sauce, assorted vegetables and rice, with:)
+[242.7, 1596.0, 277.3, 1636.7]: 71
+[320.0, 1737.0, 752.0, 1798.1]: A. Gebackener Tofu f
+[1120.0, 1737.0, 1235.8, 1990.1]: 11,90 | 12,90 | 14,90 | 13,90
+[1260.0, 1737.0, 1940.6, 1990.1]: b. HΣhnchenbrustfilet | d. Gegrilltes HΣhnchen-Brustfilet | g. Garnelen | h. Gegrillter Lachs
+[2060.0, 1737.0, 2175.8, 2054.1]: 12,90 | 13,90 | 13,90 | 15,90 | 13,90
+[320.0, 1801.0, 1032.6, 2054.1]: c. Gebackener HΣhnchenbrustfilet | e. Ente Kross | r. Marinierter Rindfleisch | i. Gebackene Seitan mit Sesam f
+[320.0, 2075.0, 1521.5, 2238.3]: (a,d,n,i) | Mango-Curry | Feinwⁿrzige Mango-Curry-So▀e, verschiedenes Gemⁿse und Reis, dazu: | (Spicy mango curry sauce, assorted vegetables and rice, with:)
+[242.7, 2096.0, 277.3, 2136.7]: 72
+[320.0, 2237.0, 752.0, 2298.1]: A. Gebackener Tofu f
+[1120.0, 2237.0, 1235.8, 2490.1]: 11,90 | 12,90 | 14,90 | 13,90
+[1260.0, 2237.0, 1940.6, 2490.1]: b. HΣhnchenbrustfilet | d. Gegrilltes HΣhnchen-Brustfilet | g. Garnelen | h. Gegrillter Lachs
+[2060.0, 2237.0, 2175.8, 2554.1]: 12,90 | 13,90 | 13,90 | 15,90 | 13,90
+[320.0, 2301.0, 1032.6, 2554.1]: c. Gebackener HΣhnchenbrustfilet | e. Ente Kross | r. Marinierter Rindfleisch | i. Gebackene Seitan mit Sesam f
+[1009.5, 3248.0, 1389.5, 3291.7]: 6 Scharf  |  f Vegetarisch
+[639.7, 3318.7, 1760.4, 3383.2]: Sollten Sie Fragen zu Allergenen, Zusatzstoffen oder UnvertrΣglichkeiten haben, sprechen Sie uns gerne an | If you have any questions about allergens, additives or intolerances, please feel free to contact us
+
+=================== PAGE 16 BLOCKS ===================
+[304.0, 918.0, 1148.1, 1029.9]: Wok Dishes With Rice
+[322.7, 1072.0, 757.9, 1146.2]: 73 Avocado Curry
+[763.0, 1084.0, 886.0, 1118.5]: (a,d,n,i) 6
+[400.0, 1150.0, 1805.5, 1238.3]: Cremige Kokosmilch-So▀e, grⁿnes Curry, verschiedenes Gemⁿse und Duftreis, dazu: | (Creamy coconut sauce, green curry, assorted vegetables and fragrant rice, with:)
+[400.0, 1237.0, 832.0, 1298.1]: A. Gebackener Tofu f
+[1200.0, 1237.0, 1315.8, 1490.1]: 11,90 | 12,90 | 14,90 | 13,90
+[1340.0, 1237.0, 2020.6, 1490.1]: b. HΣhnchenbrustfilet | d. Gegrilltes HΣhnchen-Brustfilet | g. Garnelen | h. Gegrillter Lachs
+[2140.0, 1237.0, 2255.8, 1554.1]: 12,90 | 13,90 | 13,90 | 15,90 | 13,90
+[400.0, 1301.0, 1112.6, 1554.1]: c. Gebackener HΣhnchenbrustfilet | e. Ente Kross | r. Marinierter Rindfleisch | i. Gebackene Seitan mit Sesam f
+[400.0, 1575.0, 1817.4, 1738.3]: (a,d,n,i) 6 | Good Curry | Cremige Kokosmilch-So▀e, Ingwer-Curry, verschiedenes Gemⁿse und Duftreis, dazu: | (Creamy coconut sauce, ginger curry, assorted vegetables and fragrant rice, with:)
+[322.7, 1596.0, 357.3, 1636.7]: 74
+[400.0, 1737.0, 832.0, 1798.1]: A. Gebackener Tofu f
+[1200.0, 1737.0, 1315.8, 1990.1]: 11,90 | 12,90 | 14,90 | 13,90
+[1340.0, 1737.0, 2020.6, 1990.1]: b. HΣhnchenbrustfilet | d. Gegrilltes HΣhnchen-Brustfilet | g. Garnelen | h. Gegrillter Lachs
+[2140.0, 1737.0, 2255.8, 2054.1]: 12,90 | 13,90 | 13,90 | 15,90 | 13,90
+[400.0, 1801.0, 1112.6, 2054.1]: c. Gebackener HΣhnchenbrustfilet | e. Ente Kross | r. Marinierter Rindfleisch | i. Gebackene Seitan mit Sesam f
+[400.0, 2069.7, 1720.1, 2238.4]: (A,F) 6 | Leo Spezial-So▀e | Frisches vietnamesisches Gemⁿse, pikante So▀e, Knoblauch mit Duftreis, dazu: | (Fresh Vietnamese vegetables, spicy sauce, garlic with fragrant rice, with:)
+[322.7, 2096.0, 357.3, 2136.7]: 75
+[400.0, 2237.0, 832.0, 2298.1]: A. Gebackener Tofu f
+[1200.0, 2237.0, 1315.8, 2490.1]: 11,90 | 12,90 | 14,90 | 13,90
+[1340.0, 2237.0, 2020.6, 2490.1]: b. HΣhnchenbrustfilet | d. Gegrilltes HΣhnchen-Brustfilet | g. Garnelen | h. Gegrillter Lachs
+[2140.0, 2237.0, 2255.8, 2554.1]: 12,90 | 13,90 | 13,90 | 15,90 | 13,90
+[400.0, 2301.0, 1112.6, 2554.1]: c. Gebackener HΣhnchenbrustfilet | e. Ente Kross | r. Marinierter Rindfleisch | i. Gebackene Seitan mit Sesam f
+[1089.5, 3248.0, 1469.5, 3291.7]: 6 Scharf  |  f Vegetarisch
+[719.7, 3318.7, 1840.4, 3383.6]: Sollten Sie Fragen zu Allergenen, Zusatzstoffen oder UnvertrΣglichkeiten haben, sprechen Sie uns gerne an | If you have any questions about allergens, additives or intolerances, please feel free to contact us
+
+=================== PAGE 17 BLOCKS ===================
+[224.0, 918.0, 1068.1, 1030.0]: Wok Dishes With Rice
+[242.7, 1072.0, 696.3, 1146.3]: 76 Sⁿ▀-saure So▀e
+[701.0, 1084.0, 733.6, 1114.6]: (k)
+[320.0, 1150.0, 2052.4, 1238.4]: Fruchtige Sⁿ▀-saure So▀e, zubereitet mit frischer Ananas und Orange sowie Paprika und grⁿnen Erbsen | (Fruity sweet and sour sauce prepared with fresh pineapple and orange, peppers, and green peas)
+[320.0, 1237.0, 752.0, 1298.1]: A. Gebackener Tofu f
+[1120.0, 1237.0, 1235.8, 1490.1]: 11,90 | 12,90 | 14,90 | 13,90
+[1260.0, 1237.0, 1940.6, 1490.1]: b. HΣhnchenbrustfilet | d. Gegrilltes HΣhnchen-Brustfilet | g. Garnelen | h. Gegrillter Lachs
+[2060.0, 1237.0, 2175.8, 1554.1]: 12,90 | 13,90 | 13,90 | 15,90 | 13,90
+[320.0, 1301.0, 1032.6, 1554.1]: c. Gebackener HΣhnchenbrustfilet | e. Ente Kross | r. Marinierter Rindfleisch | i. Gebackene Seitan mit Sesam f
+[224.0, 1594.0, 759.9, 1706.0]: Noodle Soups
+[242.7, 1748.0, 414.0, 1822.3]: 77 Pho
+[419.0, 1760.0, 467.8, 1790.6]: (b,F)
+[320.0, 1822.4, 1814.9, 1914.4]: Traditionelle vietnamesische Suppe mit Bandnudeln, frischem Ingwer und KrΣutern, dazu: | (Traditional Vietnamese soup with rice noodles, fresh ginger, and herbs, served with:)
+[320.0, 1925.0, 378.0, 2058.1]: A. | c.
+[373.0, 1925.0, 752.0, 1986.1]: Gebackener Tofu f
+[1120.0, 1925.0, 2175.8, 2058.1]: 11,90 b. HΣhnchenbrustfilet | 12,90 | 13,90
+[375.0, 1997.0, 851.7, 2058.1]: Marinierter Rindfleisch
+[320.0, 2061.7, 1367.0, 2230.4]: (b,g) | Japanische Nudelsuppe | Japanische Nudeln, Hⁿhnerbrⁿhe, Gemⁿse und KrΣuter, dazu: | (Japanese noodles, chicken broth, vegetables and herbs, with:)
+[242.7, 2085.0, 277.3, 2128.7]: 78
+[320.0, 2229.0, 752.0, 2290.1]: A. Gebackener Tofu f
+[1120.0, 2229.0, 1235.8, 2482.1]: 11,90 | 12,90 | 14,90 | 13,90
+[1260.0, 2229.0, 1940.6, 2482.1]: b. HΣhnchenbrustfilet | d. Gegrilltes HΣhnchen-Brustfilet | g. Garnelen | h. Gegrillter Lachs
+[2060.0, 2229.0, 2175.8, 2546.1]: 12,90 | 13,90 | 13,90 | 15,90 | 13,90
+[320.0, 2293.0, 1032.6, 2546.1]: c. Gebackener HΣhnchenbrustfilet | e. Ente Kross | r. Marinierter Rindfleisch | i. Gebackene Seitan mit Sesam f
+[1009.5, 3248.0, 1389.5, 3291.7]: 6 Scharf  |  f Vegetarisch
+[639.7, 3318.7, 1760.4, 3383.6]: Sollten Sie Fragen zu Allergenen, Zusatzstoffen oder UnvertrΣglichkeiten haben, sprechen Sie uns gerne an | If you have any questions about allergens, additives or intolerances, please feel free to contact us
+
+=================== PAGE 18 BLOCKS ===================
+[304.0, 918.0, 781.5, 1028.7]: Noodle salat
+[322.7, 1072.0, 617.3, 1145.4]: 79 Pho Tron
+[622.0, 1084.0, 675.4, 1114.2]: (a,b)
+[400.0, 1150.0, 2001.8, 1237.8]: Reisbandnudeln in Kokosmilch, rotem Curry, Salat, Erdnⁿssen, R÷stzwiebeln und KrΣutern, dazu: | (Rice noodles in coconut milk, red curry, salad, peanuts, crispy onions and herbs, with:)
+[400.0, 1249.0, 832.0, 1309.4]: A. Gebackener Tofu f
+[1200.0, 1249.0, 1315.8, 1525.4]: 11,90 | 12,90 | 14,90 | 13,90
+[1340.0, 1249.0, 2020.6, 1525.4]: b. HΣhnchenbrustfilet | d. Gegrilltes HΣhnchen-Brustfilet | g. Garnelen | h. Gegrillter Lachs
+[2140.0, 1249.0, 2255.8, 1597.4]: 12,90 | 13,90 | 13,90 | 15,90 | 13,90
+[400.0, 1321.0, 1112.6, 1597.4]: c. Gebackener HΣhnchenbrustfilet | e. Ente Kross | r. Marinierter Rindfleisch | i. Gebackene Seitan mit Sesam f
+[400.0, 1627.0, 2127.2, 1789.8]: (d,n) | Udon Coco | Japanische Nudeln in Kokosmilch, Masaman-Curry, Salat, Erdnⁿssen, R÷stzwiebeln und KrΣutern, dazu: | (Japanese noodles in coconut milk, masaman curry, salad, peanuts, crispy onions and herbs, with:)
+[322.7, 1648.0, 357.3, 1688.3]: 80
+[400.0, 1789.0, 832.0, 1849.4]: A. Gebackener Tofu f
+[1200.0, 1789.0, 1315.8, 2041.4]: 11,90 | 12,90 | 14,90 | 13,90
+[1340.0, 1789.0, 2020.6, 2041.4]: b. HΣhnchenbrustfilet | d. Gegrilltes HΣhnchen-Brustfilet | g. Garnelen | h. Gegrillter Lachs
+[2140.0, 1789.0, 2255.8, 2105.4]: 12,90 | 13,90 | 13,90 | 15,90 | 13,90
+[400.0, 1853.0, 1112.6, 2105.4]: c. Gebackener HΣhnchenbrustfilet | e. Ente Kross | r. Marinierter Rindfleisch | i. Gebackene Seitan mit Sesam f
+[400.0, 2135.0, 2183.1, 2337.8]: (e,h,n,i) | Bun Bo Nam Bo | Typisch sⁿdvietnamesische Esskultur mit dⁿnnen Reisbandnudeln, frischem Salat, Erdnⁿssen, KrΣutern und | hausgemachtem Limetten-Dressing, dazu: (Typical South Vietnamese cuisine with thin rice noodles, fresh | salad, peanuts, herbs, and homemade lime dressing, served with:)
+[322.7, 2156.0, 357.3, 2196.3]: 81
+[400.0, 2349.0, 458.0, 2481.4]: A. | c.
+[453.0, 2349.0, 832.0, 2409.4]: Gebackener Tofu f
+[1200.0, 2349.0, 1315.8, 2481.4]: 11,90 | 13,90
+[1340.0, 2349.0, 1400.9, 2481.4]: b. | d.
+[1389.0, 2349.0, 1787.4, 2409.4]: HΣhnchenbrustfilet
+[2140.0, 2349.0, 2255.8, 2481.4]: 12,90 | 12,90
+[455.0, 2421.0, 931.7, 2481.4]: Marinierter Rindfleisch
+[1397.0, 2416.4, 1817.5, 2481.4]: Nem Ha Noi (3 Stk.)
+[1089.5, 3248.0, 1469.5, 3291.3]: 6 Scharf  |  f Vegetarisch
+[719.7, 3318.7, 1840.4, 3383.2]: Sollten Sie Fragen zu Allergenen, Zusatzstoffen oder UnvertrΣglichkeiten haben, sprechen Sie uns gerne an | If you have any questions about allergens, additives or intolerances, please feel free to contact us
+
+=================== PAGE 19 BLOCKS ===================
+[224.0, 918.0, 739.2, 1028.7]: Fried noodles
+[242.7, 1072.0, 569.3, 1145.4]: 82 Udon Yaki
+[574.0, 1084.0, 624.3, 1114.2]: (a,f)
+[320.0, 1150.0, 2110.5, 1277.8]: Udon-Nudeln im hei▀en Wok mit Ei, frischem Gemⁿse gebraten, verfeinert mit vietnamesischen KrΣutern, | Erdnⁿssen und R÷stzwiebeln, dazu: (Udon noodles stir-fried in a hot wok with fresh vegetables, refined with | Vietnamese herbs, peanuts and crispy onions, with:)
+[320.0, 1277.0, 752.0, 1337.4]: A. Gebackener Tofu f
+[1120.0, 1277.0, 1235.8, 1523.4]: 11,90 | 12,90 | 14,90 | 13,90
+[1260.0, 1277.0, 1940.6, 1523.4]: b. HΣhnchenbrustfilet | d. Gegrilltes HΣhnchen-Brustfilet | f. Garnelen | h. Gegrillter Lachs
+[2060.0, 1277.0, 2175.8, 1585.4]: 12,90 | 13,90 | 13,90 | 15,90 | 13,90
+[320.0, 1339.0, 1032.6, 1585.4]: c. Gebackener HΣhnchenbrustfilet | e. Ente Kross | R. Marinierter Rindfleisch | i. Gebackene Seitan mit Sesam f
+[320.0, 1599.0, 2137.2, 1842.3]: (c,n) | Pad Thai | Reisbandnudeln im hei▀en Wok mit Ei, frischem Gemⁿse gebraten, verfeinert mit vietnamesischen KrΣutern, | Erdnⁿssen und R÷stzwiebeln, dazu: | (Rice noodles stir-fried in a hot wok with egg and fresh vegetables, refined with Vietnamese herbs, peanuts | and crispy onions, with:)
+[242.7, 1620.0, 277.3, 1660.3]: 83
+[320.0, 1841.0, 752.0, 1901.4]: A. Gebackener Tofu f
+[1120.0, 1841.0, 1235.8, 2093.4]: 11,90 | 12,90 | 14,90 | 13,90
+[1260.0, 1841.0, 1940.6, 2093.4]: b. HΣhnchenbrustfilet | d. Gegrilltes HΣhnchen-Brustfilet | g. Garnelen | h. Gegrillter Lachs
+[2060.0, 1841.0, 2175.8, 2157.4]: 12,90 | 13,90 | 13,90 | 15,90 | 13,90
+[320.0, 1905.0, 1032.6, 2157.4]: c. Gebackener HΣhnchenbrustfilet | e. Ente Kross | r. Marinierter Rindfleisch | i. Gebackene Seitan mit Sesam f
+[320.0, 2165.7, 2061.1, 2334.3]: (c,n) | My Xao | Gebratene Eiernudeln (Weizen) mit Ei, Porree, Chinakohl, M÷hren und Sojasprossen, dazu: | (Stir-fried egg noodles (wheat) with egg, leek, Chinese cabbage, carrots, and bean sprouts, served with:)
+[242.7, 2192.0, 277.3, 2232.3]: 84
+[320.0, 2345.0, 752.0, 2405.4]: A. Gebackener Tofu f
+[1120.0, 2345.0, 1235.8, 2621.4]: 11,90 | 12,90 | 14,90 | 13,90
+[1260.0, 2345.0, 1940.6, 2621.4]: b. HΣhnchenbrustfilet | d. Gegrilltes HΣhnchen-Brustfilet | g. Garnelen | h. Gegrillter Lachs
+[2060.0, 2345.0, 2175.8, 2693.4]: 12,90 | 13,90 | 13,90 | 15,90 | 13,90
+[320.0, 2417.0, 1032.6, 2693.4]: c. Gebackener HΣhnchenbrustfilet | e. Ente Kross | r. Marinierter Rindfleisch | i. Gebackene Seitan mit Sesam f
+[1009.5, 3248.0, 1389.5, 3291.7]: 6 Scharf  |  f Vegetarisch
+[639.7, 3318.7, 1760.4, 3383.5]: Sollten Sie Fragen zu Allergenen, Zusatzstoffen oder UnvertrΣglichkeiten haben, sprechen Sie uns gerne an | If you have any questions about allergens, additives or intolerances, please feel free to contact us
+
+=================== PAGE 20 BLOCKS ===================
+[304.0, 918.0, 819.2, 1028.7]: Fried noodles
+[322.7, 1056.0, 660.7, 1129.4]: (c,n) | 85 Pho Xao
+[400.0, 1134.0, 2255.8, 1333.4]: Gebratene Reisbandnudeln mit Ei, Pak Choi, Porree, M÷hren, Sojasprossen und Tamarindenso▀e, verfeinert | mit R÷stzwiebeln und Erdnⁿssen, wahlweise mit: (Stir-fried rice noodles with egg, pak choi, leek, carrots, bean | sprouts and tamarind sauce, refined with crispy fried onions and peanuts, optionally with:) | A. Gebackener Tofu | 12,90 | f
+[1200.0, 1273.0, 1315.8, 1549.4]: 11,90 | 12,90 | 14,90 | 13,90
+[1340.0, 1273.0, 2020.6, 1549.4]: b. HΣhnchenbrustfilet | d. Gegrilltes HΣhnchen-Brustfilet | g. Garnelen | h. Gegrillter Lachs
+[400.0, 1345.0, 2255.8, 1621.4]: c. Gebackener HΣhnchenbrustfilet | 13,90 | e. Ente Kross | 13,90 | r. Marinierter Rindfleisch | 15,90 | i. Gebackene Seitan mit Sesam | 13,90 | f
+[304.0, 1646.0, 677.2, 1756.7]: Fried Rice
+[322.7, 1784.0, 652.9, 1857.4]: 86 Com Rang
+[400.0, 1858.4, 2184.4, 2021.4]: Gebratener Reis mit Eier-Omelette, frischem Gemⁿse, Erbsen, Bohnen, Karotten, Mais und Zwiebeln, dazu: | (Fried rice with egg omelette, fresh vegetables, peas, beans, carrots, corn, and onions, served with:) | A. Gebackener Tofu f
+[1200.0, 1961.0, 1315.8, 2237.4]: 11,90 | 12,90 | 14,90 | 13,90
+[1340.0, 1961.0, 2020.6, 2237.4]: b. HΣhnchenbrustfilet | d. Gegrilltes HΣhnchen-Brustfilet | g. Garnelen | h. Gegrillter Lachs
+[2140.0, 1961.0, 2255.8, 2309.4]: 12,90 | 13,90 | 13,90 | 15,90 | 13,90
+[400.0, 2033.0, 1112.6, 2309.4]: c. Gebackener HΣhnchenbrustfilet | e. Ente Kross | r. Marinierter Rindfleisch | i. Gebackene Seitan mit Sesam f
+[1089.5, 3248.0, 1469.5, 3291.3]: 6 Scharf  |  f Vegetarisch
+[719.7, 3318.7, 1840.4, 3383.2]: Sollten Sie Fragen zu Allergenen, Zusatzstoffen oder UnvertrΣglichkeiten haben, sprechen Sie uns gerne an | If you have any questions about allergens, additives or intolerances, please feel free to contact us

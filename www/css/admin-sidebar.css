@@ -1,0 +1,240 @@
+/* new frontend base */
+:root {
+    --sidebar-width: 260px;
+    --header-height: 70px;
+    --bg-color: #0f1115;
+    --sidebar-bg: #16181d;
+    --gold: #d4af37;
+    --gold-hover: #f1c40f;
+    --text-light: #f3f4f6;
+    --text-muted: #9ca3af;
+    --border-color: rgba(255, 255, 255, 0.1);
+    --card-bg: #1f232b;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Inter', sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-light);
+    overflow: hidden;
+    /* App-like feel */
+}
+
+/* Dashboard Skeleton */
+.dashboard-wrapper {
+    display: flex;
+    height: 100vh;
+    width: 100vw;
+}
+
+/* Sidebar */
+.sidebar {
+    width: var(--sidebar-width);
+    background: var(--sidebar-bg);
+    border-right: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+    transition: all 0.3s ease;
+    z-index: 100;
+}
+
+.sidebar-header {
+    height: var(--header-height);
+    display: flex;
+    align-items: center;
+    padding: 0 24px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.sidebar-header h1 {
+    color: var(--gold);
+    font-size: 20px;
+    margin: 0;
+    font-weight: 700;
+    letter-spacing: 1px;
+}
+
+.sidebar-nav {
+    padding: 24px 12px;
+    flex: 1;
+    overflow-y: auto;
+}
+
+.nav-item {
+    display: flex;
+    align-items: center;
+    padding: 12px 16px;
+    color: var(--text-muted);
+    text-decoration: none;
+    border-radius: 8px;
+    margin-bottom: 8px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.nav-item i {
+    margin-right: 12px;
+    font-size: 20px;
+}
+
+.nav-item:hover,
+.nav-item.active {
+    background: rgba(212, 175, 55, 0.1);
+    color: var(--gold);
+}
+
+/* Auto Print Widget in Sidebar */
+.sidebar-widget {
+    margin: 12px;
+    padding: 16px;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+}
+
+.sidebar-widget h4 {
+    margin: 0 0 12px;
+    font-size: 14px;
+    color: var(--text-muted);
+}
+
+/* Main Content */
+.main-wrapper {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.top-header {
+    height: var(--header-height);
+    background: var(--bg-color);
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 32px;
+}
+
+.top-header .user-profile {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.logout-btn {
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+    border: 1px solid rgba(239, 68, 68, 0.2);
+    padding: 8px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.2s;
+}
+
+.logout-btn:hover {
+    background: #ef4444;
+    color: #fff;
+}
+
+.content-area {
+    flex: 1;
+    padding: 32px;
+    overflow-y: auto;
+    position: relative;
+}
+
+.admin-content {
+    display: none;
+    animation: fadeIn 0.3s ease;
+}
+
+.admin-content.active {
+    display: block;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Common Filters */
+.admin-filters {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    background: var(--card-bg);
+    padding: 16px 24px;
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+    flex-wrap: wrap;
+    gap: 16px;
+}
+
+.filter-btn {
+    background: transparent;
+    color: var(--text-muted);
+    border: 1px solid var(--border-color);
+    padding: 8px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+
+.filter-btn:hover,
+.filter-btn.active {
+    background: var(--gold);
+    color: #000;
+    border-color: var(--gold);
+}
+
+.filter-input {
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid var(--border-color);
+    color: var(--text-light);
+    padding: 10px 16px;
+    border-radius: 8px;
+    outline: none;
+}
+
+.filter-input:focus {
+    border-color: var(--gold);
+}
+
+/* Mock Data Button */
+.mock-data-btn {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background: #3b82f6;
+    color: white;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.2s;
+}
+
+.mock-data-btn:hover {
+    transform: scale(1.1);
+}

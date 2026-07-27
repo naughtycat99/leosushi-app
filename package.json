@@ -1,0 +1,39 @@
+{
+  "name": "leosushi-app",
+  "version": "1.0.0",
+  "description": "LEO SUSHI - Premium Vietnamesische Küche",
+  "main": "index.html",
+  "scripts": {
+    "build": "node build.js",
+    "sync": "npx cap sync",
+    "ios": "npx cap open ios",
+    "ios:build": "npx cap sync ios",
+    "android": "npx cap open android",
+    "android:build": "npx cap sync android"
+  },
+  "keywords": [
+    "sushi",
+    "restaurant",
+    "food",
+    "ordering"
+  ],
+  "author": "LEO SUSHI",
+  "license": "UNLICENSED",
+  "dependencies": {
+    "@capacitor-community/bluetooth-le": "^8.1.1",
+    "@capacitor/android": "^6.0.0",
+    "@capacitor/app": "^6.0.1",
+    "@capacitor/core": "^6.0.0",
+    "@capacitor/geolocation": "^6.1.1",
+    "@capacitor/haptics": "^6.0.1",
+    "@capacitor/ios": "^6.0.0",
+    "@capacitor/keyboard": "^6.0.2",
+    "@capacitor/push-notifications": "^6.0.2",
+    "@capacitor/splash-screen": "^6.0.2",
+    "@capacitor/status-bar": "^6.0.1",
+    "jsdom": "^29.1.1"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^6.0.0"
+  }
+}

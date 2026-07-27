@@ -1,0 +1,3 @@
+.\android\app\src\main\assets\public\js\admin-app.js:799: <span style="font-size: 12px; opacity: 0.5; display: block; margin-bottom: 4px;">ĐỊA CHỈ GIAO:</span>
+.\js\admin-app.js:937: <span style="font-size: 11px; color: var(--gold); font-weight: 800; display: block; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px;">📍 ĐỊA CHỈ GIAO HÀNG:</span>
+.\www\js\admin-app.js:810: <span style="font-size: 11px; color: var(--gold); font-weight: 800; display: block; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px;">📍 ĐỊA CHỈ GIAO HÀNG:</span>

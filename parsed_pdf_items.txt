@@ -1,0 +1,368 @@
+Line 2: 13158 Berlin
+  Price: None
+Line 75: 10 Algen Salat
+  Price: 4,50
+Line 79: 11 Prawn Tornado (3 Stk.)
+  Price: 4,90
+Line 84: 12 Khoai Lang Chien
+  Price: 4,90
+Line 94: 13 Yakitori (2 Stk.)
+  Price: 4,90
+Line 98: 14 Veggie Gyoza (5 Stk.)
+  Price: 4,90
+Line 103: 15 Japan Gyoza (5 Stk.)
+  Price: 4,90
+Line 108: 16 Wantan Chien (5 Stk.)
+  Price: 4,90
+Line 113: 17 Kimchi Frau Pham
+  Price: 4,50
+Line 118: 18 Sate Spieße (2 Stk.)
+  Price: 5,90
+Line 122: 19 Happy Plate (Für 2)
+  Price: 18,90
+Line 123: 2 Sommerrollen mit Tofu, 3 Veggie Gyoza, 2 Nem Ha Tinh, Edamame und Algensalat, serviert mit Erdnuss-
+  Price: 18,90
+Line 128: 20 Happy Plate (Für 2)
+  Price: 20,90
+Line 129: 2 Sommerrollen mit Hähnchenfleisch, 3 Prawn Tornado, 2 Nem Ha Noi, 5 Wantan-Chien, Algensalat, serviert
+  Price: 20,90
+Line 141: 30 Mix Sashimi
+  Price: 11,90
+Line 148: 31 Mango salat
+  Price: None
+Line 183: 33 Salmon Love
+  Price: 10,90
+Line 196: 40 Miso Suppe
+  Price: 3,50
+Line 201: 41 Sake Suppe
+  Price: 3,90
+Line 206: 42 Ebi Soup
+  Price: 4,90
+Line 211: 43 Sua dua dau
+  Price: 4,50
+Line 216: 44 Sua Dua Tom
+  Price: 4,90
+Line 221: 45 Sua Dua Ga
+  Price: 4,90
+Line 225: 46 Wan-tan-suppe
+  Price: 4,90
+Line 230: 47 Sauer-Scharf-Suppe
+  Price: 4,90
+Line 240: S1 Menü 1
+  Price: 9,90
+Line 241: 8 Kappa Maki, 8 Kampyo Maki, 8 Avocado Maki, 2
+  Price: 9,90
+Line 245: S2 Menü 2
+  Price: 11,50
+Line 246: 8 Oshinko Maki, 8 Avocado Rollen, 2 Nigiri, 1
+  Price: 11,50
+Line 250: S3 Menü 3
+  Price: 14,90
+Line 251: 1 Miso, 8 Paprika Maki, 8 Veggie I-O, 3 Nigiri, 1
+  Price: 14,90
+Line 255: S4 Menü 4
+  Price: 10,90
+Line 256: 8 Kali Maki, 8 Sake Maki, 2 Nigiri: Sake
+  Price: 10,90
+Line 258: S5 Menü 5
+  Price: 11,90
+Line 259: 8 Sake Maki, 4 Kali I-O, 1 Maguro Nigiri,
+  Price: 11,90
+Line 260: 1 Sake Nigiri
+  Price: 11,90
+Line 262: S6 Menü 6
+  Price: 13,90
+Line 263: 8 Sake Roll, 8 Ebi Maki,
+  Price: 13,90
+Line 264: 2 Nigiri: Sake, Maguro
+  Price: 13,90
+Line 266: S7 Nigiri Menü
+  Price: 14,90
+Line 267: 6 Nigiri: Sake, Maguro, Ebi, Ika, Avocado, Unagi
+  Price: 14,90
+Line 270: S8 Philadelphia Menü
+  Price: 17,90
+Line 271: 8 Philadelphia I-O, 8 Sake Avocado Maki, 2 Ebi
+  Price: 17,90
+Line 275: S9 Aiko Menü
+  Price: 18,90
+Line 276: 6 Aiko Rollen, 8 Sake Avocado Maki, 2 Maguro Nigiri
+  Price: 18,90
+Line 279: S10 Tuna Menü
+  Price: 17,90
+Line 280: 8 Maguro Crunchy, 8 Sake Avocado Maki, 2 Maguro
+  Price: 17,90
+Line 283: S11 Tori Menü
+  Price: 15,90
+Line 284: 6 Yakitori Big Rolls, 8 Tori Maki, 8 Tori I-O
+  Price: 15,90
+Line 286: S12 Deluxe Menü (Für 2 Personen)
+  Price: 32,00
+Line 287: 8 Sake Maki, 8 California Maki, 8 Sake I-O, 8 Sake Rolls, 8 Ebi Rolls, 2 Nigiri Sake, 2 Nigiri Maguro
+  Price: 32,00
+Line 289: S13 Deluxe Menü Leo
+  Price: 45,00
+Line 290: 8 Ebi Tempura I-O, 8 Sake I-O, 6 Sake Sashimi, 6 Leo Rollen, 8 California Maki, 8 Sake Maki, 1 Sake Nigiri, 1
+  Price: 45,00
+Line 299: M1 Sake
+  Price: 4,20
+Line 303: M2 Sake avocado
+  Price: 4,50
+Line 307: M3 Sake Kappa
+  Price: 4,50
+Line 311: M4 Tekka
+  Price: 4,50
+Line 315: M5 Spicy Tuna
+  Price: 4,80
+Line 319: M6 Ebi
+  Price: 4,20
+Line 323: M7 Ebi Avocado
+  Price: 4,50
+Line 327: M8 California
+  Price: 3,90
+Line 330: M9 Salmon Skin
+  Price: 3,90
+Line 333: M10 Tuna Cooked
+  Price: 4,50
+Line 336: M11 Sake Cooked
+  Price: 4,50
+Line 339: M12 Tori
+  Price: 4,20
+Line 342: M13 Kappa
+  Price: 3,90
+Line 346: M14 Avocado
+  Price: 3,90
+Line 350: M15 Tamago
+  Price: 3,90
+Line 353: M16 Unagi
+  Price: 4,50
+Line 356: M17 Inari
+  Price: 3,90
+Line 360: M18 Shiitake
+  Price: 3,90
+Line 364: M19 Kampyo
+  Price: 3,90
+Line 368: M20 Rucula
+  Price: 3,90
+Line 372: M21 Paprika
+  Price: 3,90
+Line 382: U1 Sake I-O
+  Price: 7,50
+Line 386: U2 Maguro I-O
+  Price: 8,90
+Line 390: U3 Ebi I-O
+  Price: 8,50
+Line 394: U4 Ebi Tempura I-O
+  Price: 8,90
+Line 398: U5 Veggie I-O
+  Price: 7,20
+Line 403: U6 Rucola Kappa I-O
+  Price: 7,20
+Line 408: U7 California I-O
+  Price: 7,50
+Line 412: U8 Ebi Spicy I-O
+  Price: 8,20
+Line 416: U9 Sake Spicy I-O
+  Price: 8,20
+Line 420: U10 Salmon Skin I-O
+  Price: 7,50
+Line 424: U11 Maguro Spicy I-O
+  Price: 8,90
+Line 428: U12 Tamago I-O
+  Price: 7,20
+Line 432: U13 Lachs Cooked I-O
+  Price: 7,80
+Line 436: U14 Tuna Cooked I-O
+  Price: 7,80
+Line 440: U15 Tori I-O
+  Price: 7,50
+Line 444: U16 Lachs Rucula I-O
+  Price: 8,20
+Line 455: C1 Sake Crunchy
+  Price: 7,50
+Line 458: C2 Maguro Crunchy
+  Price: 8,90
+Line 461: C3 Ebi Crunchy
+  Price: 8,50
+Line 464: C4 Skin Crunchy
+  Price: 7,50
+Line 467: C5 Salmon Tempura Crunchy
+  Price: 8,20
+Line 470: C6 Tuna Crunchy
+  Price: 8,20
+Line 474: C7 Tori crunchy
+  Price: 8,20
+Line 484: Sa1 Sake (6 Stk.)
+  Price: 13,90
+Line 487: Sa2 Maguro (6 Stk.)
+  Price: 14,90
+Line 490: Sa3 Sake & Maguro
+  Price: 18,00
+Line 493: Sa4 Sake Special (6 Stk.)
+  Price: 14,90
+Line 496: Sa5 Maguro Special (6 Stk.)
+  Price: 14,90
+Line 500: N1 Sake
+  Price: 3,90
+Line 504: N2 Maguro
+  Price: 4,50
+Line 508: N3 Amaebi
+  Price: 4,50
+Line 512: N4 Ebi
+  Price: 4,20
+Line 516: N5 Ikura
+  Price: 4,50
+Line 520: N6 Unagi
+  Price: 4,50
+Line 524: N7 Kani
+  Price: 3,50
+Line 528: N8 Tamago
+  Price: 3,50
+Line 532: N9 Ika
+  Price: 3,90
+Line 536: N10 Inari
+  Price: 3,50
+Line 540: N11 Shiitake
+  Price: 3,50
+Line 544: N12 Avocado
+  Price: 3,20
+Line 554: P1 Leo Rolls
+  Price: 8,20
+Line 559: P2 Aiko Rolls
+  Price: 8,20
+Line 564: P3 Tokyo Rolls
+  Price: 8,20
+Line 569: P4 Fuji San Rolls
+  Price: 8,50
+Line 574: P5 Emilia Rolls
+  Price: 7,90
+Line 579: P6 Yakitori Rolls
+  Price: 8,20
+Line 584: P7 Bao ngoc Rolls
+  Price: 8,20
+Line 589: Pa1 Sake Rolls
+  Price: 6,50
+Line 593: Pa2 Ebi Rolls
+  Price: 6,90
+Line 598: Pa3 Spicy Rolls
+  Price: 6,90
+Line 603: Pa4 Bao ngoc Rolls
+  Price: 6,90
+Line 608: Pa5 Veggie Rolls
+  Price: 6,50
+Line 613: Pa6 Avocado Rolls
+  Price: 6,50
+Line 618: Pa7 Tori Rolls
+  Price: 6,50
+Line 629: Sp1 Leo Rolls
+  Price: 6,50
+Line 634: Sp2 Mango Thunfisch Roll
+  Price: 6,50
+Line 640: Sp3 Fire Tuna
+  Price: 6,50
+Line 645: Sp4 Fire Salmon
+  Price: 6,50
+Line 650: Sp5 Tiger Rolls
+  Price: 6,50
+Line 655: Sp6 Chichken rolls
+  Price: 6,50
+Line 660: Sp7 Fire Ocean Rolls
+  Price: 6,50
+Line 666: Sp8 Tuna Rolls
+  Price: 6,50
+Line 672: Sp9 Philadelphia Rolls
+  Price: 6,50
+Line 677: Sp10 Kyoto Rolls
+  Price: 6,50
+Line 682: Sp11 Sake Alaska Rolls
+  Price: 6,50
+Line 687: Sp12 Omelette Rolls
+  Price: 6,50
+Line 692: Sp13 Dragon Rolls
+  Price: 6,50
+Line 697: Sp14 Fuji Rolls
+  Price: 6,50
+Line 702: Sp15 Tempura Special Rolls
+  Price: 6,50
+Line 707: Sp16 Taiko Rolls
+  Price: 6,50
+Line 718: F1 Maguro Aburi
+  Price: 5,20
+Line 722: F2 Sake Aburi
+  Price: 4,50
+Line 726: F3 Squid Aburi
+  Price: 4,50
+Line 730: F4 Maguro-Tatar
+  Price: 4,90
+Line 735: F5 Salmon Rose
+  Price: 5,50
+Line 741: Te1 Maguro Temaki
+  Price: 5,90
+Line 744: Te2 Sake Temaki
+  Price: 4,90
+Line 747: Te3 California Temaki
+  Price: 4,60
+Line 750: Te4 Salmon Skin Temaki
+  Price: 4,90
+Line 753: Te5 Tamago Temaki
+  Price: 4,60
+Line 756: Te6 Inari Avocado Temaki
+  Price: 4,60
+Line 766: 50 Sake Teriyaki
+  Price: 16,90
+Line 772: 51 Tuna Teriyaki
+  Price: 17,90
+Line 778: 52 Tori Teriyaki
+  Price: 14,90
+Line 784: 53 Ebi Teriyaki
+  Price: 15,90
+Line 790: 54 Squid Teriyaki
+  Price: 15,90
+Line 796: 55 Duck Teriyaki
+  Price: 16,90
+Line 806: 60 Tufu Bowl
+  Price: 11,90
+Line 811: 61 Seitan Bowl
+  Price: 12,90
+Line 816: 62 Sake Bowl
+  Price: 13,90
+Line 821: 63 Tori Bowl
+  Price: 12,90
+Line 826: 64 Bowl Grill
+  Price: 14,90
+Line 831: 65 Ebi Bowl
+  Price: 13,90
+Line 842: 70 Roter Curry
+  Price: None
+Line 916: 73 Avocado Curry
+  Price: None
+Line 990: 76 Süß-saure Soße
+  Price: 11,90
+Line 1013: 77 Pho
+  Price: None
+Line 1053: 79 Pho Tron
+  Price: None
+Line 1122: 82 Udon Yaki
+  Price: None
+Line 1200: 85 Pho Xao
+  Price: 12,90
+Line 1225: 86 Com Rang
+  Price: 11,90
+Line 1252: 87 Steak Grill Lachs (Medium)
+  Price: 16,90
+Line 1256: 88 Steak Grill Thunfisch (Medium)
+  Price: 16,90
+Line 1260: 89 Bo Luc Lac
+  Price: 16,90
+Line 1265: 90 Black Tiger
+  Price: 16,90
+Line 1273: D1 Dragon Ball (3 Stk.)
+  Price: 4,50
+Line 1277: D2 Mochi (2 Stk.)
+  Price: 4,50
+Line 1281: D3 Lucky Egg (3 Stk.)
+  Price: 4,50
+Line 1286: D4 Bananifirt (5 Stk.)
+  Price: 4,50
+Line 1494: 13158 Berlin
+  Price: None

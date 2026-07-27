@@ -1,0 +1,41 @@
+{
+    "appId": "com.leosushi.berlin",
+    "appName": "LEO SUSHI",
+    "webDir": "www",
+    "server": {
+        "url": "https://www.leo-sushi-berlin.de/admin.html",
+        "cleartext": false,
+        "allowNavigation": [
+            "https://www.leo-sushi-berlin.de/*",
+            "https://leo-sushi-berlin.de/*",
+            "https://*.stripe.com/*",
+            "https://*.paypal.com/*"
+        ]
+    },
+    "overrideUserAgent": "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1",
+    "ios": {
+        "contentInset": "never",
+        "backgroundColor": "#0b0b0c",
+        "preferredContentMode": "mobile",
+        "allowsLinkPreview": true,
+        "scrollEnabled": true,
+        "limitsNavigationsToAppBoundDomains": false,
+        "webContentsDebuggingEnabled": true
+    },
+    "plugins": {
+        "SplashScreen": {
+            "launchShowDuration": 1500,
+            "launchAutoHide": true,
+            "backgroundColor": "#0b0b0c",
+            "showSpinner": false
+        },
+        "StatusBar": {
+            "style": "dark",
+            "backgroundColor": "#0b0b0c"
+        },
+        "Keyboard": {
+            "resize": "body",
+            "style": "dark"
+        }
+    }
+}

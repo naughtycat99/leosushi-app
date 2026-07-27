@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>Neue Bestellung - LEO SUSHI</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 20px auto;
+            background-color: #ffffff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .header {
+            background-color: #d4af37;
+            color: #000000;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+
+        .content {
+            padding: 30px;
+            color: #333333;
+            line-height: 1.6;
+        }
+
+        .order-info {
+            background-color: #f9f9f9;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            border-left: 4px solid #d4af37;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            border-bottom: 1px dashed #eee;
+            padding-bottom: 8px;
+        }
+
+        .info-row:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .info-label {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .info-value {
+            font-weight: 600;
+            color: #000;
+            text-align: right;
+        }
+
+        .items-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+
+        .items-table th {
+            text-align: left;
+            padding: 10px;
+            border-bottom: 2px solid #eee;
+            color: #666;
+            font-size: 12px;
+            text-transform: uppercase;
+        }
+
+        .items-table td {
+            padding: 12px 10px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .item-name {
+            font-weight: 600;
+        }
+
+        .total-row td {
+            padding-top: 20px;
+            font-size: 18px;
+            font-weight: 700;
+            color: #d4af37;
+            border-bottom: none;
+        }
+
+        .footer {
+            background-color: #333333;
+            color: #ffffff;
+            padding: 20px;
+            text-align: center;
+            font-size: 12px;
+        }
+
+        .btn {
+            display: inline-block;
+            background-color: #d4af37;
+            color: #000000;
+            padding: 12px 25px;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: 600;
+            margin-top: 20px;
+        }
+
+        .highlight {
+            color: #d4af37;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+            background: #eee;
+        }
+
+        .badge-delivery {
+            background: #e3f2fd;
+            color: #0d47a1;
+        }
+
+        .badge-pickup {
+            background: #e8f5e9;
+            color: #1b5e20;
+        }
+
+        .badge-dinein {
+            background: #fff3e0;
+            color: #e65100;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Neue Bestellung eingegangen! 🔔</h1>
+        </div>
+        <div class="content">
+            <p>Es ist eine neue Bestellung eingegangen.</p>
+
+            <div class="order-info">
+                <div class="info-row">
+                    <span class="info-label">Bestell-Nr.:</span>
+                    <span class="info-value">{{ORDER_ID}}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Zeitpunkt:</span>
+                    <span class="info-value">{{ORDER_TIME}}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Service:</span>
+                    <span class="info-value">
+                        <span class="badge {{SERVICE_CLASS}}">{{SERVICE_TYPE}}</span>
+                    </span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Zahlung:</span>
+                    <span class="info-value">{{PAYMENT_METHOD}}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Kunde:</span>
+                    <span class="info-value">{{CUSTOMER_NAME}}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Telefon:</span>
+                    <span class="info-value"><a href="tel:{{PHONE}}"
+                            style="text-decoration: none; color: inherit;">{{PHONE}}</a></span>
+                </div>
+                {{DELIVERY_DETAILS}}
+                {{NOTE_SECTION}}
+            </div>
+
+            <table class="items-table">
+                <thead>
+                    <tr>
+                        <th width="70%">Artikel</th>
+                        <th width="30%" style="text-align: right;">Preis</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{ORDER_ITEMS}}
+                    <tr class="total-row">
+                        <td>Gesamtbetrag</td>
+                        <td style="text-align: right;">{{ORDER_TOTAL}}</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div style="text-align: center;">
+                <a href="https://www.leo-sushi-berlin.de/admin.html" class="btn">Zum Admin-Panel</a>
+            </div>
+        </div>
+        <div class="footer">
+            &copy; {{YEAR}} LEO SUSHI Admin System
+        </div>
+    </div>
+</body>
+
+</html>

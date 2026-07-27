@@ -1,0 +1,997 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>LEO SUSHI - Lieferung</title>
+    <meta name="theme-color" content="#0a0a0c">
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    
+    <link rel="manifest" href="shipper-manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="assets/logo.png">
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+    
+    <style>
+        :root {
+            --gold: #e5cf8e;
+            --gold-2: #c2a355;
+            --bg-dark: #0a0a0c;
+            --card-bg: rgba(18, 18, 20, 0.95);
+            --card-border: rgba(229, 207, 142, 0.15);
+        }
+        
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-dark);
+            color: #fff;
+            overscroll-behavior: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        * {
+            box-sizing: border-box;
+        }
+        
+        h1, h2, h3 {
+            font-family: 'Playfair Display', serif;
+            margin-top: 0;
+        }
+        
+        /* Screens */
+        .screen {
+            display: none;
+            padding-bottom: 70px;
+            min-height: 100vh;
+            padding-top: 20px;
+            padding-left: 16px;
+            padding-right: 16px;
+        }
+        .screen.active {
+            display: block;
+            animation: fadeIn 0.3s ease-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* Components */
+        .glass-card {
+            background: linear-gradient(135deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 16px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+        .header h1 {
+            color: var(--gold);
+            font-size: 24px;
+            margin-bottom: 4px;
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, var(--gold), var(--gold-2));
+            color: #000;
+            font-weight: 600;
+            padding: 14px 20px;
+            border-radius: 12px;
+            border: none;
+            width: 100%;
+            font-size: 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: opacity 0.2s;
+        }
+        .btn:active { opacity: 0.8; }
+        
+        .btn-outline {
+            background: rgba(229, 207, 142, 0.1);
+            border: 1px solid var(--gold);
+            color: var(--gold);
+        }
+        
+        .input-field {
+            width: 100%;
+            padding: 14px;
+            border-radius: 12px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: #fff;
+            margin-bottom: 16px;
+            font-size: 16px;
+            font-family: inherit;
+        }
+        .input-field:focus {
+            outline: none;
+            border-color: var(--gold);
+        }
+        
+        /* Bottom Navigation */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(10, 10, 12, 0.95);
+            backdrop-filter: blur(20px);
+            border-top: 1px solid var(--card-border);
+            display: flex;
+            justify-content: space-around;
+            padding: 12px 0;
+            padding-bottom: calc(12px + env(safe-area-inset-bottom));
+            z-index: 1000;
+        }
+        
+        .nav-item {
+            text-align: center;
+            color: rgba(255,255,255,0.5);
+            text-decoration: none;
+            font-size: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            padding: 8px 16px;
+            border-radius: 12px;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+        
+        .nav-item.active {
+            color: var(--gold);
+            background: rgba(229, 207, 142, 0.1);
+        }
+        
+        .nav-icon {
+            font-size: 24px;
+        }
+        
+        /* Typography */
+        .text-gold { color: var(--gold); }
+        .text-sm { font-size: 13px; opacity: 0.7; }
+        .text-xs { font-size: 11px; opacity: 0.5; }
+        .font-bold { font-weight: 600; }
+        
+        /* Margin & Padding utilities */
+        .mb-2 { margin-bottom: 8px; }
+        .mb-4 { margin-bottom: 16px; }
+        .mt-2 { margin-top: 8px; }
+        .mt-4 { margin-top: 16px; }
+        .flex { display: flex; }
+        .justify-between { justify-content: space-between; }
+        .items-center { align-items: center; }
+        .gap-2 { gap: 8px; }
+        
+        /* Badges */
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .badge-pending { background: rgba(245, 158, 11, 0.2); color: #fbbf24; }
+        
+        /* Map */
+        #map-container {
+            height: 350px;
+            width: 100%;
+            border-radius: 12px;
+            margin-bottom: 16px;
+            z-index: 1;
+        }
+        
+        /* QR Scanner */
+        #qr-reader {
+            width: 100%;
+            border-radius: 16px;
+            overflow: hidden;
+            border: 2px solid var(--gold);
+        }
+        
+        /* Toast Notification */
+        #toast {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-100px);
+            background: rgba(18, 18, 20, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--gold);
+            padding: 12px 24px;
+            border-radius: 24px;
+            z-index: 2000;
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            font-weight: 500;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+        }
+        #toast.show {
+            transform: translateX(-50%) translateY(0);
+        }
+        
+        .loading-spinner {
+            border: 3px solid rgba(255,255,255,0.1);
+            border-radius: 50%;
+            border-top: 3px solid var(--gold);
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: rgba(255,255,255,0.5);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Toast Notification -->
+    <div id="toast">Benachrichtigung</div>
+
+    <!-- Screen 1: Login -->
+    <div id="screen-login" class="screen">
+        <div class="header" style="margin-top: 40px;">
+            <h1>LEO SUSHI</h1>
+            <p class="text-sm">Liefersystem</p>
+        </div>
+        
+        <div class="glass-card">
+            <h3 class="mb-4">Fahrer-Login</h3>
+            <input type="text" id="login-name" class="input-field" placeholder="Dein Name" autocomplete="name">
+            <select id="login-branch" class="input-field" style="margin-bottom: 15px; background: rgba(255,255,255,0.05); color: #fff; appearance: auto;">
+                <option value="branch_flora" style="color: #000;">Filiale 1 (Florastraße 10A)</option>
+                <option value="branch_haupt" style="color: #000;">Filiale 2 (Hauptstraße 29a)</option>
+            </select>
+            <input type="password" id="login-passcode" class="input-field" placeholder="Sicherheitscode">
+            <button class="btn" onclick="app.login()">Anmelden</button>
+        </div>
+    </div>
+
+    <!-- Screen 2: Dashboard (Đơn chờ giao) -->
+    <div id="screen-dashboard" class="screen">
+        <div class="header">
+            <h2>Offene Lieferungen</h2>
+            <p class="text-sm">Nach unten ziehen zum Aktualisieren</p>
+        </div>
+        
+        <div id="dashboard-orders">
+            <div class="loading-spinner"></div>
+        </div>
+    </div>
+
+    <!-- Screen 3: QR Scanner -->
+    <div id="screen-scanner" class="screen">
+        <div class="header">
+            <h2>QR-Code scannen</h2>
+            <p class="text-sm">Kamera auf den Code auf der Rechnung richten</p>
+        </div>
+        
+        <div class="glass-card" style="padding: 0; background: transparent;">
+            <div id="qr-reader"></div>
+        </div>
+        
+        <button class="btn btn-outline mt-4" onclick="app.switchTab('dashboard')">Abbrechen & Zurück</button>
+    </div>
+
+    <!-- Screen 4: Active Delivery (Đang giao) -->
+    <div id="screen-active" class="screen">
+        <div class="header">
+            <h2>Aktive Lieferung</h2>
+        </div>
+        
+        <div id="active-delivery-content">
+            <div class="empty-state">Keine aktive Lieferung</div>
+        </div>
+    </div>
+
+    <!-- Screen 5: History -->
+    <div id="screen-history" class="screen">
+        <div class="header">
+            <h2>Lieferhistorie</h2>
+            <p class="text-sm">Heute abgeschlossen</p>
+        </div>
+        
+        <div id="history-orders">
+            <div class="loading-spinner"></div>
+        </div>
+    </div>
+
+    <!-- Bottom Navigation -->
+    <div id="bottom-nav" class="bottom-nav" style="display: none;">
+        <div class="nav-item" data-target="dashboard" onclick="app.switchTab('dashboard')">
+            <span class="nav-icon">📋</span>
+            <span>Offen</span>
+        </div>
+        <div class="nav-item" data-target="scanner" onclick="app.switchTab('scanner')">
+            <span class="nav-icon">📷</span>
+            <span>QR-Scan</span>
+        </div>
+        <div class="nav-item" data-target="active" onclick="app.switchTab('active')">
+            <span class="nav-icon">🚚</span>
+            <span>Aktiv</span>
+        </div>
+        <div class="nav-item" data-target="history" onclick="app.switchTab('history')">
+            <span class="nav-icon">📊</span>
+            <span>Historie</span>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <!-- HTML5 QR Code -->
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+
+    <script>
+        const app = {
+            state: {
+                shipperName: localStorage.getItem('shipper_name') || '',
+                shipperBranch: localStorage.getItem('shipper_branch') || 'branch_flora',
+                currentMapUrl: null,
+                passcode: localStorage.getItem('shipper_passcode') || '',
+                currentTab: 'login',
+                orders: [],
+                activeOrder: null, // order currently being delivered
+                history: [],
+                refreshInterval: null,
+                locationWatchId: null,
+                map: null,
+                mapMarkers: {},
+                mapRoute: null,
+                qrScanner: null
+            },
+            
+            // Utility: Get Base URL
+            getBaseURL() {
+                const isCapacitor = window.Capacitor !== undefined || !!window.webkit?.messageHandlers?.capacitor;
+                const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+                
+                let baseUrl = '/api/';
+                if (isCapacitor || (!isLocal && window.location.protocol === 'file:')) {
+                    baseUrl = 'https://www.leo-sushi-berlin.de/api/';
+                }
+                return baseUrl;
+            },
+            
+            // Utility: API Call
+            async apiCall(endpoint, method = 'GET', body = null) {
+                // Always append passcode to URL to avoid header stripping issues
+                const separator = endpoint.includes('?') ? '&' : '?';
+                const url = this.getBaseURL() + endpoint + (this.state.passcode ? `${separator}passcode=${encodeURIComponent(this.state.passcode)}` : '');
+                
+                const options = {
+                    method,
+                    headers: {
+                        'X-Shipper-Passcode': this.state.passcode
+                    }
+                };
+                
+                if (body) {
+                    options.headers['Content-Type'] = 'application/json';
+                    options.body = JSON.stringify(body);
+                }
+                
+                try {
+                    const response = await fetch(url, options);
+                    const data = await response.json();
+                    if (!response.ok) throw new Error(data.error || 'API Error');
+                    return data;
+                } catch (error) {
+                    console.error('API Error:', error);
+                    throw error;
+                }
+            },
+            
+            // UI Utilities
+            showToast(msg) {
+                const toast = document.getElementById('toast');
+                toast.textContent = msg;
+                toast.classList.add('show');
+                setTimeout(() => toast.classList.remove('show'), 3000);
+            },
+            
+            switchTab(tabId) {
+                // Stop QR scanner if navigating away
+                if (this.state.qrScanner && this.state.qrScanner.isScanning && tabId !== 'scanner') {
+                    this.state.qrScanner.stop().catch(console.error);
+                }
+                
+                // Hide all screens
+                document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+                
+                // Show target screen
+                document.getElementById(`screen-${tabId}`).classList.add('active');
+                
+                // Update bottom nav
+                if (tabId !== 'login') {
+                    document.getElementById('bottom-nav').style.display = 'flex';
+                    document.querySelectorAll('.nav-item').forEach(item => {
+                        item.classList.toggle('active', item.dataset.target === tabId);
+                    });
+                } else {
+                    document.getElementById('bottom-nav').style.display = 'none';
+                }
+                
+                this.state.currentTab = tabId;
+                
+                // Trigger tab-specific actions
+                if (tabId === 'dashboard') this.fetchOrders();
+                if (tabId === 'history') this.fetchHistory();
+                if (tabId === 'scanner') this.startScanner();
+                if (tabId === 'active') this.renderActiveDelivery();
+            },
+            
+            // Init
+            init() {
+                console.log('📦 Giao Hàng App Init');
+                
+                // Check for ?scan= URL parameter
+                const urlParams = new URLSearchParams(window.location.search);
+                const scanId = urlParams.get('scan');
+                if (scanId) {
+                    this.pendingScan = scanId;
+                    // Clean up URL so it doesn't rescan on refresh
+                    window.history.replaceState({}, document.title, window.location.pathname);
+                }
+
+                if (this.state.passcode && this.state.shipperName) {
+                    if (this.pendingScan) {
+                        this.acceptOrder(this.pendingScan);
+                        this.pendingScan = null;
+                    } else {
+                        // Restore active delivery if any
+                        this.apiCall(`orders.php?action=get-active-deliveries&branch_id=${this.state.shipperBranch}`)
+                            .then(data => {
+                                // Find any delivery by this shipper
+                                const active = (data.orders || []).find(o => {
+                                    try {
+                                        const sum = typeof o.summary === 'string' ? JSON.parse(o.summary) : o.summary;
+                                        return sum && sum.shipper_name === this.state.shipperName;
+                                    } catch(e) { return false; }
+                                });
+                                if (active) {
+                                    this.state.activeOrder = active;
+                                    this.switchTab('active');
+                                } else {
+                                    this.switchTab('dashboard');
+                                }
+                            })
+                            .catch(e => {
+                                console.error('Failed to restore active delivery', e);
+                                this.switchTab('dashboard');
+                            });
+                    }
+                } else {
+                    this.switchTab('login');
+                }
+                
+                // Setup auto-refresh for dashboard
+                setInterval(() => {
+                    if (this.state.currentTab === 'dashboard') {
+                        this.fetchOrders(true);
+                    }
+                }, 10000);
+            },
+            
+            // Screen 1: Login
+            async login() {
+                const name = document.getElementById('login-name').value.trim();
+                const pass = document.getElementById('login-passcode').value.trim();
+                const branchEl = document.getElementById('login-branch');
+                const branch = branchEl ? branchEl.value : 'branch_flora';
+                
+                if (!name || !pass) {
+                    return this.showToast('Bitte alle Felder ausfüllen');
+                }
+                
+                try {
+                    // Test credentials by fetching orders
+                    this.state.passcode = pass;
+                    await this.apiCall(`orders.php?action=list&status=confirmed&branch_id=${branch}`);
+                    
+                    // Success
+                    this.state.shipperName = name;
+                    this.state.shipperBranch = branch;
+                    localStorage.setItem('shipper_name', name);
+                    localStorage.setItem('shipper_branch', branch);
+                    localStorage.setItem('shipper_passcode', pass);
+                    
+                    this.showToast(`Willkommen ${name}`);
+                    this.switchTab('dashboard');
+                } catch (err) {
+                    this.state.passcode = '';
+                    if (err.message && (err.message.includes('Failed to fetch') || err.message.includes('NetworkError') || err.message.includes('network'))) {
+                        this.showToast('Netzwerkfehler! Bitte WLAN/4G prüfen.');
+                    } else {
+                        this.showToast('Falscher Sicherheitscode!');
+                    }
+                }
+            },
+            
+            // Screen 2: Dashboard
+            async fetchOrders(silent = false) {
+                if (!silent) {
+                    document.getElementById('dashboard-orders').innerHTML = '<div class="loading-spinner"></div>';
+                }
+                
+                try {
+                    const data = await this.apiCall(`orders.php?action=list&status=confirmed&branch_id=${this.state.shipperBranch}`);
+                    let html = '';
+                    
+                    // Filter for delivery only
+                    const deliveryOrders = (data.orders || []).filter(o => o.service_type === 'delivery');
+                    
+                    if (deliveryOrders.length === 0) {
+                        html = '<div class="empty-state">Keine offenen Lieferungen</div>';
+                    } else {
+                        deliveryOrders.forEach(order => {
+                            let itemsText = 'N/A';
+                            let addressText = 'N/A';
+                            let customerName = 'Kunde';
+                            let customerPhone = '';
+                            try { 
+                                const summary = typeof order.summary === 'string' ? JSON.parse(order.summary) : (order.summary || {});
+                                itemsText = summary.items_count ? `${summary.items_count} Artikel` : ''; 
+                            } catch(e){}
+                            try { 
+                                const addr = typeof order.delivery_address === 'string' ? JSON.parse(order.delivery_address) : (order.delivery_address || {});
+                                addressText = `${addr.street || ''} ${addr.house_number || ''}, ${addr.postal || ''} ${addr.city || ''}`;
+                                customerName = [addr.first_name, addr.last_name].filter(Boolean).join(' ') || 'Kunde';
+                                customerPhone = addr.phone || '';
+                            } catch(e){}
+                            
+                            const orderId = order.order_id || order.id || '';
+                            html += `
+                                <div class="glass-card">
+                                    <div class="flex justify-between items-center mb-2">
+                                        <span class="font-bold text-gold" style="font-size: 18px;">#${orderId.slice(-6).toUpperCase()}</span>
+                                        <span class="text-xs">${itemsText}</span>
+                                    </div>
+                                    <div class="mb-2">👤 ${customerName} • ${customerPhone}</div>
+                                    <div class="mb-4 text-sm">📍 ${addressText}</div>
+                                    
+                                    <div class="flex gap-2">
+                                        <button class="btn btn-outline" style="flex: 1" onclick="app.switchTab('scanner')">📷 QR-Scan</button>
+                                        <button class="btn" style="flex: 1" onclick="app.acceptOrder('${orderId}')">Annehmen</button>
+                                    </div>
+                                </div>
+                            `;
+                        });
+                    }
+                    
+                    document.getElementById('dashboard-orders').innerHTML = html;
+                    
+                } catch (err) {
+                    if (err.message.includes('401') || err.message.includes('Sicherheitscode')) {
+                        this.logout();
+                    }
+                    document.getElementById('dashboard-orders').innerHTML = '<div class="empty-state">Fehler: ' + (err.message || 'Netzwerk-/Analysefehler') + '</div>';
+                }
+            },
+            
+            async acceptOrder(orderId) {
+                try {
+                    this.showToast('Bestellung wird angenommen...');
+                    
+                    // Fire API call
+                    const result = await this.apiCall('orders.php?action=accept-delivery', 'POST', {
+                        order_id: orderId,
+                        shipper_name: this.state.shipperName
+                    });
+                    
+                    if (result.order) {
+                        this.state.activeOrder = result.order;
+                    } else if (result.success) {
+                        // Fallback: fetch order details
+                        const data = await this.apiCall(`orders.php?action=get&order_id=${orderId}`);
+                        if (data.order) {
+                            this.state.activeOrder = data.order;
+                        }
+                    }
+                    
+                    if (this.state.activeOrder) {
+                        this.showToast('Bestellung angenommen! 🚚');
+                        this.switchTab('active');
+                    } else {
+                        this.showToast('Fehler: Bestelldaten nicht verfügbar');
+                        this.switchTab('dashboard');
+                    }
+                    
+                } catch (err) {
+                    this.showToast('Fehler: ' + (err.message || 'Bestellung konnte nicht angenommen werden'));
+                }
+            },
+            
+            // Screen 3: QR Scanner
+            async startScanner() {
+                if (this.state.qrScanner) {
+                    try { await this.state.qrScanner.stop(); } catch(e) {}
+                    this.state.qrScanner.clear();
+                }
+                
+                this.state.qrScanner = new Html5Qrcode("qr-reader");
+                const config = { fps: 10, qrbox: { width: 250, height: 250 }, aspectRatio: 1.0 };
+                
+                this.state.qrScanner.start(
+                    { facingMode: "environment" },
+                    config,
+                    (decodedText, decodedResult) => {
+                        // success
+                        this.state.qrScanner.stop().catch(console.error);
+                        this.handleQRScan(decodedText);
+                    },
+                    (errorMessage) => {
+                        // ignore background scanning errors
+                    }
+                ).catch(err => {
+                    console.error("Kamerafehler:", err);
+                    this.showToast("Kamera konnte nicht geöffnet werden");
+                });
+            },
+            
+            handleQRScan(text) {
+                console.log('Scanned:', text);
+                // Expected format: URL with ?scan= or leosushi://delivery/{order_id} or just order_id
+                let orderId = text;
+                if (text.startsWith('leosushi://delivery/')) {
+                    orderId = text.split('/').pop();
+                } else if (text.includes('delivery.html?scan=')) {
+                    try {
+                        // Use current origin as base to handle relative URLs
+                        const url = new URL(text, window.location.origin);
+                        orderId = url.searchParams.get('scan') || orderId;
+                    } catch(e) {
+                        // Fallback: extract scan param with regex
+                        const match = text.match(/[?&]scan=([^&]+)/);
+                        if (match) orderId = decodeURIComponent(match[1]);
+                    }
+                } else if (text.includes('?scan=')) {
+                    const match = text.match(/[?&]scan=([^&]+)/);
+                    if (match) orderId = decodeURIComponent(match[1]);
+                }
+                
+                if (orderId) {
+                    this.acceptOrder(orderId);
+                } else {
+                    this.showToast("Ungültiger QR-Code");
+                    this.switchTab('dashboard');
+                }
+            },
+            
+            // Screen 4: Active Delivery
+            async renderActiveDelivery() {
+                const order = this.state.activeOrder;
+                const container = document.getElementById('active-delivery-content');
+                
+                if (!order) {
+                    container.innerHTML = '<div class="empty-state">Keine aktive Lieferung</div>';
+                    this.stopLocationTracking();
+                    return;
+                }
+                
+                let addressText = 'N/A';
+                let rawAddress = {};
+                try { 
+                    rawAddress = typeof order.delivery_address === 'string' ? JSON.parse(order.delivery_address) : (order.delivery_address || {});
+                    addressText = `${rawAddress.street || ''}, ${rawAddress.postal || ''} ${rawAddress.city || ''}`;
+                } catch(e){}
+                
+                let destinationQuery = encodeURIComponent(addressText);
+                let mapUrl = `https://www.google.com/maps/dir/?api=1&destination=${destinationQuery}`;
+                // Store mapUrl for the navigate button
+                this.state.currentMapUrl = mapUrl;
+                
+                const activeOrderId = order.order_id || order.id || '';
+                const customerName = [rawAddress.first_name, rawAddress.last_name].filter(Boolean).join(' ') || 'Kunde';
+                const customerPhone = rawAddress.phone || '';
+                
+                container.innerHTML = `
+                    <div class="glass-card mb-4">
+                        <div class="flex justify-between items-center mb-4">
+                            <span class="font-bold text-gold" style="font-size: 20px;">#${activeOrderId.slice(-6).toUpperCase()}</span>
+                            <span class="badge badge-pending">Unterwegs</span>
+                        </div>
+                        
+                        <div id="map-container"></div>
+                        
+                        <div class="mb-4">
+                            <div class="font-bold mb-2">👤 Kunde</div>
+                            <div class="mb-2">${customerName}</div>
+                            <div class="text-gold mb-2"><a href="tel:${customerPhone}" class="text-gold" style="text-decoration:none">📞 ${customerPhone}</a></div>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <div class="font-bold mb-2">📍 Lieferadresse</div>
+                            <div class="text-sm">${addressText}</div>
+                        </div>
+                        
+                        <div class="flex gap-2">
+                            <button class="btn btn-outline" style="flex: 1; text-align: center;" onclick="app.openNavigation()">🧭 Navigation</button>
+                            <button class="btn btn-outline" style="flex: 1; text-align: center;" onclick="app.showRouteOnMap()">🗺️ Route</button>
+                            <button class="btn" style="flex: 1" onclick="app.completeDelivery('${activeOrderId}')">✅ Geliefert</button>
+                        </div>
+                        
+                    </div>
+                `;
+                
+                // Init map slightly after render
+                setTimeout(() => this.initMap(rawAddress), 100);
+                
+                // Start tracking
+                this.startLocationTracking(activeOrderId);
+            },
+            
+            initMap(customerAddress) {
+                if (this.state.map) {
+                    this.state.map.remove();
+                }
+                
+                const mapEl = document.getElementById('map-container');
+                if (!mapEl) return;
+                
+                this.state.map = L.map('map-container').setView([52.5659, 13.3970], 13);
+                
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    maxZoom: 19,
+                    attribution: '© OSM'
+                }).addTo(this.state.map);
+                
+                // We'll add markers when location updates
+                this.geocodeAndAddCustomerMarker(customerAddress);
+            },
+            
+            async geocodeAndAddCustomerMarker(address) {
+                if (!address.street) return;
+                const query = `${address.street}, ${address.postal || ''} ${address.city || ''}`;
+                
+                try {
+                    const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1&email=contact@leosushi.de`);
+                    const data = await res.json();
+                    if (data && data.length > 0) {
+                        const lat = parseFloat(data[0].lat);
+                        const lng = parseFloat(data[0].lon);
+                        
+                        const icon = L.divIcon({
+                            className: 'customer-marker',
+                            html: '<div style="background: #3b82f6; width: 24px; height: 24px; border-radius: 50%; border: 2px solid white; display: flex; align-items: center; justify-content: center; font-size: 12px;">📍</div>',
+                            iconSize: [24, 24]
+                        });
+                        
+                        this.state.mapMarkers.customer = L.marker([lat, lng], {icon}).addTo(this.state.map);
+                        this.state.map.setView([lat, lng], 14);
+                    }
+                } catch(e) {
+                    console.error('Geocode err', e);
+                }
+            },
+            
+            startLocationTracking(orderId) {
+                this.stopLocationTracking();
+                
+                if ("geolocation" in navigator) {
+                    this.state.locationWatchId = navigator.geolocation.watchPosition(
+                        (position) => {
+                            const lat = position.coords.latitude;
+                            const lng = position.coords.longitude;
+                            
+                            // Update map
+                            this.updateShipperMarker(lat, lng);
+                            
+                            // Send to API
+                            this.apiCall('orders.php?action=update-location', 'POST', {
+                                order_id: orderId,
+                                lat: lat,
+                                lng: lng
+                            }).catch(console.error);
+                        },
+                        (err) => console.error("GPS error", err),
+                        { enableHighAccuracy: true, maximumAge: 10000, timeout: 5000 }
+                    );
+                }
+            },
+            
+            async showRouteOnMap() {
+                if (!this.state.map) return;
+                
+                const shipperMarker = this.state.mapMarkers.shipper;
+                const customerMarker = this.state.mapMarkers.customer;
+                
+                if (!shipperMarker) {
+                    this.showToast('GPS-Position wird ermittelt, bitte warten...');
+                    return;
+                }
+                if (!customerMarker) {
+                    this.showToast('Kundenadresse konnte nicht georeferenziert werden.');
+                    return;
+                }
+                
+                const sLatLng = shipperMarker.getLatLng();
+                const cLatLng = customerMarker.getLatLng();
+                
+                try {
+                    const res = await fetch(`https://router.project-osrm.org/route/v1/driving/${sLatLng.lng},${sLatLng.lat};${cLatLng.lng},${cLatLng.lat}?overview=full&geometries=geojson`);
+                    const data = await res.json();
+                    
+                    if (data.routes && data.routes.length > 0) {
+                        if (this.state.mapRoute) {
+                            this.state.map.removeLayer(this.state.mapRoute);
+                        }
+                        
+                        const routeCoords = data.routes[0].geometry.coordinates.map(c => [c[1], c[0]]);
+                        this.state.mapRoute = L.polyline(routeCoords, {
+                            color: '#3b82f6',
+                            weight: 5,
+                            opacity: 0.8,
+                            dashArray: '10, 10',
+                            lineCap: 'round'
+                        }).addTo(this.state.map);
+                        
+                        // Show distance and ETA
+                        const distKm = (data.routes[0].distance / 1000).toFixed(1);
+                        const etaMin = Math.ceil(data.routes[0].duration / 60);
+                        this.showToast(`📍 ${distKm} km — ca. ${etaMin} Min.`);
+                        
+                        this.state.map.fitBounds(this.state.mapRoute.getBounds(), { padding: [30, 30] });
+                    }
+                } catch(e) {
+                    console.error('Routing err', e);
+                    this.showToast('Route konnte nicht geladen werden');
+                }
+            },
+            
+            stopLocationTracking() {
+                if (this.state.locationWatchId !== null) {
+                    navigator.geolocation.clearWatch(this.state.locationWatchId);
+                    this.state.locationWatchId = null;
+                }
+            },
+            
+            updateShipperMarker(lat, lng) {
+                if (!this.state.map) return;
+                
+                if (this.state.mapMarkers.shipper) {
+                    this.state.mapMarkers.shipper.setLatLng([lat, lng]);
+                } else {
+                    const icon = L.divIcon({
+                        className: 'shipper-marker',
+                        html: '<div style="background: #10b981; width: 28px; height: 28px; border-radius: 50%; border: 2px solid white; display: flex; align-items: center; justify-content: center; font-size: 14px;">🚚</div>',
+                        iconSize: [28, 28]
+                    });
+                    this.state.mapMarkers.shipper = L.marker([lat, lng], {icon}).addTo(this.state.map);
+                    
+                    // Auto-draw route when shipper position is first acquired
+                    if (this.state.mapMarkers.customer) {
+                        this.showRouteOnMap();
+                    }
+                }
+            },
+            
+            async completeDelivery(orderId) {
+                if (!confirm('Lieferung als abgeschlossen markieren?')) return;
+                
+                try {
+                    this.showToast('Wird aktualisiert...');
+                    await this.apiCall('orders.php?action=complete-delivery', 'POST', {
+                        order_id: orderId,
+                        shipper_name: this.state.shipperName
+                    });
+                    
+                    this.showToast('Lieferung abgeschlossen! 🎉');
+                    this.state.activeOrder = null;
+                    this.stopLocationTracking();
+                    this.switchTab('dashboard');
+                } catch (err) {
+                    this.showToast('Fehler: ' + err.message);
+                }
+            },
+            
+            // Screen 5: History
+            async fetchHistory() {
+                document.getElementById('history-orders').innerHTML = '<div class="loading-spinner"></div>';
+                
+                try {
+                    const data = await this.apiCall(`orders.php?action=list&status=completed&branch_id=${this.state.shipperBranch}`);
+                    
+                    // Filter history to today and for this shipper if backend supports it.
+                    // For now just show recent completed.
+                    const deliveries = (data.orders || []).filter(o => o.service_type === 'delivery').slice(0, 20); // show last 20
+                    
+                    if (deliveries.length === 0) {
+                        document.getElementById('history-orders').innerHTML = '<div class="empty-state">Noch keine Lieferhistorie</div>';
+                        return;
+                    }
+                    
+                    let html = '';
+                    deliveries.forEach(order => {
+                        const date = new Date(order.created_at).toLocaleString('de-DE');
+                        const historyOrderId = order.order_id || order.id || '';
+                        let historyCustomerName = 'Kunde';
+                        try {
+                            const addr = typeof order.delivery_address === 'string' ? JSON.parse(order.delivery_address) : (order.delivery_address || {});
+                            historyCustomerName = [addr.first_name, addr.last_name].filter(Boolean).join(' ') || 'Kunde';
+                        } catch(e) {}
+                        html += `
+                            <div class="glass-card mb-2" style="padding: 12px 16px;">
+                                <div class="flex justify-between items-center">
+                                    <div class="font-bold text-gold">#${historyOrderId.slice(-6).toUpperCase()}</div>
+                                    <div class="text-xs">${date}</div>
+                                </div>
+                                <div class="text-sm mt-2">👤 ${historyCustomerName}</div>
+                            </div>
+                        `;
+                    });
+                    
+                    document.getElementById('history-orders').innerHTML = html;
+                } catch (err) {
+                    document.getElementById('history-orders').innerHTML = '<div class="empty-state">Verbindungsfehler</div>';
+                }
+            },
+            openNavigation() {
+                const url = this.state.currentMapUrl;
+                if (!url) {
+                    this.showToast('Keine Adresse für Navigation vorhanden');
+                    return;
+                }
+                // Open Google Maps externally (not inside WebView)
+                // Try Capacitor Browser plugin first, then fallback to window.open
+                if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Browser) {
+                    window.Capacitor.Plugins.Browser.open({ url: url });
+                } else {
+                    // window.open with _system opens the system browser/app on Android WebView
+                    // _blank also works and is the standard fallback
+                    const opened = window.open(url, '_system');
+                    if (!opened) {
+                        window.open(url, '_blank');
+                    }
+                }
+            },
+            
+            logout() {
+                localStorage.removeItem('shipper_name');
+                localStorage.removeItem('shipper_passcode');
+                localStorage.removeItem('shipper_branch');
+                this.state.passcode = '';
+                this.state.shipperName = '';
+                this.switchTab('login');
+            }
+        };
+
+        // Initialize app when DOM is loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            app.init();
+            
+            // Register Service Worker for PWA
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.register('/shipper-sw.js')
+                .then(() => console.log('Shipper Service Worker Registered'));
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,63 @@
+
+> Configure project :app
+WARNING: Using flatDir should be avoided because it doesn't support any meta-data formats.
+
+> Configure project :capacitor-cordova-android-plugins
+WARNING: Using flatDir should be avoided because it doesn't support any meta-data formats.
+
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preReleaseBuild UP-TO-DATE
+> Task :capacitor-android:preBuild UP-TO-DATE
+> Task :capacitor-android:preReleaseBuild UP-TO-DATE
+> Task :capacitor-android:processReleaseNavigationResources UP-TO-DATE
+> Task :capacitor-app:preBuild UP-TO-DATE
+> Task :capacitor-app:preReleaseBuild UP-TO-DATE
+> Task :capacitor-app:processReleaseNavigationResources UP-TO-DATE
+> Task :capacitor-community-bluetooth-le:preBuild UP-TO-DATE
+> Task :capacitor-community-bluetooth-le:preReleaseBuild UP-TO-DATE
+> Task :capacitor-community-bluetooth-le:processReleaseNavigationResources UP-TO-DATE
+> Task :capacitor-cordova-android-plugins:preBuild UP-TO-DATE
+> Task :capacitor-cordova-android-plugins:preReleaseBuild UP-TO-DATE
+> Task :capacitor-cordova-android-plugins:processReleaseNavigationResources UP-TO-DATE
+> Task :capacitor-haptics:preBuild UP-TO-DATE
+> Task :capacitor-haptics:preReleaseBuild UP-TO-DATE
+> Task :capacitor-haptics:processReleaseNavigationResources UP-TO-DATE
+> Task :capacitor-keyboard:preBuild UP-TO-DATE
+> Task :capacitor-keyboard:preReleaseBuild UP-TO-DATE
+> Task :capacitor-keyboard:processReleaseNavigationResources UP-TO-DATE
+> Task :capacitor-push-notifications:preBuild UP-TO-DATE
+> Task :capacitor-push-notifications:preReleaseBuild UP-TO-DATE
+> Task :capacitor-push-notifications:processReleaseNavigationResources UP-TO-DATE
+> Task :capacitor-splash-screen:preBuild UP-TO-DATE
+> Task :capacitor-splash-screen:preReleaseBuild UP-TO-DATE
+> Task :capacitor-splash-screen:processReleaseNavigationResources UP-TO-DATE
+> Task :capacitor-status-bar:preBuild UP-TO-DATE
+> Task :capacitor-status-bar:preReleaseBuild UP-TO-DATE
+> Task :capacitor-status-bar:processReleaseNavigationResources UP-TO-DATE
+> Task :app:processReleaseNavigationResources UP-TO-DATE
+> Task :app:compileReleaseNavigationResources UP-TO-DATE
+> Task :app:generateReleaseResValues UP-TO-DATE
+> Task :app:processReleaseGoogleServices FAILED
+
+[Incubating] Problems report is available at: file:///D:/jatodemo/leosushi2/android/build/reports/problems/problems-report.html
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':app:processReleaseGoogleServices'.
+> No matching client found for package name 'com.leosushi.restaurant'
+
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to get full insights.
+> Get more help at https://help.gradle.org.
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 9.0.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/8.13/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD FAILED in 2s
+13 actionable tasks: 1 executed, 12 up-to-date

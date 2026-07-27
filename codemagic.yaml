@@ -1,0 +1,279 @@
+workflows:
+  ios-workflow:
+    name: iOS App Build
+    max_build_duration: 120
+    instance_type: mac_mini_m1
+    environment:
+      # Cài đặt phiên bản phần mềm
+      xcode: latest
+      node: 20
+      cocoapods: default
+      groups:
+        - app_store_connect
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.leosushi.app
+    triggering:
+      events:
+        - push
+        - tag
+        - pull_request
+      branch_patterns:
+        - pattern: 'main'
+          include: true
+          source: true
+    integrations:
+      app_store_connect: LEO SUSHI
+    scripts:
+      - name: Install dependencies
+        script: |
+          set -e
+          npm install
+
+      - name: Build Web Assets
+        script: |
+          set -e
+          echo "=== Copying website files to www folder ==="
+          
+          # Create www folder
+          mkdir -p www
+          
+          # Copy HTML files
+          cp -v *.html www/ 2>/dev/null || true
+          
+          # Copy CSS files
+          cp -v *.css www/ 2>/dev/null || true
+          
+          # Copy JS files  
+          mkdir -p www/js
+          cp -rv js/* www/js/
+          
+          # Copy assets
+          if [ -d "assets" ]; then
+            cp -rv assets www/
+          fi
+          
+          # Copy CSS folder
+          if [ -d "css" ]; then
+            cp -rv css www/
+          fi
+          
+          # Copy manifest and service worker
+          cp -v manifest.json www/ 2>/dev/null || true
+          cp -v sw.js www/ 2>/dev/null || true
+          
+          # Copy API folder for any client-side needs
+          if [ -d "api" ]; then
+            cp -rv api www/
+          fi
+          
+          echo "=== www folder contents ==="
+          ls -la www/
+
+      - name: Add iOS platform (if needed)
+        script: |
+          set -e
+          if [ ! -d "ios" ]; then
+            echo "iOS folder not found, adding platform..."
+            npx cap add ios
+          else
+            echo "iOS folder exists, skipping add platform."
+          fi
+
+      - name: Capacitor Sync
+        script: |
+          set -e
+          npx cap sync ios
+          
+          # Force pod install explicitly to be sure
+          cd ios/App
+          pod install
+
+      - name: Override Standalone Detection
+        script: |
+          set -e
+          echo "=== Injecting WKUserScript to override standalone detection ==="
+          
+          # Find the AppDelegate.swift file
+          APP_DELEGATE="ios/App/App/AppDelegate.swift"
+          
+          # Check if we need to add import WebKit
+          if ! grep -q "import WebKit" "$APP_DELEGATE"; then
+            sed -i '' 's/import UIKit/import UIKit\nimport WebKit/' "$APP_DELEGATE"
+          fi
+          
+          # Create a new Swift file to handle the WebView configuration
+          cat > ios/App/App/WebViewConfiguration.swift << 'SWIFTEOF'
+          import Foundation
+          import WebKit
+          import Capacitor
+          
+          extension CAPBridgeViewController {
+              override open func viewDidLoad() {
+                  super.viewDidLoad()
+                  
+                  // JavaScript to run before page load
+                  let script = """
+                  // Override navigator.standalone
+                  Object.defineProperty(navigator, 'standalone', {
+                      get: function() { return false; },
+                      configurable: true
+                  });
+                  
+                  // Override matchMedia for display-mode: standalone
+                  (function() {
+                      const originalMatchMedia = window.matchMedia.bind(window);
+                      window.matchMedia = function(query) {
+                          if (query && query.includes('standalone')) {
+                              return { matches: false, media: query, 
+                                  addEventListener: function(){}, 
+                                  removeEventListener: function(){},
+                                  addListener: function(){}, 
+                                  removeListener: function(){} };
+                          }
+                          return originalMatchMedia(query);
+                      };
+                  })();
+                  
+                  // Hide Capacitor from detection
+                  if (window.Capacitor) {
+                      delete window.Capacitor;
+                  }
+                  if (window.capacitor) {
+                      delete window.capacitor;
+                  }
+                  """
+                  
+                  let userScript = WKUserScript(source: script, injectionTime: .atDocumentStart, forMainFrameOnly: false)
+                  webView?.configuration.userContentController.addUserScript(userScript)
+              }
+          }
+          SWIFTEOF
+
+
+      - name: Generate App Icons
+        script: |
+          set -e
+          echo "=== Generating iOS App Icons from logo.png ==="
+          
+          SOURCE_ICON="assets/logo.png"
+          ICON_DIR="ios/App/App/Assets.xcassets/AppIcon.appiconset"
+          TEMP_ICON="/tmp/icon_no_alpha.png"
+          
+          # Create icon directory if not exists
+          mkdir -p "$ICON_DIR"
+          
+          # First, create a version without alpha channel by adding white background
+          # Using ImageMagick (installed via Homebrew on Codemagic machines)
+          brew install imagemagick 2>/dev/null || true
+          
+          # Convert PNG to have white background (remove transparency)
+          convert "$SOURCE_ICON" -background white -alpha remove -alpha off "$TEMP_ICON"
+          
+          # Generate all required iOS icon sizes using sips (macOS built-in tool)
+          # iPhone icons
+          sips -z 40 40 "$TEMP_ICON" --out "$ICON_DIR/AppIcon-20@2x.png"
+          sips -z 60 60 "$TEMP_ICON" --out "$ICON_DIR/AppIcon-20@3x.png"
+          sips -z 58 58 "$TEMP_ICON" --out "$ICON_DIR/AppIcon-29@2x.png"
+          sips -z 87 87 "$TEMP_ICON" --out "$ICON_DIR/AppIcon-29@3x.png"
+          sips -z 80 80 "$TEMP_ICON" --out "$ICON_DIR/AppIcon-40@2x.png"
+          sips -z 120 120 "$TEMP_ICON" --out "$ICON_DIR/AppIcon-40@3x.png"
+          sips -z 120 120 "$TEMP_ICON" --out "$ICON_DIR/AppIcon-60@2x.png"
+          sips -z 180 180 "$TEMP_ICON" --out "$ICON_DIR/AppIcon-60@3x.png"
+          
+          # iPad icons
+          sips -z 20 20 "$TEMP_ICON" --out "$ICON_DIR/AppIcon-20.png"
+          sips -z 29 29 "$TEMP_ICON" --out "$ICON_DIR/AppIcon-29.png"
+          sips -z 40 40 "$TEMP_ICON" --out "$ICON_DIR/AppIcon-40.png"
+          sips -z 76 76 "$TEMP_ICON" --out "$ICON_DIR/AppIcon-76.png"
+          sips -z 152 152 "$TEMP_ICON" --out "$ICON_DIR/AppIcon-76@2x.png"
+          sips -z 167 167 "$TEMP_ICON" --out "$ICON_DIR/AppIcon-83.5@2x.png"
+          
+          # App Store icon (1024x1024)
+          sips -z 1024 1024 "$TEMP_ICON" --out "$ICON_DIR/AppIcon-1024.png"
+          
+          # Create Contents.json for the icon set
+          cat > "$ICON_DIR/Contents.json" << 'EOF'
+          {
+            "images" : [
+              { "filename" : "AppIcon-20@2x.png", "idiom" : "iphone", "scale" : "2x", "size" : "20x20" },
+              { "filename" : "AppIcon-20@3x.png", "idiom" : "iphone", "scale" : "3x", "size" : "20x20" },
+              { "filename" : "AppIcon-29@2x.png", "idiom" : "iphone", "scale" : "2x", "size" : "29x29" },
+              { "filename" : "AppIcon-29@3x.png", "idiom" : "iphone", "scale" : "3x", "size" : "29x29" },
+              { "filename" : "AppIcon-40@2x.png", "idiom" : "iphone", "scale" : "2x", "size" : "40x40" },
+              { "filename" : "AppIcon-40@3x.png", "idiom" : "iphone", "scale" : "3x", "size" : "40x40" },
+              { "filename" : "AppIcon-60@2x.png", "idiom" : "iphone", "scale" : "2x", "size" : "60x60" },
+              { "filename" : "AppIcon-60@3x.png", "idiom" : "iphone", "scale" : "3x", "size" : "60x60" },
+              { "filename" : "AppIcon-20.png", "idiom" : "ipad", "scale" : "1x", "size" : "20x20" },
+              { "filename" : "AppIcon-20@2x.png", "idiom" : "ipad", "scale" : "2x", "size" : "20x20" },
+              { "filename" : "AppIcon-29.png", "idiom" : "ipad", "scale" : "1x", "size" : "29x29" },
+              { "filename" : "AppIcon-29@2x.png", "idiom" : "ipad", "scale" : "2x", "size" : "29x29" },
+              { "filename" : "AppIcon-40.png", "idiom" : "ipad", "scale" : "1x", "size" : "40x40" },
+              { "filename" : "AppIcon-40@2x.png", "idiom" : "ipad", "scale" : "2x", "size" : "40x40" },
+              { "filename" : "AppIcon-76.png", "idiom" : "ipad", "scale" : "1x", "size" : "76x76" },
+              { "filename" : "AppIcon-76@2x.png", "idiom" : "ipad", "scale" : "2x", "size" : "76x76" },
+              { "filename" : "AppIcon-83.5@2x.png", "idiom" : "ipad", "scale" : "2x", "size" : "83.5x83.5" },
+              { "filename" : "AppIcon-1024.png", "idiom" : "ios-marketing", "scale" : "1x", "size" : "1024x1024" }
+            ],
+            "info" : { "author" : "xcode", "version" : 1 }
+          }
+          EOF
+          
+          echo "=== App icons generated successfully ==="
+          ls -la "$ICON_DIR"
+      
+      - name: Build iOS App
+        script: |
+          set -e
+          set -x
+
+          # Cài đặt provisioning profiles từ Codemagic
+          xcode-project use-profiles
+          
+          # Set build number to Codemagic build number (ensures unique build for each upload)
+          cd ios/App
+          # Use BUILD_NUMBER from Codemagic, or generate from timestamp if not available
+          if [ -n "$BUILD_NUMBER" ]; then
+            BUILD_NUM=$BUILD_NUMBER
+          else
+            BUILD_NUM=$(date +%Y%m%d%H%M)
+          fi
+          echo "Setting build number to: $BUILD_NUM"
+          
+          # Update Info.plist with new build number
+          /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $BUILD_NUM" "App/Info.plist"
+          /usr/libexec/PlistBuddy -c "Print :CFBundleVersion" "App/Info.plist"
+          cd ../..
+          
+          cd ios
+          # Build archive
+          xcodebuild archive \
+            -workspace "App/App.xcworkspace" \
+            -scheme "App" \
+            -archivePath "App.xcarchive" \
+            -destination "generic/platform=iOS" \
+            CODE_SIGN_STYLE=Manual \
+            PROVISIONING_PROFILE_SPECIFIER="LEO SUSHI App Store" \
+            DEVELOPMENT_TEAM="N55LHBSSHX"
+
+          # Export IPA
+          xcodebuild -exportArchive \
+            -archivePath "App.xcarchive" \
+            -exportPath "build/ios/ipa" \
+            -exportOptionsPlist "../ExportOptions.plist"
+          
+          # Debug: List output files
+          echo "=== Listing export output ==="
+          ls -la build/ios/ipa || echo "Export folder not found"
+          find . -name "*.ipa" -type f 2>/dev/null || echo "No IPA files found"
+    
+    artifacts:
+      - "ios/build/ios/ipa/*.ipa"
+      - "ios/**/*.ipa"
+      - "/tmp/xcodebuild_logs/*.log"
+      - "**/*.ipa"
+    
+    publishing:
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: true

@@ -1,0 +1,136 @@
+/* Mobile App UI Enhancements */
+/* For Leo Sushi Android App */
+
+/* Root variables for app theme */
+:root {
+    --app-bottom-bar-height: 65px;
+    --app-bg-dark: #0b0b0c;
+    --app-gold: #e5cf8e;
+    --app-text-dim: #a0a0a0;
+}
+
+/* Hide web-only elements in App Mode - Minimal Hiding */
+body.is-capacitor-app .promo-banner,
+body.is-capacitor-app .download-app-section,
+body.is-capacitor-app .site-footer {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+}
+
+/* Adjust Site Header for App Mode */
+body.is-capacitor-app .site-header {
+    background: rgba(11, 11, 12, 0.95) !important;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(229, 207, 142, 0.1);
+    position: sticky !important;
+    top: 0 !important;
+    padding-top: env(safe-area-inset-top, 0px) !important;
+}
+
+/* Minimize Hero Sections for App Mode */
+body.is-capacitor-app .hero-luxe,
+body.is-capacitor-app .menu-order-hero {
+    padding: 20px 0 20px !important;
+    min-height: auto !important;
+}
+
+body.is-capacitor-app .hero-description-luxe,
+body.is-capacitor-app .hero-subtitle,
+body.is-capacitor-app .hero-meta-grid {
+    display: none !important;
+}
+
+body.is-capacitor-app .hero-title-luxe,
+body.is-capacitor-app .hero-title {
+    font-size: 28px !important;
+    margin-bottom: 15px !important;
+}
+
+/* Adjust body padding for top/bottom bars */
+body.is-capacitor-app {
+    padding-bottom: var(--app-bottom-bar-height) !important;
+    background-color: var(--app-bg-dark) !important;
+}
+
+/* Bottom Navigation Bar Styles */
+.bottom-nav-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: var(--app-bottom-bar-height);
+    background: rgba(11, 11, 12, 0.98);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    z-index: 10000;
+    border-top: 1px solid rgba(229, 207, 142, 0.15);
+    box-shadow: 0 -5px 25px rgba(0, 0, 0, 0.6);
+    padding: 0 10px;
+    padding-bottom: env(safe-area-inset-bottom);
+}
+
+.nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: var(--app-text-dim);
+    text-decoration: none;
+    font-size: 10px;
+    padding: 5px 0;
+    transition: all 0.2s ease;
+    flex: 1;
+}
+
+.nav-item .nav-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    margin-bottom: 4px;
+}
+
+.nav-item .nav-icon svg {
+    width: 100%;
+    height: 100%;
+}
+
+.nav-item.active {
+    color: var(--app-gold);
+}
+
+.nav-item span {
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Central Prominent Item (Menu) */
+.nav-item-center {
+    position: relative;
+    top: -12px;
+    flex: 0 0 65px;
+    height: 65px;
+    background: linear-gradient(135deg, var(--app-gold), #c2a355);
+    border-radius: 50%;
+    color: #000 !important;
+    box-shadow: 0 5px 15px rgba(229, 207, 142, 0.3);
+    border: 4px solid var(--app-bg-dark);
+}
+
+.nav-item-center.active {
+    transform: scale(1.05);
+}
+
+.nav-item-center .nav-icon {
+    width: 28px;
+    height: 28px;
+    margin-bottom: 0;
+}

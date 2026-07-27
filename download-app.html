@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leo Sushi App Download</title>
+    <style>
+        body { font-family: sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; background: #0b0b0c; color: white; text-align: center; }
+        .loader { border: 3px solid #333; border-top: 3px solid #e5cf8e; border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; margin: 0 auto 20px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+    <script>
+        (function() {
+            const userAgent = navigator.userAgent || navigator.vendor || window.opera;
+            const iosLink = "https://apps.apple.com/de/app/leo-sushi/id6758460309";
+            const androidLink = "https://play.google.com/store/apps/details?id=com.leosushi.berlin";
+            const fallbackLink = "https://www.leo-sushi-berlin.de/";
+
+            // Chuyển hướng ngay lập tức
+            if (/iPad|iPhone|iPod/.test(userAgent) && !window.MSStream) {
+                window.location.replace(iosLink);
+            } else if (/android/i.test(userAgent)) {
+                window.location.replace(androidLink);
+            } else {
+                // Nếu là máy tính hoặc không xác định, về trang chủ
+                window.location.replace(fallbackLink);
+            }
+        })();
+    </script>
+</head>
+<body>
+    <div>
+        <div class="loader"></div>
+        <p>Redirecting to App Store...</p>
+        <p style="font-size: 12px; color: #666;">Bitte warten Sie einen Moment.</p>
+    </div>
+</body>
+</html>

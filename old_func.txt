@@ -1,0 +1,106 @@
+function showPrinterMenu() {
+                // Remove existing menu
+                const existing = document.getElementById('printerMenu');
+                if (existing) { existing.remove(); return; }
+
+                const connected = typeof BluetoothPrinter !== 'undefined' && BluetoothPrinter.isConnected;
+
+                const menu = document.createElement('div');
+                menu.id = 'printerMenu';
+                menu.style.cssText = 'position:fixed;top:60px;right:20px;background:#1a1a1e;border:1px solid rgba(229,207,142,0.3);border-radius:12px;padding:16px;z-index:10001;min-width:280px;box-shadow:0 8px 32px rgba(0,0,0,0.5);max-height:80vh;overflow-y:auto;';
+
+                const isInApp = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
+                const currentType = isInApp
+                    ? 'network'
+                    : (localStorage.getItem('printer_type') || 'bluetooth');
+                if (isInApp) localStorage.setItem('printer_type', 'network');
+
+                const nativePrinterStatus = (typeof NativeLanPrinter !== 'undefined' && isInApp)
+                    ? NativeLanPrinter.getStatus() : { connected: false, ip: null };
+                const lanConnected = nativePrinterStatus.connected;
+                const lanIp = nativePrinterStatus.ip || NativeLanPrinter?.getSavedIp?.() || '';
+
+                menu.innerHTML = `
+                    <div style="color:#fff;font-size:14px;font-weight:600;margin-bottom:12px;">🖨️ Druckereinstellungen</div>
+
+                    <!-- Printer Type Selector — only show in browser (not in app) -->
+                    ${!isInApp ? `
+                    <div style="margin-bottom:12px;">
+                        <div style="color:rgba(255,255,255,0.6);font-size:11px;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px;">Druckmethode:</div>
+                        <div style="display:flex;gap:6px;">
+                            <button onclick="setPrinterType('bluetooth')" id="btnTypeBT" style="flex:1;padding:8px 6px;border-radius:8px;border:1px solid ${currentType === 'bluetooth' ? 'rgba(229,207,142,0.6)' : 'rgba(255,255,255,0.15)'};background:${currentType === 'bluetooth' ? 'rgba(229,207,142,0.15)' : 'transparent'};color:${currentType === 'bluetooth' ? '#e5cf8e' : 'rgba(255,255,255,0.5)'};cursor:pointer;font-size:12px;font-weight:600;">
+                                📶 Bluetooth
+                            </button>
+                            <button onclick="setPrinterType('network')" id="btnTypeNet" style="flex:1;padding:8px 6px;border-radius:8px;border:1px solid ${currentType === 'network' ? 'rgba(16,185,129,0.6)' : 'rgba(255,255,255,0.15)'};background:${currentType === 'network' ? 'rgba(16,185,129,0.15)' : 'transparent'};color:${currentType === 'network' ? '#10b981' : 'rgba(255,255,255,0.5)'};cursor:pointer;font-size:12px;font-weight:600;">
+                                🌐 USB / Máy POS / LAN
+                            </button>
+                        </div>
+                    </div>
+                    ` : ''}
+
+                    <div style="border-top:1px solid rgba(255,255,255,0.1);margin:8px 0;"></div>
+
+                    ${isInApp ? `
+                    <!-- === LAN Printer Section (Android App) === -->
+                    <div id="lanPrinterStatus" style="color:${lanConnected ? '#10b981' : 'rgba(255,255,255,0.5)'};font-size:13px;margin-bottom:10px;">
+                        ${lanConnected
+                            ? '✅ Verbunden: ' + lanIp
+                            : (lanIp ? '⚪ Zuletzt: ' + lanIp + ' (getrennt)' : '⚪ Kein Drucker verbunden')}
+                    </div>
+
+                    <!-- Discover button -->
+                    <button onclick="discoverLanPrinters()" id="btnDiscover" style="width:100%;padding:10px;background:linear-gradient(180deg,#C2A355,#a8893e);color:#1a1a1a;border:none;border-radius:8px;font-weight:700;cursor:pointer;margin-bottom:8px;font-size:14px;">
+                        🔍 Tự tìm máy in trong mạng
+                    </button>
+
+                    <!-- Discovered printer list -->
+                    <div id="discoveredPrintersList" style="margin-bottom:8px;"></div>
+
+                    ${lanConnected ? `
+                    <button onclick="testNetworkPrint()" style="width:100%;padding:10px;background:rgba(16,185,129,0.2);color:#10b981;border:1px solid rgba(16,185,129,0.3);border-radius:8px;cursor:pointer;margin-bottom:6px;font-size:13px;">
+                        📄 Testseite drucken
+                    </button>
+                    <button onclick="disconnectLanPrinter()" style="width:100%;padding:10px;background:rgba(239,68,68,0.1);color:#ef4444;border:1px solid rgba(239,68,68,0.2);border-radius:8px;cursor:pointer;font-size:13px;">
+                        ❌ Trennen & vergessen
+                    </button>
+                    ` : ''}
+
+                    <div style="color:rgba(255,255,255,0.4);font-size:11px;margin-top:10px;line-height:1.5;">
+                        Máy in cắm LAN cùng mạng WiFi sẽ được tìm tự động.<br>
+                        Cổng: TCP ${9100} (ESC/POS)
+                    </div>
+
+                    ` : currentType === 'bluetooth' ? `
+                    <!-- Bluetooth Section (browser) -->
+                    <div id="printerStatus" style="color:${connected ? '#10b981' : 'rgba(255,255,255,0.5)'};font-size:13px;margin-bottom:12px;">
+                        ${connected ? '✅ Verbunden: ' + (BluetoothPrinter.printerName || 'Drucker') : '⚪ Bluetooth nicht verbunden'}
+                    </div>
+                    ${!connected ? `
+                    <button onclick="pairPrinter()" style="width:100%;padding:10px;background:linear-gradient(180deg,#C2A355,#a8893e);color:#1a1a1a;border:none;border-radius:8px;font-weight:600;cursor:pointer;margin-bottom:8px;font-size:14px;">
+                        🔍 Drucker suchen &amp; verbinden
+                    </button>
+                    ` : `
+                    <button onclick="testPrint()" style="width:100%;padding:10px;background:rgba(16,185,129,0.2);color:#10b981;border:1px solid rgba(16,185,129,0.3);border-radius:8px;cursor:pointer;margin-bottom:8px;font-size:13px;">
+                        📄 Testseite drucken
+                    </button>
+                    <button onclick="disconnectPrinter()" style="width:100%;padding:10px;background:rgba(239,68,68,0.1);color:#ef4444;border:1px solid rgba(239,68,68,0.2);border-radius:8px;cursor:pointer;font-size:13px;">
+                        ❌ Trennen &amp; vergessen
+                    </button>
+                    `}
+                    ` : `
+                    <!-- Network / OS Dialog Section (browser) -->
+                    <div style="color:#10b981;font-size:13px;margin-bottom:12px;">
+                        🌐 Netzwerkdrucker aktiv (Systemdialog)
+                    </div>
+                    <button onclick="testNetworkPrint()" style="width:100%;padding:10px;background:rgba(16,185,129,0.2);color:#10b981;border:1px solid rgba(16,185,129,0.3);border-radius:8px;cursor:pointer;margin-bottom:8px;font-size:13px;">
+                        📄 Testseite drucken
+                    </button>
+                    <div style="color:rgba(255,255,255,0.4);font-size:11px;margin-top:8px;line-height:1.4;">
+                        Beim Drucken öffnet sich der Systemdialog. Wählen Sie dort Ihren WLAN-Drucker aus.
+                    </div>
+                    `}
+                `;
+
+
+
+                

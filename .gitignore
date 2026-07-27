@@ -1,0 +1,29 @@
+# Dependencies
+node_modules/
+# package-lock.json
+
+# iOS Build
+
+*.xcarchive
+*.ipa
+build/
+
+# Capacitor
+.capacitor/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+npm-debug.log*

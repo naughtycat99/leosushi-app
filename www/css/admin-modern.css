@@ -1,0 +1,469 @@
+/*  ╔══════════════════════════════════════════════════╗
+    ║  LEO SUSHI - Admin Dashboard Modern Skin v2.2   ║
+    ║  Fixed: All buttons/tabs fully clickable         ║
+    ╚══════════════════════════════════════════════════╝  */
+
+:root {
+    --gold: #c2a355;
+    --gold-light: #e5cf8e;
+    --gold-glow: rgba(229, 207, 142, 0.15);
+    --dark-bg: #0a0a0c;
+    --dark-card: #111113;
+    --dark-surface: #161618;
+    --sidebar-width: 240px;
+    --radius-lg: 16px;
+    --radius-md: 12px;
+    --radius-sm: 8px;
+}
+
+/* ═══════════════════════════════════════════
+   BODY & GLOBAL RESET
+   ═══════════════════════════════════════════ */
+body {
+    background: var(--dark-bg) !important;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
+}
+
+/* ═══════════════════════════════════════════
+   ADMIN CONTAINER
+   ═══════════════════════════════════════════ */
+.admin-container {
+    max-width: 100% !important;
+    padding: 0 !important;
+}
+
+/* ═══════════════════════════════════════════
+   ADMIN HEADER → Sticky Top Bar
+   z-index MUST be LOWER than sidebar
+   ═══════════════════════════════════════════ */
+.admin-header {
+    position: sticky !important;
+    top: 0;
+    z-index: 50 !important;
+    background: rgba(10, 10, 12, 0.92) !important;
+    backdrop-filter: blur(20px) saturate(1.5) !important;
+    -webkit-backdrop-filter: blur(20px) saturate(1.5) !important;
+    border: none !important;
+    border-bottom: 1px solid rgba(229, 207, 142, 0.08) !important;
+    border-radius: 0 !important;
+    padding: 16px 28px !important;
+    margin-bottom: 0 !important;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3) !important;
+}
+
+.admin-header > div:first-child {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.admin-header h1 {
+    font-size: 20px !important;
+    font-weight: 600 !important;
+    letter-spacing: -0.3px;
+    margin: 0 !important;
+}
+
+.admin-header p {
+    font-size: 12px !important;
+    margin: 2px 0 0 0 !important;
+}
+
+/* Kill ALL pseudo-elements on header to prevent overlay */
+.admin-header::before,
+.admin-header::after {
+    display: none !important;
+    content: none !important;
+    pointer-events: none !important;
+}
+
+/* ═══════════════════════════════════════════
+   ADMIN LAYOUT → Sidebar + Content
+   ═══════════════════════════════════════════ */
+.admin-layout {
+    display: flex !important;
+    gap: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    min-height: calc(100vh - 100px);
+    position: relative !important;
+    z-index: 200 !important;
+}
+
+/* ═══════════════════════════════════════════
+   SIDEBAR → Sticky Left Panel (Desktop)
+   MUST be fully clickable
+   ═══════════════════════════════════════════ */
+.admin-sidebar {
+    position: sticky !important;
+    top: 0 !important;
+    width: var(--sidebar-width) !important;
+    height: 100vh !important;
+    max-height: 100vh !important;
+    border-radius: 0 !important;
+    border: none !important;
+    border-right: 1px solid rgba(229, 207, 142, 0.06) !important;
+    background: var(--dark-card) !important;
+    backdrop-filter: none !important;
+    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.3) !important;
+    padding: 0 !important;
+    z-index: 9999 !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    flex-shrink: 0 !important;
+    pointer-events: auto !important;
+}
+
+/* Sidebar Logo Area */
+.admin-sidebar::before {
+    content: '🍱  LEO SUSHI';
+    display: block;
+    font-family: 'Playfair Display', serif;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--gold);
+    padding: 28px 24px 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    letter-spacing: 0.5px;
+    pointer-events: none;
+}
+
+.admin-tabs {
+    padding: 16px 12px !important;
+    gap: 4px !important;
+    pointer-events: auto !important;
+    position: relative !important;
+    z-index: 201 !important;
+}
+
+/* ═══════════════════════════════════════════
+   TAB BUTTONS → Modern Nav Items (CLICKABLE!)
+   ═══════════════════════════════════════════ */
+.admin-tab {
+    padding: 13px 18px !important;
+    border-radius: var(--radius-md) !important;
+    border-left: none !important;
+    border: none !important;
+    background: transparent !important;
+    font-size: 14px !important;
+    font-weight: 500 !important;
+    color: rgba(255, 255, 255, 0.55) !important;
+    transition: all 0.25s ease !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    letter-spacing: 0.1px !important;
+    position: relative !important;
+    cursor: pointer !important;
+    pointer-events: auto !important;
+    width: 100% !important;
+    text-align: left !important;
+}
+
+.admin-tab:hover {
+    color: rgba(255, 255, 255, 0.9) !important;
+    background: rgba(255, 255, 255, 0.04) !important;
+}
+
+.admin-tab.active {
+    color: var(--gold) !important;
+    background: var(--gold-glow) !important;
+    border-left: none !important;
+    font-weight: 600 !important;
+    box-shadow: 0 2px 12px rgba(194, 163, 85, 0.1);
+}
+
+.admin-tab.active::before {
+    content: '' !important;
+    position: absolute !important;
+    left: 0 !important;
+    top: 6px !important;
+    bottom: 6px !important;
+    width: 3px !important;
+    background: var(--gold) !important;
+    border-radius: 0 3px 3px 0 !important;
+    opacity: 1 !important;
+    pointer-events: none !important;
+}
+
+/* Show the Stats tab that was hidden */
+.admin-tab[data-tab="stats"] {
+    display: flex !important;
+}
+
+/* ═══════════════════════════════════════════
+   MAIN CONTENT AREA
+   ═══════════════════════════════════════════ */
+.admin-main-content {
+    flex: 1 !important;
+    min-width: 0 !important;
+    padding: 24px 28px 40px !important;
+    pointer-events: auto !important;
+}
+
+/* ═══════════════════════════════════════════
+   FILTER BUTTONS → Upgraded Style (CLICKABLE!)
+   ═══════════════════════════════════════════ */
+.filter-btn {
+    padding: 10px 18px !important;
+    border-radius: var(--radius-sm) !important;
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    letter-spacing: 0.2px !important;
+    transition: all 0.25s ease !important;
+    cursor: pointer !important;
+    pointer-events: auto !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    background: rgba(255, 255, 255, 0.03) !important;
+    color: rgba(255, 255, 255, 0.6) !important;
+}
+
+.filter-btn:hover {
+    background: rgba(255, 255, 255, 0.08) !important;
+    color: #fff !important;
+}
+
+.filter-btn.active {
+    background: linear-gradient(135deg, var(--gold), #d4af37) !important;
+    color: #1a1a1a !important;
+    border-color: var(--gold) !important;
+    box-shadow: 0 4px 16px rgba(194, 163, 85, 0.25) !important;
+}
+
+.filter-input {
+    background: rgba(255, 255, 255, 0.03) !important;
+    border: 1px solid rgba(229, 207, 142, 0.12) !important;
+    border-radius: var(--radius-md) !important;
+    color: #fff !important;
+    font-size: 14px !important;
+    padding: 12px 16px !important;
+    transition: all 0.25s ease !important;
+    pointer-events: auto !important;
+}
+
+.filter-input:focus {
+    border-color: var(--gold) !important;
+    box-shadow: 0 0 0 3px rgba(229, 207, 142, 0.08) !important;
+    background: rgba(255, 255, 255, 0.06) !important;
+}
+
+/* ═══════════════════════════════════════════
+   ORDER & RESERVATION CARDS → Refined
+   ═══════════════════════════════════════════ */
+.order-card,
+.reservation-card {
+    background: var(--dark-surface) !important;
+    border: 1px solid rgba(255, 255, 255, 0.04) !important;
+    border-radius: var(--radius-lg) !important;
+    padding: 24px !important;
+    transition: all 0.3s ease !important;
+}
+
+.order-card:hover,
+.reservation-card:hover {
+    border-color: rgba(229, 207, 142, 0.2) !important;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3) !important;
+    transform: translateY(-2px) !important;
+}
+
+/* ═══════════════════════════════════════════
+   ACTION BUTTONS → Polished (CLICKABLE!)
+   ═══════════════════════════════════════════ */
+.btn-action {
+    border-radius: var(--radius-sm) !important;
+    font-weight: 600 !important;
+    font-size: 13px !important;
+    letter-spacing: 0.2px !important;
+    transition: all 0.25s ease !important;
+    cursor: pointer !important;
+    pointer-events: auto !important;
+}
+
+.btn-confirm {
+    background: linear-gradient(135deg, #10b981, #059669) !important;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25) !important;
+}
+
+.btn-confirm:hover {
+    box-shadow: 0 6px 20px rgba(16, 185, 129, 0.35) !important;
+    transform: translateY(-1px) !important;
+}
+
+/* ═══════════════════════════════════════════
+   STATS CARDS → Glassmorphism
+   ═══════════════════════════════════════════ */
+.stat-card {
+    background: var(--dark-surface) !important;
+    border: 1px solid rgba(229, 207, 142, 0.08) !important;
+    border-radius: var(--radius-lg) !important;
+}
+
+.stat-card:hover {
+    border-color: rgba(229, 207, 142, 0.2) !important;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25),
+        0 0 0 1px rgba(229, 207, 142, 0.15) !important;
+}
+
+/* ═══════════════════════════════════════════
+   BOTTOM NAV → Hide on Desktop
+   ═══════════════════════════════════════════ */
+@media (min-width: 1025px) {
+    .bottom-nav {
+        display: none !important;
+    }
+
+    #moreMenu {
+        display: none !important;
+    }
+}
+
+/* ═══════════════════════════════════════════
+   LOGIN MODAL → Premium Overlay
+   ═══════════════════════════════════════════ */
+.admin-login-modal {
+    backdrop-filter: blur(12px) !important;
+}
+
+.admin-login-content,
+.modal-content {
+    background: var(--dark-card) !important;
+    border: 1px solid rgba(229, 207, 142, 0.15) !important;
+    border-radius: 20px !important;
+    box-shadow: 0 24px 64px rgba(0, 0, 0, 0.5) !important;
+}
+
+/* ═══════════════════════════════════════════
+   SCROLLBAR → Minimal Dark
+   ═══════════════════════════════════════════ */
+::-webkit-scrollbar {
+    width: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: rgba(229, 207, 142, 0.15);
+    border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(229, 207, 142, 0.3);
+}
+
+/* ═══════════════════════════════════════════
+   FLOATING BUTTONS → Better Positioned
+   ═══════════════════════════════════════════ */
+.refresh-btn {
+    position: fixed !important;
+    bottom: 24px !important;
+    z-index: 800 !important;
+    border-radius: 50% !important;
+    width: 48px !important;
+    height: 48px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4) !important;
+    border: 1px solid rgba(229, 207, 142, 0.2) !important;
+    transition: all 0.3s ease !important;
+    cursor: pointer !important;
+    pointer-events: auto !important;
+}
+
+.refresh-btn:hover {
+    transform: scale(1.1) !important;
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.5) !important;
+}
+
+/* ═══════════════════════════════════════════
+   MOBILE RESPONSIVE
+   ═══════════════════════════════════════════ */
+@media (max-width: 1024px) {
+    .admin-sidebar {
+        display: none !important;
+    }
+
+    .admin-header {
+        padding: 14px 16px !important;
+    }
+
+    .admin-main-content {
+        padding: 16px 12px 100px !important;
+    }
+
+    .bottom-nav {
+        display: flex !important;
+        position: fixed !important;
+        bottom: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        z-index: 900 !important;
+        background: rgba(10, 10, 12, 0.95) !important;
+        backdrop-filter: blur(12px) !important;
+        border-top: 1px solid rgba(229, 207, 142, 0.08) !important;
+        padding: 8px 0 !important;
+        padding-bottom: env(safe-area-inset-bottom) !important;
+        justify-content: space-around !important;
+    }
+
+    .bottom-nav .nav-item {
+        color: rgba(255, 255, 255, 0.5) !important;
+        font-size: 10px !important;
+        pointer-events: auto !important;
+        cursor: pointer !important;
+    }
+
+    .bottom-nav .nav-item.active {
+        color: var(--gold) !important;
+    }
+
+    #moreMenu {
+        display: block !important;
+    }
+}
+
+@media (max-width: 768px) {
+    .admin-header h1 {
+        font-size: 16px !important;
+    }
+
+    .admin-header p {
+        display: none !important;
+    }
+
+    .card-header {
+        flex-direction: column !important;
+    }
+
+    .order-card,
+    .reservation-card {
+        padding: 16px !important;
+    }
+}
+
+/* ═══════════════════════════════════════════
+   PRINT STYLES
+   ═══════════════════════════════════════════ */
+@media print {
+
+    .admin-sidebar,
+    .admin-header,
+    .bottom-nav,
+    .refresh-btn,
+    .btn-action,
+    .admin-filters {
+        display: none !important;
+    }
+
+    .admin-main-content {
+        margin-left: 0 !important;
+        padding: 0 !important;
+    }
+}

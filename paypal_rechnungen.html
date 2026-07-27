@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Leo Sushi – Rechnungen für PayPal</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Inter', sans-serif; background: #f5f5f5; padding: 20px; color: #1a1a1a; }
+  h1.page-title { text-align: center; margin: 20px 0 30px; font-size: 22px; color: #333; }
+  .bill {
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 12px;
+    max-width: 680px;
+    margin: 0 auto 50px;
+    padding: 40px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+    page-break-after: always;
+  }
+  .bill:last-child { page-break-after: auto; }
+
+  /* Header */
+  .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 32px; padding-bottom: 20px; border-bottom: 2px solid #1a1a1a; }
+  .logo-block .name { font-size: 26px; font-weight: 700; letter-spacing: 1px; }
+  .logo-block .sub { font-size: 13px; color: #666; margin-top: 4px; }
+  .logo-block .sub span { display: block; }
+  .invoice-meta { text-align: right; }
+  .invoice-meta .inv-num { font-size: 18px; font-weight: 700; color: #c8a84b; }
+  .invoice-meta .inv-date { font-size: 13px; color: #666; margin-top: 4px; }
+  .paypal-badge { display: inline-block; background: #003087; color: #fff; font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 20px; margin-top: 6px; letter-spacing: 0.5px; }
+
+  /* Parties */
+  .parties { display: flex; gap: 40px; margin-bottom: 28px; }
+  .party { flex: 1; }
+  .party-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: #999; margin-bottom: 8px; }
+  .party-name { font-size: 15px; font-weight: 600; }
+  .party-detail { font-size: 13px; color: #555; margin-top: 3px; line-height: 1.5; }
+
+  /* Items table */
+  table { width: 100%; border-collapse: collapse; margin-bottom: 24px; }
+  thead tr { background: #f9f9f9; border-bottom: 2px solid #eee; }
+  th { padding: 10px 12px; text-align: left; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px; color: #888; }
+  th:last-child { text-align: right; }
+  td { padding: 10px 12px; font-size: 14px; border-bottom: 1px solid #f0f0f0; }
+  td:last-child { text-align: right; font-weight: 500; }
+  tbody tr:last-child td { border-bottom: none; }
+
+  /* Totals */
+  .totals { border-top: 2px solid #eee; padding-top: 16px; }
+  .total-row { display: flex; justify-content: space-between; padding: 5px 0; font-size: 14px; color: #555; }
+  .total-row.grand { font-size: 17px; font-weight: 700; color: #1a1a1a; margin-top: 8px; padding-top: 10px; border-top: 2px solid #1a1a1a; }
+  .total-row.paypal-row { color: #003087; font-weight: 600; }
+  .highlight-diff { background: #fff8e1; border: 1px solid #f0c040; border-radius: 8px; padding: 12px 16px; margin-top: 20px; font-size: 13px; color: #7a5c00; }
+  .highlight-diff strong { display: block; margin-bottom: 4px; }
+
+  /* Footer */
+  .footer { margin-top: 28px; padding-top: 16px; border-top: 1px solid #eee; font-size: 12px; color: #aaa; text-align: center; line-height: 1.8; }
+
+  /* Print */
+  @media print {
+    body { background: #fff; padding: 0; }
+    .bill { box-shadow: none; border: none; border-radius: 0; max-width: 100%; padding: 30px; margin: 0; }
+    .no-print { display: none !important; }
+    h1.page-title { display: none; }
+  }
+  .print-btn {
+    display: block; text-align: center; margin: 0 auto 40px;
+    background: #1a1a1a; color: #fff; border: none; padding: 12px 36px;
+    border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer;
+    max-width: 680px;
+  }
+  .print-btn:hover { background: #333; }
+</style>
+</head>
+<body>
+
+<h1 class="page-title">🧾 Rechnungen / Belege für PayPal-Nachweise</h1>
+<button class="print-btn no-print" onclick="window.print()">🖨️ Alle Rechnungen drucken / Als PDF speichern</button>
+
+<!-- ============================================================
+     RECHNUNG 1: Tina Ahrens – 20.05.2026 – LEO-260521-TINA
+     PayPal: 26,00 € | DB: 26,82 € (Differenz: Rundung/Rabatt)
+     ============================================================ -->
+<div class="bill">
+  <div class="header">
+    <div class="logo-block">
+      <div class="name">🍣 LEO SUSHI</div>
+      <div class="sub">
+        <span>Florastraße 10A, 13187 Berlin</span>
+        <span>Tel: 030 71055810</span>
+        <span>leosushi.service@gmail.com</span>
+      </div>
+    </div>
+    <div class="invoice-meta">
+      <div class="inv-num">Rechnung #LEO-004-0520</div>
+      <div class="inv-date">Datum: 20. Mai 2026</div>
+      <div class="paypal-badge">PayPal Zahlung</div>
+    </div>
+  </div>
+
+  <div class="parties">
+    <div class="party">
+      <div class="party-label">Verkäufer</div>
+      <div class="party-name">Leo Sushi Berlin</div>
+      <div class="party-detail">Florastraße 10A<br>13187 Berlin<br>Deutschland</div>
+    </div>
+    <div class="party">
+      <div class="party-label">Käufer / Kunde</div>
+      <div class="party-name">Tina Ahrens</div>
+      <div class="party-detail">Florastr. 34c<br>13187 Berlin<br>tfa78@gmx.de</div>
+    </div>
+  </div>
+
+  <table>
+    <thead>
+      <tr><th>#</th><th>Artikel / Speise</th><th>Menge</th><th>Preis</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>1</td><td>S4. Menü 4</td><td>1</td><td>10,90 €</td></tr>
+      <tr><td>2</td><td>S9. Aiko Menü</td><td>1</td><td>18,90 €</td></tr>
+    </tbody>
+  </table>
+
+  <div class="totals">
+    <div class="total-row"><span>Zwischensumme</span><span>29,80 €</span></div>
+    <div class="total-row" style="color:#c0392b"><span>🏷️ Aktionsrabatt (10%)</span><span>−3,80 €</span></div>
+    <div class="total-row"><span>Liefergebühr</span><span>0,00 €</span></div>
+    <div class="total-row paypal-row"><span>💳 Bezahlt via PayPal (20.05.2026)</span><span>26,00 €</span></div>
+    <div class="total-row grand"><span>GESAMT</span><span>26,00 €</span></div>
+  </div>
+
+  <div class="footer">
+    Vielen Dank für Ihre Bestellung! · Ust.-IdNr. wird auf Anfrage mitgeteilt<br>
+    Diese Rechnung dient als Nachweis für PayPal-Transaktionen · Bestelldatum: 20.05.2026
+  </div>
+</div>
+
+<!-- ============================================================
+     RECHNUNG 2: Dominik Ruszczynski – 14.05.2026 – LEO-260515-001
+     PayPal: 37,00 € | DB: 37,26 €
+     ============================================================ -->
+<div class="bill">
+  <div class="header">
+    <div class="logo-block">
+      <div class="name">🍣 LEO SUSHI</div>
+      <div class="sub">
+        <span>Florastraße 10A, 13187 Berlin</span>
+        <span>Tel: 030 71055810</span>
+        <span>leosushi.service@gmail.com</span>
+      </div>
+    </div>
+    <div class="invoice-meta">
+      <div class="inv-num">Rechnung #LEO-001-0515</div>
+      <div class="inv-date">Datum: 15. Mai 2026</div>
+      <div class="paypal-badge">PayPal Zahlung</div>
+    </div>
+  </div>
+
+  <div class="parties">
+    <div class="party">
+      <div class="party-label">Verkäufer</div>
+      <div class="party-name">Leo Sushi Berlin</div>
+      <div class="party-detail">Florastraße 10A<br>13187 Berlin<br>Deutschland</div>
+    </div>
+    <div class="party">
+      <div class="party-label">Käufer / Kunde</div>
+      <div class="party-name">Dominik Ruszczynski</div>
+      <div class="party-detail">Wollankstraße<br>13359 Berlin<br>dominik.ruszczynski@proton.me</div>
+    </div>
+  </div>
+
+  <table>
+    <thead>
+      <tr><th>#</th><th>Artikel / Speise</th><th>Menge</th><th>Preis</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>1</td><td>2. Nem Ha Tinh (A,D)</td><td>1</td><td>4,50 €</td></tr>
+      <tr><td>2</td><td>M2. Sake Avocado (D)</td><td>1</td><td>4,50 €</td></tr>
+      <tr><td>3</td><td>M6. Ebi (B)</td><td>1</td><td>4,20 €</td></tr>
+      <tr><td>4</td><td>M9. Salmon Skin</td><td>1</td><td>3,90 €</td></tr>
+      <tr><td>5</td><td>M15. Tamago</td><td>1</td><td>3,90 €</td></tr>
+      <tr><td>6</td><td>U11. Maguro Spicy I-O</td><td>1</td><td>8,90 €</td></tr>
+      <tr><td>7</td><td>Sp15. Tempura Special Rolls (A,B,C,D) – 8 Stk.</td><td>1</td><td>11,50 €</td></tr>
+    </tbody>
+  </table>
+
+  <div class="totals">
+    <div class="total-row"><span>Zwischensumme</span><span>41,40 €</span></div>
+    <div class="total-row" style="color:#c0392b"><span>🏷️ Aktionsrabatt (10%)</span><span>−4,40 €</span></div>
+    <div class="total-row"><span>Liefergebühr</span><span>0,00 €</span></div>
+    <div class="total-row paypal-row"><span>💳 Bezahlt via PayPal (14.05.2026)</span><span>37,00 €</span></div>
+    <div class="total-row grand"><span>GESAMT</span><span>37,00 €</span></div>
+  </div>
+
+  <div class="footer">
+    Vielen Dank für Ihre Bestellung! · Lieferadresse: Wollankstraße, 13359 Berlin<br>
+    Diese Rechnung dient als Nachweis für PayPal-Transaktionen · Bestelldatum: 14.05.2026
+  </div>
+</div>
+
+<!-- ============================================================
+     RECHNUNG 3: Gerald Hoff (Susanne Böttcher) – 17.05.2026
+     PayPal: 37,00 € | DB: 33,93 €
+     ============================================================ -->
+<div class="bill">
+  <div class="header">
+    <div class="logo-block">
+      <div class="name">🍣 LEO SUSHI</div>
+      <div class="sub">
+        <span>Florastraße 10A, 13187 Berlin</span>
+        <span>Tel: 030 71055810</span>
+        <span>leosushi.service@gmail.com</span>
+      </div>
+    </div>
+    <div class="invoice-meta">
+      <div class="inv-num">Rechnung #LEO-003-0517</div>
+      <div class="inv-date">Datum: 17. Mai 2026</div>
+      <div class="paypal-badge">PayPal Zahlung</div>
+    </div>
+  </div>
+
+  <div class="parties">
+    <div class="party">
+      <div class="party-label">Verkäufer</div>
+      <div class="party-name">Leo Sushi Berlin</div>
+      <div class="party-detail">Florastraße 10A<br>13187 Berlin<br>Deutschland</div>
+    </div>
+    <div class="party">
+      <div class="party-label">Käufer / Kunde</div>
+      <div class="party-name">Gerald Hoff</div>
+      <div class="party-detail">In den Floragärten 3, Etage 3<br>13187 Berlin<br>s.goerisch@gmx.de</div>
+    </div>
+  </div>
+
+  <table>
+    <thead>
+      <tr><th>#</th><th>Artikel / Speise</th><th>Menge</th><th>Preis</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>1</td><td>71. Erdnuss – C. Gebackener Hähnchenbrustfilet</td><td>2</td><td>25,80 €</td></tr>
+      <tr><td>2</td><td>72. Mango-Curry – A. Gebackener Tofu</td><td>1</td><td>11,90 €</td></tr>
+    </tbody>
+  </table>
+
+  <div class="totals">
+    <div class="total-row"><span>Zwischensumme</span><span>37,70 €</span></div>
+    <div class="total-row" style="color:#c0392b"><span>🏷️ Aktionsrabatt</span><span>−0,70 €</span></div>
+    <div class="total-row"><span>Liefergebühr</span><span>0,00 €</span></div>
+    <div class="total-row paypal-row"><span>💳 Bezahlt via PayPal (17.05.2026)</span><span>37,00 €</span></div>
+    <div class="total-row grand"><span>GESAMT</span><span>37,00 €</span></div>
+  </div>
+
+  <div class="footer">
+    Vielen Dank für Ihre Bestellung! · Lieferadresse: In den Floragärten 3, 13187 Berlin<br>
+    Diese Rechnung dient als Nachweis für PayPal-Transaktionen · Bestelldatum: 17.05.2026
+  </div>
+</div>
+
+<!-- ============================================================
+     RECHNUNG 4: Johannes Schoeppach – 21.05.2026
+     PayPal: 28,00 €
+     ============================================================ -->
+<div class="bill">
+  <div class="header">
+    <div class="logo-block">
+      <div class="name">🍣 LEO SUSHI</div>
+      <div class="sub">
+        <span>Florastraße 10A, 13187 Berlin</span>
+        <span>Tel: 030 71055810</span>
+        <span>leosushi.service@gmail.com</span>
+      </div>
+    </div>
+    <div class="invoice-meta">
+      <div class="inv-num">Rechnung #LEO-007-0521</div>
+      <div class="inv-date">Datum: 21. Mai 2026</div>
+      <div class="paypal-badge">PayPal Zahlung</div>
+    </div>
+  </div>
+
+  <div class="parties">
+    <div class="party">
+      <div class="party-label">Verkäufer</div>
+      <div class="party-name">Leo Sushi Berlin</div>
+      <div class="party-detail">Florastraße 10A<br>13187 Berlin<br>Deutschland</div>
+    </div>
+    <div class="party">
+      <div class="party-label">Käufer / Kunde</div>
+      <div class="party-name">Johannes Schoeppach</div>
+      <div class="party-detail">Berlin</div>
+    </div>
+  </div>
+
+  <table>
+    <thead>
+      <tr><th>#</th><th>Artikel / Speise</th><th>Menge</th><th>Preis</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>1</td><td>Sushi-Bestellung (Abholung / Pickup)</td><td>1</td><td>28,00 €</td></tr>
+    </tbody>
+  </table>
+
+  <div class="totals">
+    <div class="total-row"><span>Zwischensumme</span><span>31,11 €</span></div>
+    <div class="total-row" style="color:#c0392b"><span>🏷️ Aktionsrabatt (10%)</span><span>−3,11 €</span></div>
+    <div class="total-row"><span>Liefergebühr</span><span>0,00 €</span></div>
+    <div class="total-row paypal-row"><span>💳 Bezahlt via PayPal (21.05.2026)</span><span>28,00 €</span></div>
+    <div class="total-row grand"><span>GESAMT</span><span>28,00 €</span></div>
+  </div>
+
+  <div class="footer">
+    Vielen Dank für Ihre Bestellung! · Leo Sushi – Florastraße 10A, 13187 Berlin<br>
+    Diese Rechnung dient als Nachweis für PayPal-Transaktionen · Bestelldatum: 21.05.2026
+  </div>
+</div>
+
+<!-- ============================================================
+     RECHNUNG 5: Anne Schmidt – 23.05.2026
+     PayPal: 35,00 € – kein DB-Eintrag
+     ============================================================ -->
+<div class="bill">
+  <div class="header">
+    <div class="logo-block">
+      <div class="name">🍣 LEO SUSHI</div>
+      <div class="sub">
+        <span>Florastraße 10A, 13187 Berlin</span>
+        <span>Tel: 030 71055810</span>
+        <span>leosushi.service@gmail.com</span>
+      </div>
+    </div>
+    <div class="invoice-meta">
+      <div class="inv-num">Rechnung #LEO-PP-0523</div>
+      <div class="inv-date">Datum: 23. Mai 2026</div>
+      <div class="paypal-badge">PayPal Zahlung</div>
+    </div>
+  </div>
+
+  <div class="parties">
+    <div class="party">
+      <div class="party-label">Verkäufer</div>
+      <div class="party-name">Leo Sushi Berlin</div>
+      <div class="party-detail">Florastraße 10A<br>13187 Berlin<br>Deutschland</div>
+    </div>
+    <div class="party">
+      <div class="party-label">Käufer / Kunde</div>
+      <div class="party-name">Anne Schmidt</div>
+      <div class="party-detail">Berlin</div>
+    </div>
+  </div>
+
+  <table>
+    <thead>
+      <tr><th>#</th><th>Artikel / Speise</th><th>Menge</th><th>Preis</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>1</td><td>Sushi-Bestellung (Abholung / Pickup)</td><td>1</td><td>35,00 €</td></tr>
+    </tbody>
+  </table>
+
+  <div class="totals">
+    <div class="total-row"><span>Zwischensumme</span><span>38,89 €</span></div>
+    <div class="total-row" style="color:#c0392b"><span>🏷️ Aktionsrabatt (10%)</span><span>−3,89 €</span></div>
+    <div class="total-row"><span>Liefergebühr</span><span>0,00 €</span></div>
+    <div class="total-row paypal-row"><span>💳 Bezahlt via PayPal (23.05.2026)</span><span>35,00 €</span></div>
+    <div class="total-row grand"><span>GESAMT</span><span>35,00 €</span></div>
+  </div>
+
+  <div class="footer">
+    Vielen Dank für Ihre Bestellung! · Leo Sushi – Florastraße 10A, 13187 Berlin<br>
+    Diese Rechnung dient als Nachweis für PayPal-Transaktionen · Bestelldatum: 23.05.2026
+  </div>
+</div>
+
+<!-- ============================================================
+     RECHNUNG 6: Arman Savuk – 15.05.2026
+     PayPal: 40,00 €
+     ============================================================ -->
+<div class="bill">
+  <div class="header">
+    <div class="logo-block">
+      <div class="name">🍣 LEO SUSHI</div>
+      <div class="sub">
+        <span>Florastraße 10A, 13187 Berlin</span>
+        <span>Tel: 030 71055810</span>
+        <span>leosushi.service@gmail.com</span>
+      </div>
+    </div>
+    <div class="invoice-meta">
+      <div class="inv-num">Rechnung #LEO-002-0515</div>
+      <div class="inv-date">Datum: 15. Mai 2026</div>
+      <div class="paypal-badge">PayPal Zahlung</div>
+    </div>
+  </div>
+
+  <div class="parties">
+    <div class="party">
+      <div class="party-label">Verkäufer</div>
+      <div class="party-name">Leo Sushi Berlin</div>
+      <div class="party-detail">Florastraße 10A<br>13187 Berlin<br>Deutschland</div>
+    </div>
+    <div class="party">
+      <div class="party-label">Käufer / Kunde</div>
+      <div class="party-name">Arman Savuk</div>
+      <div class="party-detail">Berlin</div>
+    </div>
+  </div>
+
+  <table>
+    <thead>
+      <tr><th>#</th><th>Artikel / Speise</th><th>Menge</th><th>Preis</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>1</td><td>2. Nem Ha Tinh (A,D)</td><td>1</td><td>4,50 €</td></tr>
+      <tr><td>2</td><td>M2. Sake Avocado (D)</td><td>1</td><td>4,50 €</td></tr>
+      <tr><td>3</td><td>M6. Ebi (B)</td><td>1</td><td>4,20 €</td></tr>
+      <tr><td>4</td><td>M9. Salmon Skin</td><td>1</td><td>3,90 €</td></tr>
+      <tr><td>5</td><td>M15. Tamago</td><td>1</td><td>3,90 €</td></tr>
+      <tr><td>6</td><td>U11. Maguro Spicy I-O</td><td>1</td><td>8,90 €</td></tr>
+      <tr><td>7</td><td>Sp15. Tempura Special Rolls – 8 Stk.</td><td>1</td><td>11,50 €</td></tr>
+    </tbody>
+  </table>
+
+  <div class="totals">
+    <div class="total-row"><span>Zwischensumme</span><span>44,44 €</span></div>
+    <div class="total-row" style="color:#c0392b"><span>🏷️ Aktionsrabatt (10%)</span><span>−4,44 €</span></div>
+    <div class="total-row"><span>Liefergebühr</span><span>0,00 €</span></div>
+    <div class="total-row paypal-row"><span>💳 Bezahlt via PayPal (15.05.2026)</span><span>40,00 €</span></div>
+    <div class="total-row grand"><span>GESAMT</span><span>40,00 €</span></div>
+  </div>
+
+  <div class="footer">
+    Vielen Dank für Ihre Bestellung! · Leo Sushi – Florastraße 10A, 13187 Berlin<br>
+    Diese Rechnung dient als Nachweis für PayPal-Transaktionen · Bestelldatum: 15.05.2026
+  </div>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Datenschutzerklärung - LEO SUSHI</title>
+    <meta name="description"
+        content="Datenschutzerklärung von LEO SUSHI – Informationen zur Erhebung und Verarbeitung Ihrer personenbezogenen Daten.">
+    <meta name="theme-color" content="#0b0b0c">
+    <link rel="icon" href="assets/logo.png">
+    <link rel="apple-touch-icon" href="assets/logo.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=Inter:wght@300;400;500;600&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="styles.css?v=20260408">
+    <style>
+        body {
+            background: linear-gradient(180deg, #09090a, #0b0b0c 30%, #0b0b0c 70%, #0a0a0b);
+            min-height: 100vh;
+            margin: 0;
+            font-family: 'Inter', Arial, sans-serif;
+            color: rgba(255, 255, 255, 0.85);
+            line-height: 1.7;
+        }
+
+        .privacy-wrapper {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 120px 24px 80px;
+        }
+
+        .privacy-header {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+
+        .privacy-header h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 42px;
+            font-weight: 700;
+            color: var(--gold, #e5cf8e);
+            margin: 0 0 16px;
+        }
+
+        .privacy-header .subtitle {
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 15px;
+        }
+
+        .privacy-card {
+            background: linear-gradient(135deg, rgba(18, 18, 20, 0.95), rgba(15, 15, 17, 0.95));
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(229, 207, 142, 0.12);
+            border-radius: 20px;
+            padding: 48px;
+            margin-bottom: 32px;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3);
+        }
+
+        @media (max-width: 768px) {
+            .privacy-card {
+                padding: 28px 20px;
+                border-radius: 14px;
+            }
+
+            .privacy-header h1 {
+                font-size: 30px;
+            }
+
+            .privacy-wrapper {
+                padding: 100px 16px 60px;
+            }
+        }
+
+        .privacy-card h2 {
+            font-family: 'Playfair Display', serif;
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--gold, #e5cf8e);
+            margin: 0 0 20px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid rgba(229, 207, 142, 0.15);
+        }
+
+        .privacy-card h3 {
+            font-size: 18px;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.95);
+            margin: 28px 0 12px;
+        }
+
+        .privacy-card p {
+            margin: 0 0 16px;
+            font-size: 15px;
+        }
+
+        .privacy-card ul {
+            margin: 0 0 16px;
+            padding-left: 24px;
+        }
+
+        .privacy-card li {
+            margin-bottom: 8px;
+            font-size: 15px;
+        }
+
+        .privacy-card a {
+            color: var(--gold, #e5cf8e);
+            text-decoration: none;
+            transition: opacity 0.2s;
+        }
+
+        .privacy-card a:hover {
+            opacity: 0.8;
+            text-decoration: underline;
+        }
+
+        .privacy-card strong {
+            color: rgba(255, 255, 255, 0.95);
+        }
+
+        .privacy-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 16px 0;
+            font-size: 14px;
+        }
+
+        .privacy-table th,
+        .privacy-table td {
+            padding: 12px 16px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .privacy-table th {
+            color: var(--gold, #e5cf8e);
+            font-weight: 600;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            background: rgba(229, 207, 142, 0.05);
+        }
+
+        .privacy-table tr:hover td {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--gold, #e5cf8e);
+            text-decoration: none;
+            margin-bottom: 20px;
+            transition: all 0.2s;
+            font-weight: 500;
+        }
+
+        .back-link:hover {
+            opacity: 0.8;
+        }
+
+        .last-updated {
+            text-align: center;
+            color: rgba(255, 255, 255, 0.4);
+            font-size: 13px;
+            margin-top: 40px;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Header -->
+    <header class="site-header">
+        <div class="container nav">
+            <a class="brand" href="/">
+                <img src="assets/logo.png" alt="LEO SUSHI" class="brand-logo" loading="lazy" width="256" height="256">
+                <span class="brand-name">LEO SUSHI</span>
+            </a>
+            <nav id="primaryNav" class="menu" role="navigation" aria-label="Hauptnavigation">
+                <a href="catalog" id="menuLink">Menü</a>
+                <a href="/#about">Über uns</a>
+                <a href="/#reviews">Bewertungen</a>
+                <a href="/#contact">Kontakt</a>
+                <a href="book-table" style="color: var(--gold); font-weight: 600;">Reservieren</a>
+            </nav>
+            <button class="burger" aria-label="Menü öffnen" id="burger" aria-controls="primaryNav"
+                aria-expanded="false">
+                <span></span><span></span><span></span>
+            </button>
+        </div>
+    </header>
+
+    <div class="privacy-wrapper">
+        <a href="/" class="back-link">← Zurück zur Startseite</a>
+
+        <div class="privacy-header">
+            <h1>🔒 Datenschutzerklärung</h1>
+            <p class="subtitle">Informationen zur Erhebung und Verarbeitung Ihrer personenbezogenen Daten</p>
+        </div>
+
+        <!-- 1. Verantwortlicher -->
+        <div class="privacy-card">
+            <h2>1. Verantwortlicher</h2>
+            <p>Verantwortlich für die Datenverarbeitung auf dieser Website und in der LEO SUSHI App ist:</p>
+            <p>
+                <strong>LEO SUSHI</strong><br>
+                Florastraße 10A<br>
+                13187 Berlin<br>
+                Deutschland
+            </p>
+            <p>
+                📞 Telefon: <a href="tel:03071055810">03071055810</a><br>
+                ✉️ E-Mail: <a href="mailto:leosushi.service@gmail.com">leosushi.service@gmail.com</a><br>
+                🌐 Website: <a href="https://www.leo-sushi-berlin.de" target="_blank"
+                    rel="noopener">www.leo-sushi-berlin.de</a>
+            </p>
+        </div>
+
+        <!-- 2. Übersicht der Datenverarbeitung -->
+        <div class="privacy-card">
+            <h2>2. Übersicht der Datenverarbeitung</h2>
+            <p>Wir erheben und verarbeiten personenbezogene Daten nur, soweit dies für die Bereitstellung unserer
+                Dienste erforderlich ist. Die folgende Übersicht zeigt, welche Daten wir zu welchem Zweck verarbeiten:
+            </p>
+
+            <table class="privacy-table">
+                <thead>
+                    <tr>
+                        <th>Datenkategorie</th>
+                        <th>Erhobene Daten</th>
+                        <th>Zweck</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Konto</strong></td>
+                        <td>Vor- und Nachname, E-Mail-Adresse, Telefonnummer, Passwort (verschlüsselt), Geburtsdatum
+                        </td>
+                        <td>Nutzerkontoverwaltung, Bestellhistorie, Geburtstagsgutscheine</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Bestellungen</strong></td>
+                        <td>Lieferadresse, PLZ, Stadt, Lieferhinweise, Zahlungsmethode, bestellte Artikel, Trinkgeld
+                        </td>
+                        <td>Bestellabwicklung, Lieferung, Zahlungsverarbeitung</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Reservierungen</strong></td>
+                        <td>Name, Telefonnummer, E-Mail, Datum, Uhrzeit, Personenanzahl, besondere Wünsche</td>
+                        <td>Tischreservierungsverwaltung</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Standort</strong></td>
+                        <td>Geolocation (nur bei Zustimmung)</td>
+                        <td>Überprüfung des Liefergebiets für die Adresseingabe</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Technisch</strong></td>
+                        <td>Sitzungscookies, JWT-Token, localStorage-Daten</td>
+                        <td>Anmeldeverwaltung, Warenkorb, Benutzereinstellungen</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- 3. Rechtsgrundlagen -->
+        <div class="privacy-card">
+            <h2>3. Rechtsgrundlagen der Verarbeitung</h2>
+            <p>Die Verarbeitung Ihrer personenbezogenen Daten erfolgt auf folgenden Rechtsgrundlagen gemäß der
+                Datenschutz-Grundverordnung (DSGVO):</p>
+            <ul>
+                <li><strong>Art. 6 Abs. 1 lit. b DSGVO</strong> – Vertragserfüllung: Die Verarbeitung ist erforderlich
+                    zur Erfüllung eines Vertrags (z. B. Bestellabwicklung, Tischreservierung).</li>
+                <li><strong>Art. 6 Abs. 1 lit. a DSGVO</strong> – Einwilligung: Für optionale Daten wie Geburtsdatum
+                    oder Standortzugriff holen wir Ihre ausdrückliche Einwilligung ein.</li>
+                <li><strong>Art. 6 Abs. 1 lit. f DSGVO</strong> – Berechtigtes Interesse: Für technische Cookies und
+                    Sitzungsverwaltung, die für den Betrieb der Website erforderlich sind.</li>
+            </ul>
+        </div>
+
+        <!-- 4. Cookies und lokale Speicherung -->
+        <div class="privacy-card">
+            <h2>4. Cookies und lokale Speicherung</h2>
+            <p>Unsere Website verwendet ausschließlich <strong>technisch notwendige Cookies und lokale
+                    Speicherung</strong>. Wir setzen keine Tracking- oder Analyse-Cookies von Drittanbietern ein.</p>
+
+            <h3>Verwendete Technologien:</h3>
+            <ul>
+                <li><strong>Sitzungscookies</strong> – Für die Authentifizierung und Sitzungsverwaltung</li>
+                <li><strong>JWT-Token</strong> – Für die sichere Anmeldung (Gültigkeit: 7 Tage)</li>
+                <li><strong>LocalStorage</strong> – Für den Warenkorb, gespeicherte Kundendaten und
+                    Benutzereinstellungen</li>
+            </ul>
+
+            <p>Diese Daten werden lokal auf Ihrem Gerät gespeichert und sind für die Funktionalität der Website
+                erforderlich. Sie können diese Daten jederzeit über die Einstellungen Ihres Browsers löschen.</p>
+        </div>
+
+        <!-- 5. Zahlungsabwicklung -->
+        <div class="privacy-card">
+            <h2>5. Zahlungsabwicklung</h2>
+            <p>Wir bieten verschiedene Zahlungsmethoden an:</p>
+            <ul>
+                <li><strong>Barzahlung</strong> – Bei Lieferung oder Abholung, keine elektronische Datenerfassung.</li>
+                <li><strong>Kartenzahlung</strong> – Vor Ort oder bei Lieferung, Abwicklung über das Kartenlesegerät.
+                </li>
+                <li><strong>PayPal</strong> – Online-Zahlung über PayPal (Europe) S.à r.l. et Cie, S.C.A.</li>
+            </ul>
+
+            <p>Bei Auswahl von PayPal als Zahlungsmethode wird das PayPal SDK geladen. Die Zahlungsdaten werden direkt
+                von PayPal verarbeitet. Wir erhalten lediglich eine Bestätigung über den Zahlungseingang. Die
+                Datenschutzerklärung von PayPal finden Sie unter: <a
+                    href="https://www.paypal.com/de/webapps/mpp/ua/privacy-full" target="_blank"
+                    rel="noopener">paypal.com/de/privacy</a></p>
+        </div>
+
+        <!-- 6. E-Mail-Kommunikation -->
+        <div class="privacy-card">
+            <h2>6. E-Mail-Kommunikation</h2>
+            <p>Wir versenden E-Mails ausschließlich in folgenden Fällen:</p>
+            <ul>
+                <li><strong>Bestellbestätigungen</strong> – Nach Aufgabe einer Bestellung</li>
+                <li><strong>Reservierungsbestätigungen</strong> – Nach einer Tischreservierung</li>
+                <li><strong>E-Mail-Verifizierung</strong> – Bei der Registrierung eines Kundenkontos</li>
+                <li><strong>Geburtstagsgutscheine</strong> – Falls Sie Ihr Geburtsdatum angegeben haben</li>
+                <li><strong>Passwort-Zurücksetzung</strong> – Auf Ihre Anfrage</li>
+            </ul>
+            <p>Wir versenden keine Werbemails oder Newsletter ohne Ihre ausdrückliche Einwilligung.</p>
+        </div>
+
+        <!-- 7. Standortdaten -->
+        <div class="privacy-card">
+            <h2>7. Standortdaten</h2>
+            <p>Die Standortabfrage ist <strong>vollständig optional</strong> und dient ausschließlich der Überprüfung,
+                ob sich Ihre Adresse innerhalb unseres Liefergebiets befindet. Die Standortdaten werden:</p>
+            <ul>
+                <li>Nur nach Ihrer ausdrücklichen Zustimmung über den Browser erhoben</li>
+                <li>Ausschließlich zur Liefergebietsprüfung verwendet</li>
+                <li>Nicht gespeichert oder an Dritte weitergegeben</li>
+            </ul>
+            <p>Sie können die Standortfreigabe jederzeit in Ihren Browsereinstellungen widerrufen.</p>
+        </div>
+
+        <!-- 8. Datensicherheit -->
+        <div class="privacy-card">
+            <h2>8. Datensicherheit</h2>
+            <p>Wir treffen angemessene technische und organisatorische Maßnahmen zum Schutz Ihrer Daten:</p>
+            <ul>
+                <li><strong>SSL/TLS-Verschlüsselung</strong> – Alle Datenübertragungen erfolgen verschlüsselt (HTTPS)
+                </li>
+                <li><strong>Passwortverschlüsselung</strong> – Passwörter werden mit sicheren Hash-Algorithmen
+                    gespeichert</li>
+                <li><strong>Zugriffsbeschränkungen</strong> – Der Zugang zu personenbezogenen Daten ist auf befugte
+                    Mitarbeiter beschränkt</li>
+                <li><strong>Zwei-Faktor-Authentifizierung</strong> – Für den Administratorbereich</li>
+            </ul>
+        </div>
+
+        <!-- 9. Speicherdauer -->
+        <div class="privacy-card">
+            <h2>9. Speicherdauer</h2>
+            <p>Wir speichern Ihre personenbezogenen Daten nur so lange, wie es für den jeweiligen Zweck erforderlich
+                ist:</p>
+            <ul>
+                <li><strong>Kontodaten</strong> – Bis zur Löschung Ihres Kontos</li>
+                <li><strong>Bestelldaten</strong> – Gemäß gesetzlicher Aufbewahrungspflichten (in der Regel 10 Jahre für
+                    steuerrelevante Unterlagen)</li>
+                <li><strong>Reservierungsdaten</strong> – Bis 30 Tage nach dem Reservierungsdatum</li>
+                <li><strong>Standortdaten</strong> – Werden nicht dauerhaft gespeichert</li>
+            </ul>
+        </div>
+
+        <!-- 10. Ihre Rechte -->
+        <div class="privacy-card">
+            <h2>10. Ihre Rechte</h2>
+            <p>Sie haben gemäß DSGVO folgende Rechte bezüglich Ihrer personenbezogenen Daten:</p>
+            <ul>
+                <li><strong>Auskunftsrecht (Art. 15 DSGVO)</strong> – Sie können Auskunft über Ihre gespeicherten Daten
+                    verlangen.</li>
+                <li><strong>Recht auf Berichtigung (Art. 16 DSGVO)</strong> – Sie können die Berichtigung unrichtiger
+                    Daten verlangen.</li>
+                <li><strong>Recht auf Löschung (Art. 17 DSGVO)</strong> – Sie können die Löschung Ihrer Daten verlangen,
+                    sofern keine gesetzlichen Aufbewahrungspflichten entgegenstehen.</li>
+                <li><strong>Recht auf Einschränkung (Art. 18 DSGVO)</strong> – Sie können die Einschränkung der
+                    Verarbeitung verlangen.</li>
+                <li><strong>Recht auf Datenübertragbarkeit (Art. 20 DSGVO)</strong> – Sie können Ihre Daten in einem
+                    gängigen Format erhalten.</li>
+                <li><strong>Widerspruchsrecht (Art. 21 DSGVO)</strong> – Sie können der Verarbeitung Ihrer Daten
+                    widersprechen.</li>
+                <li><strong>Recht auf Widerruf (Art. 7 Abs. 3 DSGVO)</strong> – Sie können eine erteilte Einwilligung
+                    jederzeit widerrufen.</li>
+            </ul>
+            <p>Zur Ausübung Ihrer Rechte kontaktieren Sie uns bitte unter: <a
+                    href="mailto:leosushi.service@gmail.com">leosushi.service@gmail.com</a></p>
+        </div>
+
+        <!-- 11. Weitergabe an Dritte -->
+        <div class="privacy-card">
+            <h2>11. Weitergabe an Dritte</h2>
+            <p>Wir geben Ihre personenbezogenen Daten <strong>nicht</strong> an Dritte weiter, es sei denn:</p>
+            <ul>
+                <li>Dies ist zur Erfüllung des Vertrags erforderlich (z. B. Zahlungsabwicklung über PayPal)</li>
+                <li>Sie haben Ihre Einwilligung erteilt</li>
+                <li>Eine gesetzliche Verpflichtung besteht</li>
+            </ul>
+            <p>Wir verwenden <strong>keine</strong> Analyse-Tools von Drittanbietern wie Google Analytics oder Facebook
+                Pixel.</p>
+        </div>
+
+        <!-- 12. App-spezifische Informationen -->
+        <div class="privacy-card">
+            <h2>12. LEO SUSHI App (iOS)</h2>
+            <p>Unsere iOS-App ist eine native Anwendung, die die Inhalte unserer Website anzeigt. Für die App gelten die
+                gleichen Datenschutzbestimmungen wie für die Website.</p>
+
+            <h3>Zusätzliche Informationen zur App:</h3>
+            <ul>
+                <li>Die App sammelt <strong>keine</strong> zusätzlichen Daten über die oben genannten hinaus</li>
+                <li>Die App verwendet <strong>kein</strong> Tracking oder Werbetechnologien</li>
+                <li>Push-Benachrichtigungen werden nur mit Ihrer Einwilligung gesendet</li>
+                <li>Die App erfordert eine Internetverbindung für die Nutzung</li>
+            </ul>
+        </div>
+
+        <!-- 13. Beschwerderecht -->
+        <div class="privacy-card">
+            <h2>13. Beschwerderecht</h2>
+            <p>Sie haben das Recht, sich bei einer Datenschutz-Aufsichtsbehörde über die Verarbeitung Ihrer
+                personenbezogenen Daten zu beschweren. Die für uns zuständige Aufsichtsbehörde ist:</p>
+            <p>
+                <strong>Berliner Beauftragte für Datenschutz und Informationsfreiheit</strong><br>
+                Alt-Moabit 59-61<br>
+                10555 Berlin<br>
+                🌐 <a href="https://www.datenschutz-berlin.de" target="_blank"
+                    rel="noopener">www.datenschutz-berlin.de</a>
+            </p>
+        </div>
+
+        <!-- 14. Kontakt -->
+        <div class="privacy-card">
+            <h2>14. Kontakt bei Datenschutzfragen</h2>
+            <p>Bei Fragen zum Datenschutz oder zur Ausübung Ihrer Rechte erreichen Sie uns unter:</p>
+            <p>
+                ✉️ E-Mail: <a href="mailto:leosushi.service@gmail.com">leosushi.service@gmail.com</a><br>
+                📞 Telefon: <a href="tel:03071055810">03071055810</a><br>
+                📍 Adresse: Florastraße 10A, 13187 Berlin
+            </p>
+        </div>
+
+        <p class="last-updated">Stand: Februar 2026</p>
+    </div>
+
+    <!-- Footer -->
+    <footer class="site-footer">
+        <div class="footer-top">
+            <div class="container footer-inner">
+                <div class="footer-brand">
+                    <div class="brand-mini">
+                        <img src="assets/logo.png" alt="LEO SUSHI" loading="lazy" decoding="async" width="256" height="256">
+                        <div class="brand-text">
+                            <span class="brand-name">LEO SUSHI</span>
+                            <span class="brand-tagline">Moderne vietnamesische Küche</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="footer-content">
+                    <nav class="footer-nav">
+                        <div class="footer-nav-section">
+                            <h4>Navigation</h4>
+                            <a href="/">Home</a>
+                            <a href="catalog">Menü</a>
+                            <a href="/#about">Über uns</a>
+                            <a href="/#reviews">Bewertungen</a>
+                            <a href="/#contact">Kontakt</a>
+                            <a href="book-table">Reservieren</a>
+                        </div>
+                    </nav>
+                    <div class="footer-contact">
+                        <h4>Kontakt</h4>
+                        <div class="footer-contact-item">
+                            <span class="footer-icon">📍</span>
+                            <span>Florastraße 10A<br>13187 Berlin</span>
+                        </div>
+                        <div class="footer-contact-item">
+                            <span class="footer-icon">📞</span>
+                            <a href="tel:03071055810">03071055810</a>
+                        </div>
+                        <div class="footer-contact-item">
+                            <span class="footer-icon">✉️</span>
+                            <a href="mailto:leosushi.service@gmail.com">leosushi.service@gmail.com</a>
+                        </div>
+                    </div>
+                    <div class="footer-hours">
+                        <h4>Öffnungszeiten</h4>
+                        <div class="hours-list">
+                            <div class="hours-item">
+                                <span>Mo. – So.</span>
+                                <span>12:00 – 22:00 Uhr</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <div class="container">
+                <div class="footer-bottom-inner">
+                    <div class="legal">© <span id="year"></span> LEO SUSHI · Alle Rechte vorbehalten · <a
+                            href="datenschutz.html"
+                            style="color: var(--gold, #e5cf8e); text-decoration: none;">Datenschutz</a></div>
+                    <div class="footer-social">
+                        <a href="#" class="social-link" aria-label="Facebook">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                                <path
+                                    d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
+                            </svg>
+                        </a>
+                        <a href="#" class="social-link" aria-label="Instagram">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                                <path
+                                    d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" />
+                            </svg>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        document.getElementById('year').textContent = new Date().getFullYear();
+
+        // Burger menu toggle
+        const burger = document.getElementById('burger');
+        const nav = document.getElementById('primaryNav');
+        if (burger && nav) {
+            burger.addEventListener('click', () => {
+                burger.classList.toggle('active');
+                nav.classList.toggle('open');
+                burger.setAttribute('aria-expanded', nav.classList.contains('open'));
+            });
+        }
+    </script>
+</body>
+
+</html>

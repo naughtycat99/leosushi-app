@@ -1,0 +1,46 @@
+<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+<head>
+    <meta charset="utf-8">
+    <title>Letter of Authorization</title>
+    <style>
+        body { font-family: 'Times New Roman', serif; font-size: 14pt; line-height: 1.5; margin: 40px; }
+        .center { text-align: center; }
+        .bold { font-weight: bold; }
+        .heading { font-size: 18pt; text-transform: uppercase; margin-bottom: 40px; }
+        p { margin-bottom: 15px; text-align: justify; }
+    </style>
+</head>
+<body>
+    <div class="center bold heading">LETTER OF AUTHORIZATION</div>
+    
+    <table width="100%" border="0" cellspacing="0" cellpadding="5">
+        <tr>
+            <td width="15%" class="bold">To:</td>
+            <td width="85%">Google Play Developer Support Team</td>
+        </tr>
+        <tr>
+            <td class="bold">Date:</td>
+            <td>11 April 2026</td>
+        </tr>
+        <tr>
+            <td class="bold">Subject:</td>
+            <td class="bold">Authorization to publish "Leo Sushi" Application</td>
+        </tr>
+    </table>
+    
+    <br><br>
+    <p>I, <b>Nguyen, Van Nam</b>, the legal owner of the restaurant brand <b>"LEO Sushi und vietnamesische Küche"</b> (Registered Address: Florastraße 10, 13187 Berlin, Germany) as proven by the attached Business Registration Certificate (Gewerbe-Anmeldung), hereby declare and confirm that:</p>
+    
+    <p>I officially authorize the development agency/developer account known as <b>"atmica"</b> to develop, publish, and manage the official mobile application for my restaurant, named <b>"Leo Sushi" (Package: com.leosushi.app)</b>, on the Google Play Store.</p>
+    
+    <p>The developer "atmica" has the full right to use our brand name, logo, and necessary intellectual property for this specific application. Let this letter serve as our official declaration signed by the brand owner.</p>
+    
+    <br><br>
+    <p>Sincerely,</p>
+    <br><br><br><br>
+    <p>___________________________<br>
+    <b>Nguyen, Van Nam</b><br>
+    Owner of LEO Sushi<br>
+    Phone: +49(155)66003388</p>
+</body>
+</html>
