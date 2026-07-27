@@ -12,7 +12,7 @@ workflows:
         - app_store_connect
       ios_signing:
         distribution_type: app_store
-        bundle_identifier: com.leosushi.app
+        bundle_identifier: com.leosushi.berlin
     triggering:
       events:
         - push
@@ -246,17 +246,15 @@ workflows:
           cd ../..
           
           cd ios
-          # Build archive
+          # Build archive using Codemagic automatic signing
           xcodebuild archive \
             -workspace "App/App.xcworkspace" \
             -scheme "App" \
             -archivePath "App.xcarchive" \
             -destination "generic/platform=iOS" \
-            CODE_SIGN_STYLE=Manual \
-            PROVISIONING_PROFILE_SPECIFIER="LEO SUSHI App Store" \
-            DEVELOPMENT_TEAM="N55LHBSSHX"
+            CODE_SIGN_STYLE=Automatic
 
-          # Export IPA
+          # Export IPA using Codemagic export options
           xcodebuild -exportArchive \
             -archivePath "App.xcarchive" \
             -exportPath "build/ios/ipa" \
