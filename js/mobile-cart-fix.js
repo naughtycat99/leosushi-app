@@ -1,58 +1,50 @@
-﻿// Mobile App Cart Fix
+// Mobile App Cart Fix
 // Ensure cart button always opens cart sidebar, never opens browser
 
 (function () {
   console.log('📱 Mobile Cart Fix loaded');
 
-  // Dynamic app navigation can add cart controls after first paint. Keep track of
-  // controls that are already wired instead of cloning/replacing them on every
-  // retry, which would otherwise discard handlers registered by other modules.
   const boundCartElements = new WeakSet();
 
-  // Global click handler to catch ANY element with WARENKORB text
+  // Global click handler to catch ANY element with WARENKORB or BESTELLEN in cart context
   document.addEventListener('click', function (e) {
     const target = e.target;
-    const text = target.textContent || target.innerText || '';
+    if (!target) return;
 
-    // Check if clicked element or its parent contains WARENKORB
-    if (text.toUpperCase().includes('WARENKORB')) {
-      console.log('🛒 WARENKORB element clicked:', target);
+    const floatingBar = target.closest('#appFloatingCartBar, .app-floating-cart-bar, #appNavCart, .app-top-cart-btn, .app-cart-bar-action, .app-cart-bar-left');
+    if (floatingBar) {
       e.preventDefault();
       e.stopPropagation();
-      e.stopImmediatePropagation();
+      if (typeof window.openAppCartModal === 'function') {
+        window.openAppCartModal();
+      }
+      return false;
+    }
 
-      // Open cart
+    const text = target.textContent || target.innerText || '';
+    if (text.toUpperCase().includes('WARENKORB') && !target.closest('.app-cart-sheet-close, #cartClose')) {
+      e.preventDefault();
+      e.stopPropagation();
+
       if (typeof window.openAppCartModal === 'function') {
         window.openAppCartModal();
       } else if (typeof window.openCart === 'function') {
         window.openCart();
       } else if (typeof window.toggleCart === 'function') {
         window.toggleCart();
-      } else {
-        // Fallback
-        const cartSidebar = document.getElementById('cartSidebar');
-        const cartOverlay = document.getElementById('cartOverlay');
-
-        if (cartSidebar) {
-          cartSidebar.classList.add('active');
-          cartSidebar.style.display = 'block';
-          cartSidebar.style.transform = 'translateX(0)';
-        }
-        if (cartOverlay) {
-          cartOverlay.classList.add('active');
-          cartOverlay.style.display = 'block';
-        }
-        document.body.classList.add('cart-open');
       }
-
       return false;
     }
-  }, true); // Use capture phase
+  }, true);
 
-  // Wait for DOM to be ready
   function initMobileCartFix() {
-    // Find ALL cart buttons and links
     const cartSelectors = [
+      '#appFloatingCartBar',
+      '.app-floating-cart-bar',
+      '.app-cart-bar-action',
+      '.app-cart-bar-left',
+      '#appNavCart',
+      '.app-top-cart-btn',
       '#fixedOrderBtn',
       '#cartToggle',
       '.cart-toggle',
@@ -63,9 +55,7 @@
       'a[href*="cart"]',
       'a[href*="warenkorb"]',
       'button:has(.order-text):not(.cart-close)',
-      '*[onclick*="cart"]:not(#cartClose)',
-      // EXCLUDE close buttons
-
+      '*[onclick*="cart"]:not(#cartClose)'
     ];
 
     const cartElements = [];
@@ -83,7 +73,6 @@
     });
 
     if (cartElements.length === 0) {
-      console.warn('⚠️ No cart buttons found, will retry...');
       setTimeout(initMobileCartFix, 500);
       return;
     }
@@ -95,69 +84,35 @@
       boundCartElements.add(element);
       newlyBoundCount += 1;
 
-      // Add new click handler that always opens cart
       element.addEventListener('click', function (e) {
         e.preventDefault();
         e.stopPropagation();
         e.stopImmediatePropagation();
 
-        console.log('🛒 Cart element clicked in mobile app');
-
-        // Try to open cart using existing functions
         if (typeof window.openAppCartModal === 'function') {
-          console.log('✅ Opening native app cart');
           window.openAppCartModal();
         } else if (typeof window.openCart === 'function') {
-          console.log('✅ Opening cart using window.openCart()');
           window.openCart();
         } else if (typeof window.toggleCart === 'function') {
-          console.log('✅ Opening cart using window.toggleCart()');
           window.toggleCart();
-        } else {
-          // Fallback: manually open cart
-          console.log('⚠️ Cart functions not found, using fallback');
-          const cartSidebar = document.getElementById('cartSidebar');
-          const cartOverlay = document.getElementById('cartOverlay');
-
-          if (cartSidebar) {
-            console.log('Opening cart sidebar');
-            cartSidebar.classList.add('active');
-            cartSidebar.style.display = 'block';
-            cartSidebar.style.transform = 'translateX(0)';
-          }
-          if (cartOverlay) {
-            cartOverlay.classList.add('active');
-            cartOverlay.style.display = 'block';
-            cartOverlay.style.opacity = '1';
-          }
-          document.body.classList.add('cart-open');
         }
-
         return false;
-      }, true); // Use capture phase
-
-      // Also prevent default on touchstart for mobile
-      element.addEventListener('touchstart', function () {
-        console.log('👆 Cart element touched');
-      }, { passive: true });
+      }, true);
     });
 
     if (newlyBoundCount > 0) {
-      console.log(`✅ Mobile cart fix initialized for ${newlyBoundCount} new cart element(s)`);
+      console.log(`✅ Mobile cart fix bound ${newlyBoundCount} cart element(s)`);
     }
   }
 
-  // Initialize when DOM is ready
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initMobileCartFix);
   } else {
     initMobileCartFix();
   }
 
-  // Also retry after delays to catch dynamically added elements
-  setTimeout(initMobileCartFix, 1000);
-  setTimeout(initMobileCartFix, 2000);
+  setTimeout(initMobileCartFix, 500);
+  setTimeout(initMobileCartFix, 1500);
   setTimeout(initMobileCartFix, 3000);
   setTimeout(initMobileCartFix, 5000);
 })();
-

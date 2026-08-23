@@ -1088,14 +1088,14 @@
             }
         });
         bar.innerHTML = `
-            <div class="app-cart-bar-left">
+            <div class="app-cart-bar-left" onclick="window.openAppCartModal()">
                 <div class="app-cart-bar-badge" id="appFloatingCartBadge">0</div>
                 <div class="app-cart-bar-info">
                     <span class="app-cart-bar-count" id="appFloatingCartCountText">Warenkorb</span>
                     <span class="app-cart-bar-total" id="appFloatingCartTotalText">0,00 €</span>
                 </div>
             </div>
-            <div class="app-cart-bar-action">
+            <div class="app-cart-bar-action" onclick="window.openAppCartModal()">
                 <span>Bestellen</span>
                 <span>➔</span>
             </div>
