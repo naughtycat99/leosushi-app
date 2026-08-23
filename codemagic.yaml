@@ -225,7 +225,8 @@ workflows:
             BUILD_NUM=$(date +%Y%m%d%H%M)
           fi
           echo "Setting build number to: $BUILD_NUM"
-          /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $BUILD_NUM" "App/Info.plist"
+          /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $BUILD_NUM" "App/Info.plist" || true
+          /usr/libexec/PlistBuddy -c "Set :ITSAppUsesNonExemptEncryption false" "App/Info.plist" || /usr/libexec/PlistBuddy -c "Add :ITSAppUsesNonExemptEncryption bool false" "App/Info.plist" || true
           cd ../..
           
           cd ios
