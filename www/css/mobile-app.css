@@ -1,78 +1,91 @@
-/* Mobile App UI Enhancements */
-/* For Leo Sushi Android App */
+/* ==========================================================================
+   LEO SUSHI - Mobile App Design System (Capacitor iOS & Android)
+   Luxury Dark Gold Theme · Safe-Area Insets · Native Navigation · VIP Loyalty
+   ========================================================================== */
 
-/* Root variables for app theme */
 :root {
-    --app-bottom-bar-height: 65px;
-    --app-bg-dark: #0b0b0c;
+    --app-bottom-bar-height: 62px;
+    --app-bg-dark: #0b0b0d;
+    --app-surface: #141418;
+    --app-surface-border: rgba(229, 207, 142, 0.15);
     --app-gold: #e5cf8e;
-    --app-text-dim: #a0a0a0;
+    --app-gold-dark: #c2a355;
+    --app-text-dim: #9aa0a6;
+    --app-danger: #ef4444;
 }
 
-/* Hide web-only elements in App Mode - Minimal Hiding */
-body.is-capacitor-app .promo-banner,
-body.is-capacitor-app .download-app-section,
-body.is-capacitor-app .site-footer {
+/* Base App Container & Spacing */
+body.is-capacitor-app {
+    padding-bottom: calc(var(--app-bottom-bar-height) + env(safe-area-inset-bottom, 12px) + 24px) !important;
+    background-color: var(--app-bg-dark) !important;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+/* Hide web fixed order button & web cart toggle entirely in App mode (App has its own floating cart bar & bottom bar) */
+html.is-capacitor-app #fixedOrderBtn,
+body.is-capacitor-app #fixedOrderBtn,
+html.is-capacitor-app .fixed-order-btn,
+body.is-capacitor-app .fixed-order-btn,
+html.is-capacitor-app #cartToggle,
+body.is-capacitor-app #cartToggle,
+html.is-capacitor-app .cart-toggle,
+body.is-capacitor-app .cart-toggle,
+html.is-capacitor-app #cartSidebar,
+body.is-capacitor-app #cartSidebar,
+html.is-capacitor-app #cartOverlay,
+body.is-capacitor-app #cartOverlay {
     display: none !important;
     visibility: hidden !important;
     opacity: 0 !important;
     pointer-events: none !important;
 }
 
-/* Adjust Site Header for App Mode */
+/* Hide Web-only footers & prompts in App Mode */
+body.is-capacitor-app .site-footer,
+body.is-capacitor-app .footer-app-banner,
+body.is-capacitor-app .download-app-section,
+body.is-capacitor-app #flyerPopupOverlay {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+}
+
+/* Sticky App Header with Safe Area */
 body.is-capacitor-app .site-header {
-    background: rgba(11, 11, 12, 0.95) !important;
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    border-bottom: 1px solid rgba(229, 207, 142, 0.1);
+    background: rgba(11, 11, 13, 0.95) !important;
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--app-surface-border);
     position: sticky !important;
     top: 0 !important;
+    z-index: 9999;
     padding-top: env(safe-area-inset-top, 0px) !important;
 }
 
-/* Minimize Hero Sections for App Mode */
-body.is-capacitor-app .hero-luxe,
-body.is-capacitor-app .menu-order-hero {
-    padding: 20px 0 20px !important;
-    min-height: auto !important;
-}
-
-body.is-capacitor-app .hero-description-luxe,
-body.is-capacitor-app .hero-subtitle,
-body.is-capacitor-app .hero-meta-grid {
-    display: none !important;
-}
-
-body.is-capacitor-app .hero-title-luxe,
-body.is-capacitor-app .hero-title {
-    font-size: 28px !important;
-    margin-bottom: 15px !important;
-}
-
-/* Adjust body padding for top/bottom bars */
-body.is-capacitor-app {
-    padding-bottom: var(--app-bottom-bar-height) !important;
-    background-color: var(--app-bg-dark) !important;
-}
-
-/* Bottom Navigation Bar Styles */
+/* ==========================================================================
+   Bottom Navigation Bar (Native Luxury Feel)
+   ========================================================================== */
 .bottom-nav-bar {
     position: fixed;
     bottom: 0;
     left: 0;
+    right: 0;
     width: 100%;
-    height: var(--app-bottom-bar-height);
-    background: rgba(11, 11, 12, 0.98);
-    backdrop-filter: blur(15px);
-    -webkit-backdrop-filter: blur(15px);
+    height: calc(var(--app-bottom-bar-height) + env(safe-area-inset-bottom, 0px));
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    background: rgba(11, 11, 13, 0.94);
+    backdrop-filter: blur(25px);
+    -webkit-backdrop-filter: blur(25px);
+    border-top: 1px solid rgba(229, 207, 142, 0.2);
+    box-shadow: 0 -8px 30px rgba(0, 0, 0, 0.8), 0 0 15px rgba(229, 207, 142, 0.05);
     display: flex;
     justify-content: space-around;
     align-items: center;
-    z-index: 10000;
-    border-top: 1px solid rgba(229, 207, 142, 0.15);
-    box-shadow: 0 -5px 25px rgba(0, 0, 0, 0.6);
-    padding: 0 10px;
-    padding-bottom: env(safe-area-inset-bottom);
+    z-index: 999999;
+    box-sizing: border-box;
 }
 
 .nav-item {
@@ -83,54 +96,2391 @@ body.is-capacitor-app {
     color: var(--app-text-dim);
     text-decoration: none;
     font-size: 10px;
-    padding: 5px 0;
-    transition: all 0.2s ease;
+    font-weight: 500;
+    letter-spacing: 0.3px;
     flex: 1;
+    height: 100%;
+    padding: 6px 0;
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    position: relative;
+}
+
+.nav-item:active {
+    transform: scale(0.92);
 }
 
 .nav-item .nav-icon {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 24px;
-    height: 24px;
-    margin-bottom: 4px;
-}
-
-.nav-item .nav-icon svg {
-    width: 100%;
-    height: 100%;
+    width: 26px;
+    height: 26px;
+    margin-bottom: 3px;
+    transition: all 0.25s ease;
 }
 
 .nav-item.active {
     color: var(--app-gold);
 }
 
-.nav-item span {
-    font-weight: 500;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
+.nav-item.active .nav-icon {
+    transform: translateY(-2px);
+    filter: drop-shadow(0 2px 6px rgba(229, 207, 142, 0.4));
 }
 
-/* Central Prominent Item (Menu) */
+.nav-item.active span {
+    font-weight: 700;
+}
+
+/* Central Prominent Button (Menü) */
 .nav-item-center {
     position: relative;
     top: -12px;
-    flex: 0 0 65px;
-    height: 65px;
-    background: linear-gradient(135deg, var(--app-gold), #c2a355);
+    flex: 0 0 60px;
+    height: 60px;
+    background: linear-gradient(135deg, #f3e5b8, var(--app-gold), #b3914a);
     border-radius: 50%;
-    color: #000 !important;
-    box-shadow: 0 5px 15px rgba(229, 207, 142, 0.3);
+    color: #0b0b0d !important;
+    box-shadow: 0 8px 24px rgba(229, 207, 142, 0.45), 0 2px 8px rgba(0, 0, 0, 0.8);
     border: 4px solid var(--app-bg-dark);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.nav-item-center .nav-icon-center {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #0b0b0d;
 }
 
 .nav-item-center.active {
+    transform: scale(1.08);
+    box-shadow: 0 10px 30px rgba(229, 207, 142, 0.65);
+}
+
+.nav-center-label {
+    display: none;
+}
+
+/* Realtime Notification / Cart Badge */
+.nav-badge {
+    position: absolute;
+    top: -3px;
+    right: -8px;
+    background: #ef4444;
+    color: #ffffff;
+    font-size: 9px;
+    font-weight: 800;
+    min-width: 17px;
+    height: 17px;
+    line-height: 17px;
+    border-radius: 9px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 4px;
+    border: 1.5px solid var(--app-bg-dark);
+    box-shadow: 0 2px 6px rgba(239, 68, 68, 0.6);
+    animation: badgePop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes badgePop {
+    0% { transform: scale(0); }
+    80% { transform: scale(1.2); }
+    100% { transform: scale(1); }
+}
+
+/* ==========================================================================
+   VIP Digital Membership Card (F&B Loyalty)
+   ========================================================================== */
+.app-member-card {
+    background: linear-gradient(135deg, #1f1d19 0%, #151517 50%, #0d0d0f 100%);
+    border: 1px solid rgba(229, 207, 142, 0.3);
+    border-radius: 20px;
+    padding: 24px;
+    position: relative;
+    overflow: hidden;
+    margin-bottom: 24px;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6), 0 0 20px rgba(229, 207, 142, 0.08);
+}
+
+.app-member-card::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -20%;
+    width: 200px;
+    height: 200px;
+    background: radial-gradient(circle, rgba(229, 207, 142, 0.15), transparent 70%);
+    pointer-events: none;
+}
+
+.member-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.member-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.member-brand img {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: 1.5px solid var(--app-gold);
+}
+
+.member-brand-title {
+    font-size: 16px;
+    font-weight: 800;
+    color: #fff;
+    letter-spacing: 1px;
+}
+
+.member-vip-pill {
+    background: linear-gradient(135deg, var(--app-gold), #b3914a);
+    color: #0b0b0d;
+    font-size: 11px;
+    font-weight: 800;
+    padding: 4px 12px;
+    border-radius: 20px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    box-shadow: 0 2px 8px rgba(229, 207, 142, 0.3);
+}
+
+.member-card-body {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+}
+
+.member-info h3 {
+    color: #ffffff;
+    font-size: 20px;
+    font-weight: 700;
+    margin: 0 0 4px 0;
+}
+
+.member-code-text {
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 12px;
+    font-family: monospace;
+    letter-spacing: 1px;
+}
+
+.member-points-box {
+    text-align: right;
+}
+
+.member-points-num {
+    font-size: 28px;
+    font-weight: 800;
+    color: var(--app-gold);
+    line-height: 1;
+}
+
+.member-points-label {
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.6);
+    margin-top: 4px;
+}
+
+/* ==========================================================================
+   My Coupons Wallet (Ví Voucher)
+   ========================================================================== */
+.app-wallet-container {
+    display: grid;
+    gap: 14px;
+    margin-top: 16px;
+}
+
+.app-coupon-item {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px dashed rgba(229, 207, 142, 0.3);
+    border-radius: 14px;
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    transition: all 0.3s ease;
+}
+
+.app-coupon-item:hover {
+    background: rgba(229, 207, 142, 0.05);
+    border-color: var(--app-gold);
+}
+
+.coupon-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.coupon-badge-icon {
+    font-size: 28px;
+    width: 44px;
+    height: 44px;
+    background: rgba(229, 207, 142, 0.1);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.coupon-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: #ffffff;
+    margin-bottom: 3px;
+}
+
+.coupon-desc {
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.coupon-btn-apply {
+    background: linear-gradient(135deg, var(--app-gold), #b3914a);
+    color: #0b0b0d;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 10px;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.25s ease;
+}
+
+.coupon-btn-apply:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(229, 207, 142, 0.4);
+}
+
+/* ==========================================================================
+   1-Click Reorder Button for Orders
+   ========================================================================== */
+.btn-reorder-luxe {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 10px 18px;
+    background: rgba(229, 207, 142, 0.12);
+    border: 1px solid rgba(229, 207, 142, 0.4);
+    color: var(--app-gold);
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.25s ease;
+}
+
+.btn-reorder-luxe:hover {
+    background: var(--app-gold);
+    color: #0b0b0d;
+    box-shadow: 0 4px 15px rgba(229, 207, 142, 0.3);
+}
+
+/* Responsive adjustments */
+@media (max-width: 480px) {
+    .app-member-card {
+        padding: 18px;
+    }
+    .member-points-num {
+        font-size: 24px;
+    }
+}
+
+/* ==========================================================================
+   APP NATIVE HOME DASHBOARD vs WEB LANDING (Strict Separation)
+   ========================================================================== */
+
+/* Web Mode (Default): Show Web Landing, strictly hide App Dashboard */
+#appNativeDashboard {
+    display: none !important;
+}
+
+#webLandingContent {
+    display: block;
+}
+
+/* App Mode (Capacitor or ?app=true): Show ONLY App Dashboard, hide ALL Web content */
+html.is-capacitor-app #webLandingContent,
+body.is-capacitor-app #webLandingContent,
+html.is-capacitor-app .site-header,
+body.is-capacitor-app .site-header,
+html.is-capacitor-app .site-footer,
+body.is-capacitor-app .site-footer,
+html.is-capacitor-app .hero-luxe,
+body.is-capacitor-app .hero-luxe,
+html.is-capacitor-app .gallery-luxe,
+body.is-capacitor-app .gallery-luxe,
+html.is-capacitor-app .about-luxe-premium,
+body.is-capacitor-app .about-luxe-premium,
+html.is-capacitor-app .reviews-luxe-premium,
+body.is-capacitor-app .reviews-luxe-premium,
+html.is-capacitor-app .contact-ultimate,
+body.is-capacitor-app .contact-ultimate,
+html.is-capacitor-app .section-luxe,
+body.is-capacitor-app .section-luxe,
+html.is-capacitor-app #flyerPopupOverlay,
+body.is-capacitor-app #flyerPopupOverlay,
+html.is-capacitor-app .download-app-section,
+body.is-capacitor-app .download-app-section,
+html.is-capacitor-app .footer-app-banner,
+body.is-capacitor-app .footer-app-banner {
+    display: none !important;
+    visibility: hidden !important;
+    height: 0 !important;
+    max-height: 0 !important;
+    overflow: hidden !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+}
+
+html.is-capacitor-app #appNativeDashboard,
+body.is-capacitor-app #appNativeDashboard {
+    display: block !important;
+    padding: 0 16px 30px 16px;
+    max-width: 600px;
+    margin: 0 auto;
+    animation: fadeInApp 0.3s ease-out;
+}
+
+@keyframes fadeInApp {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* App Top Bar Header */
+.app-topbar {
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    background: rgba(11, 11, 13, 0.96);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    margin: 0 -16px 16px -16px;
+    padding: calc(env(safe-area-inset-top, 12px) + 10px) 16px 12px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid rgba(229, 207, 142, 0.12);
+}
+
+.app-location-pill {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(229, 207, 142, 0.25);
+    padding: 7px 14px;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    min-height: 44px;
+    box-sizing: border-box;
+}
+
+.app-location-pill:active {
+    transform: scale(0.96);
+    background: rgba(229, 207, 142, 0.15);
+}
+
+.app-loc-icon {
+    font-size: 14px;
+    color: var(--app-gold);
+}
+
+.app-loc-text {
+    font-size: 13px;
+    font-weight: 600;
+    color: #ffffff;
+    letter-spacing: 0.2px;
+}
+
+.app-loc-chevron {
+    font-size: 10px;
+    color: var(--app-gold);
+    transition: transform 0.2s ease;
+}
+
+.app-topbar-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.app-icon-btn {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(229, 207, 142, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #ffffff;
+    cursor: pointer;
+    position: relative;
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+.app-icon-btn:active {
+    transform: scale(0.92);
+    background: rgba(229, 207, 142, 0.2);
+}
+
+/* Service Type Switch (Lieferung / Abholung) */
+.app-service-toggle {
+    display: flex;
+    background: #15151a;
+    border: 1px solid rgba(229, 207, 142, 0.18);
+    border-radius: 14px;
+    padding: 4px;
+    margin-bottom: 18px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+}
+
+.app-service-tab {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px 12px;
+    border-radius: 11px;
+    border: none;
+    background: transparent;
+    color: var(--app-text-dim);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+}
+
+.app-service-tab * {
+    pointer-events: none;
+}
+
+.app-service-tab:active {
+    transform: scale(0.96);
+}
+
+.app-service-tab.active {
+    background: linear-gradient(135deg, var(--app-gold), #b8974a);
+    color: #0b0b0d;
+    font-weight: 700;
+    box-shadow: 0 4px 12px rgba(229, 207, 142, 0.3);
+}
+
+/* VIP Hero Luxury Member Card */
+.app-vip-hero {
+    background: linear-gradient(145deg, #18171c 0%, #101014 60%, #151318 100%);
+    border: 1px solid rgba(229, 207, 142, 0.28);
+    border-radius: 20px;
+    padding: 16px 16px 14px 16px;
+    margin-bottom: 20px;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 0 20px rgba(229, 207, 142, 0.04);
+}
+
+.app-vip-hero-glow {
+    position: absolute;
+    top: -60px;
+    right: -40px;
+    width: 170px;
+    height: 170px;
+    background: radial-gradient(circle, rgba(229, 207, 142, 0.18) 0%, rgba(229, 207, 142, 0) 70%);
+    border-radius: 50%;
+    pointer-events: none;
+}
+
+.app-vip-hero-watermark {
+    position: absolute;
+    right: 14px;
+    top: 8px;
+    font-size: 70px;
+    opacity: 0.05;
+    user-select: none;
+    pointer-events: none;
+    line-height: 1;
+    transform: rotate(12deg);
+}
+
+.app-vip-top-row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 14px;
+    position: relative;
+    z-index: 1;
+}
+
+.app-vip-user-section {
+    flex: 1;
+    min-width: 0;
+}
+
+.app-vip-greeting-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--app-gold);
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    margin-bottom: 5px;
+}
+
+.app-greeting-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #4ade80;
+    box-shadow: 0 0 6px #4ade80;
+    display: inline-block;
+}
+
+.app-vip-name {
+    font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', Roboto, sans-serif;
+    font-size: 18px;
+    font-weight: 800;
+    color: #ffffff;
+    line-height: 1.25;
+    letter-spacing: -0.2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.app-vip-tier-badge {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    background: rgba(229, 207, 142, 0.08);
+    border: 1px solid rgba(229, 207, 142, 0.25);
+    border-radius: 12px;
+    padding: 5px 9px;
+    flex-shrink: 0;
+    backdrop-filter: blur(8px);
+}
+
+.app-tier-icon {
+    font-size: 16px;
+    line-height: 1;
+}
+
+.app-tier-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.app-tier-title {
+    font-size: 10px;
+    font-weight: 800;
+    color: var(--app-gold);
+    letter-spacing: 0.6px;
+    line-height: 1.1;
+}
+
+.app-tier-subtitle {
+    font-size: 10px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.7);
+    line-height: 1.1;
+    margin-top: 1px;
+}
+
+/* Luxury Perforated Ticket Style Promo Card */
+.app-vip-promo-card {
+    background: linear-gradient(135deg, rgba(229, 207, 142, 0.12) 0%, rgba(229, 207, 142, 0.04) 100%);
+    border: 1px dashed rgba(229, 207, 142, 0.38);
+    border-radius: 14px;
+    padding: 10px 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    z-index: 1;
+}
+
+.app-vip-promo-card:active {
+    transform: scale(0.98);
+    background: rgba(229, 207, 142, 0.18);
+}
+
+.app-promo-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+}
+
+.app-promo-tag {
+    background: linear-gradient(135deg, #e5cf8e, #c5a452);
+    border-radius: 8px;
+    padding: 6px 7px;
+    text-align: center;
+    color: #0b0b0d;
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3);
+    flex-shrink: 0;
+}
+
+.app-promo-percent {
+    display: block;
+    font-size: 13px;
+    font-weight: 900;
+    line-height: 1;
+    letter-spacing: -0.5px;
+}
+
+.app-promo-info {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.app-promo-heading {
+    font-size: 12px;
+    font-weight: 700;
+    color: #ffffff;
+    line-height: 1.2;
+    margin-bottom: 2px;
+}
+
+.app-promo-code-box {
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.65);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-wrap: wrap;
+}
+
+.app-promo-code-val {
+    background: rgba(0, 0, 0, 0.45);
+    border: 1px solid rgba(229, 207, 142, 0.35);
+    color: var(--app-gold);
+    font-weight: 800;
+    font-size: 11px;
+    padding: 1px 5px;
+    border-radius: 4px;
+    letter-spacing: 0.5px;
+}
+
+.app-promo-subhint {
+    font-size: 10px;
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.app-promo-action-btn {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    background: linear-gradient(135deg, var(--app-gold), #b8974a);
+    color: #0b0b0d;
+    border: none;
+    font-size: 11px;
+    font-weight: 800;
+    padding: 7px 11px;
+    border-radius: 8px;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(229, 207, 142, 0.3);
+    flex-shrink: 0;
+    transition: transform 0.15s ease;
+    min-height: 44px;
+}
+
+.app-promo-action-btn:active {
+    transform: scale(0.95);
+}
+
+.app-promo-arrow {
+    font-size: 11px;
+    font-weight: 900;
+}
+
+/* Stories / Categories Carousel */
+.app-section-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: #ffffff;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.app-section-link {
+    font-size: 12px;
+    color: var(--app-gold);
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.app-categories-scroll {
+    display: flex;
+    gap: 14px;
+    overflow-x: auto;
+    margin: 0 -16px 24px -16px;
+    padding: 4px 16px 8px 16px;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+}
+
+.app-categories-scroll::-webkit-scrollbar {
+    display: none;
+}
+
+.app-cat-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    flex-shrink: 0;
+}
+
+.app-cat-icon-wrap {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, rgba(229, 207, 142, 0.2), rgba(20, 20, 25, 0.9));
+    border: 2px solid rgba(229, 207, 142, 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+    transition: all 0.2s ease;
+}
+
+.app-cat-item:active .app-cat-icon-wrap {
+    transform: scale(0.92);
+    border-color: var(--app-gold);
+}
+
+.app-cat-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: #e0e0e0;
+    white-space: nowrap;
+}
+
+/* Highlights / Bestseller Cards (Horizontal Scroll) */
+.app-highlights-scroll {
+    display: flex;
+    gap: 14px;
+    overflow-x: auto;
+    margin: 0 -16px 24px -16px;
+    padding: 4px 16px 12px 16px;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+}
+
+.app-highlights-scroll::-webkit-scrollbar {
+    display: none;
+}
+
+.app-highlight-card {
+    width: 210px;
+    flex-shrink: 0;
+    background: #141419;
+    border: 1px solid rgba(229, 207, 142, 0.15);
+    border-radius: 16px;
+    overflow: hidden;
+    position: relative;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.6);
+    transition: all 0.25s ease;
+}
+
+.app-card-img-wrap {
+    width: 100%;
+    height: 125px;
+    position: relative;
+    overflow: hidden;
+}
+
+.app-card-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.app-card-badge {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    background: rgba(11, 11, 13, 0.85);
+    backdrop-filter: blur(8px);
+    border: 1px solid var(--app-gold);
+    color: var(--app-gold);
+    font-size: 10px;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 12px;
+}
+
+.app-card-body {
+    padding: 12px;
+}
+
+.app-card-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: #ffffff;
+    margin-bottom: 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.app-card-desc {
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.5);
+    margin-bottom: 10px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    line-height: 1.3;
+    height: 28px;
+}
+
+.app-card-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.app-card-price {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--app-gold);
+}
+
+.app-add-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--app-gold), #b8974a);
+    color: #0b0b0d;
+    border: none;
+    font-size: 16px;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(229, 207, 142, 0.4);
+    transition: transform 0.2s ease;
+}
+
+.app-add-btn:active {
+    transform: scale(0.85);
+}
+
+/* Quick Actions 2x2 Grid */
+.app-quick-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 24px;
+}
+
+.app-grid-tile {
+    background: #141419;
+    border: 1px solid rgba(229, 207, 142, 0.15);
+    border-radius: 14px;
+    padding: 16px;
+    text-decoration: none;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    transition: all 0.2s ease;
+}
+
+.app-grid-tile:active {
+    transform: scale(0.96);
+    border-color: var(--app-gold);
+    background: rgba(229, 207, 142, 0.08);
+}
+
+.app-tile-icon {
+    font-size: 24px;
+}
+
+.app-tile-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: #ffffff;
+}
+
+.app-tile-subtitle {
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.5);
+}
+
+/* ==========================================================================
+   Branch Selection Bottom Sheet Modal (App Mode)
+   ========================================================================== */
+.app-bottom-sheet-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.75);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    z-index: 1000000;
+    display: none;
+    align-items: flex-end;
+    justify-content: center;
+    animation: fadeInOverlay 0.25s ease;
+}
+
+.app-bottom-sheet-overlay.active {
+    display: flex !important;
+}
+
+@keyframes fadeInOverlay {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.app-bottom-sheet {
+    background: #141419;
+    border-top: 1px solid rgba(229, 207, 142, 0.3);
+    border-radius: 24px 24px 0 0;
+    width: 100%;
+    max-width: 600px;
+    padding: 16px 20px calc(env(safe-area-inset-bottom, 16px) + 24px) 20px;
+    box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.9);
+    animation: slideUpSheet 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes slideUpSheet {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+}
+
+.app-sheet-handle {
+    width: 40px;
+    height: 4px;
+    border-radius: 2px;
+    background: rgba(255, 255, 255, 0.2);
+    margin: 0 auto 16px auto;
+}
+
+.app-sheet-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 18px;
+}
+
+.app-sheet-title {
+    font-size: 17px;
+    font-weight: 700;
+    color: #ffffff;
+    margin: 0;
+}
+
+.app-sheet-close {
+    background: rgba(255, 255, 255, 0.08);
+    border: none;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    color: #ffffff;
+    font-size: 14px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.app-branch-required-note {
+    margin: -6px 0 16px;
+    color: rgba(255, 255, 255, 0.68);
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.app-branch-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.app-branch-item {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(229, 207, 142, 0.15);
+    border-radius: 14px;
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    width: 100%;
+    color: inherit;
+    font: inherit;
+    text-align: left;
+}
+
+.app-branch-item.active {
+    background: rgba(229, 207, 142, 0.12);
+    border-color: var(--app-gold);
+    box-shadow: 0 4px 15px rgba(229, 207, 142, 0.15);
+}
+
+.app-branch-badge {
+    font-size: 11px;
+    color: var(--app-gold);
+    font-weight: 700;
+    margin-bottom: 4px;
+    text-transform: uppercase;
+}
+
+.app-branch-heading {
+    font-size: 15px;
+    font-weight: 700;
+    color: #ffffff;
+    margin-bottom: 4px;
+}
+
+.app-branch-sub {
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.6);
+    margin-bottom: 2px;
+}
+
+.app-branch-tel {
+    font-size: 11px;
+    color: var(--app-gold);
+    opacity: 0.8;
+}
+
+.app-branch-check {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--app-gold);
+    color: #0b0b0d;
+    font-size: 14px;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 8px rgba(229, 207, 142, 0.4);
+}
+
+/* ==========================================================================
+   SUPER APP ENHANCED FOOD ORDERING INTERFACE
+   ========================================================================== */
+
+/* Search Box */
+.app-search-box {
+    position: relative;
+    margin-bottom: 16px;
+}
+
+.app-search-input {
+    width: 100%;
+    background: #141419;
+    border: 1px solid rgba(229, 207, 142, 0.22);
+    border-radius: 14px;
+    padding: 12px 38px 12px 42px;
+    font-size: 14px;
+    color: #ffffff;
+    outline: none;
+    transition: all 0.25s ease;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    box-sizing: border-box;
+}
+
+.app-search-input:focus {
+    border-color: var(--app-gold);
+    box-shadow: 0 0 0 3px rgba(229, 207, 142, 0.15);
+    background: #191922;
+}
+
+.app-search-icon {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--app-gold);
+    pointer-events: none;
+    font-size: 16px;
+}
+
+.app-search-clear {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(255, 255, 255, 0.15);
+    border: none;
+    border-radius: 50%;
+    width: 22px;
+    height: 22px;
+    color: #ffffff;
+    font-size: 11px;
+    cursor: pointer;
+    display: none;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Category Sticky Pills */
+.app-category-pills-wrap {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding-bottom: 8px;
+    margin: 0 -16px 16px -16px;
+    padding-left: 16px;
+    padding-right: 16px;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.app-category-pills-wrap::-webkit-scrollbar {
+    display: none;
+}
+
+.app-cat-pill {
+    white-space: nowrap;
+    background: #15151a;
+    border: 1px solid rgba(229, 207, 142, 0.18);
+    border-radius: 24px;
+    padding: 8px 16px;
+    color: rgba(255, 255, 255, 0.75);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    flex-shrink: 0;
+    min-height: 44px;
+}
+
+.app-cat-pill.active {
+    background: linear-gradient(135deg, var(--app-gold), #b8974a);
+    color: #0b0b0d;
+    font-weight: 700;
+    border-color: var(--app-gold);
+    box-shadow: 0 4px 14px rgba(229, 207, 142, 0.3);
+    transform: translateY(-1px);
+}
+
+/* 2-Column Luxury Food Grid */
+.app-food-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    margin-bottom: 24px;
+}
+
+.app-menu-load-more-wrap {
+    grid-column: 1 / -1;
+    display: flex;
+    justify-content: center;
+    padding: 12px 0 4px;
+}
+
+.app-menu-load-more-btn {
+    min-height: 48px;
+    width: min(100%, 360px);
+    border-radius: 14px;
+    border: 1px solid rgba(229, 207, 142, 0.4);
+    background: rgba(229, 207, 142, 0.1);
+    color: var(--app-gold);
+    font: inherit;
+    font-size: 13px;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+.app-menu-load-more-btn:active {
+    transform: scale(0.98);
+    background: rgba(229, 207, 142, 0.18);
+}
+
+.app-food-card {
+    background: #141419;
+    border: 1px solid rgba(229, 207, 142, 0.14);
+    border-radius: 16px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.35);
+    transition: transform 0.2s ease, border-color 0.2s ease;
+    position: relative;
+    cursor: pointer;
+}
+
+.app-food-card:active {
+    transform: scale(0.98);
+    border-color: rgba(229, 207, 142, 0.4);
+}
+
+.app-food-img-wrap {
+    position: relative;
+    width: 100%;
+    padding-top: 72%;
+    overflow: hidden;
+    background: #0b0b0e;
+}
+
+.app-food-img-button {
+    display: block;
+    padding: 72% 0 0;
+    border: 0;
+    background: #0b0b0d;
+    cursor: pointer;
+    text-align: left;
+}
+
+.app-food-img {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.app-food-card:hover .app-food-img {
     transform: scale(1.05);
 }
 
-.nav-item-center .nav-icon {
-    width: 28px;
-    height: 28px;
-    margin-bottom: 0;
+.app-food-tag {
+    position: absolute;
+    top: 6px;
+    left: 6px;
+    background: rgba(11, 11, 13, 0.88);
+    backdrop-filter: blur(8px);
+    border: 1px solid var(--app-gold);
+    color: var(--app-gold);
+    font-size: 9px;
+    font-weight: 800;
+    padding: 3px 7px;
+    border-radius: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    z-index: 2;
+}
+
+.app-food-body {
+    padding: 10px 10px 12px 10px;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+}
+
+.app-food-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: #ffffff;
+    margin-bottom: 4px;
+    line-height: 1.3;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.app-food-title-btn {
+    display: block;
+    width: 100%;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+    min-height: 44px;
+}
+
+.app-food-desc {
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.55);
+    line-height: 1.3;
+    margin-bottom: 10px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    flex: 1;
+}
+
+.app-food-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: auto;
+    padding-top: 4px;
+}
+
+.app-food-price {
+    font-size: 14px;
+    font-weight: 800;
+    color: var(--app-gold);
+}
+
+.app-card-add-btn {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--app-gold), #b8974a);
+    border: none;
+    color: #0b0b0d;
+    font-size: 18px;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(229, 207, 142, 0.4);
+    transition: transform 0.15s ease;
+}
+
+.app-card-option-btn {
+    width: auto;
+    min-width: 76px;
+    padding: 0 12px;
+    border-radius: 22px;
+    background: rgba(229, 207, 142, 0.15);
+    border: 1px solid var(--app-gold);
+    color: var(--app-gold);
+    font-size: 11px;
+}
+
+.app-card-add-btn:active {
+    transform: scale(0.88);
+}
+
+/* Card Stepper */
+.app-card-stepper {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(229, 207, 142, 0.12);
+    border: 1px solid var(--app-gold);
+    border-radius: 20px;
+    padding: 3px 4px;
+    min-height: 44px;
+    box-sizing: border-box;
+}
+
+.app-stepper-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--app-gold);
+    border: none;
+    color: #0b0b0d;
+    font-size: 14px;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    line-height: 1;
+}
+
+.app-stepper-qty {
+    font-size: 12px;
+    font-weight: 800;
+    color: #ffffff;
+    min-width: 14px;
+    text-align: center;
+}
+
+/* Floating Bottom Sticky Cart Bar */
+.app-floating-cart-bar {
+    position: fixed;
+    bottom: calc(var(--app-bottom-bar-height) + env(safe-area-inset-bottom, 12px) + 12px);
+    left: 16px;
+    right: 16px;
+    max-width: 568px;
+    margin: 0 auto;
+    background: linear-gradient(135deg, #222019, #131317);
+    border: 1.5px solid var(--app-gold);
+    border-radius: 18px;
+    padding: 10px 16px;
+    display: none;
+    align-items: center;
+    justify-content: space-between;
+    z-index: 99999;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8), 0 0 20px rgba(229, 207, 142, 0.25);
+    animation: slideUpCart 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    cursor: pointer;
+}
+
+.app-floating-cart-bar.active {
+    display: flex !important;
+}
+
+@keyframes slideUpCart {
+    from { transform: translateY(30px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+.app-cart-bar-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.app-cart-bar-badge {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: var(--app-gold);
+    color: #0b0b0d;
+    font-size: 14px;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.app-cart-bar-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.app-cart-bar-count {
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.6);
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    font-weight: 600;
+}
+
+.app-cart-bar-total {
+    font-size: 16px;
+    font-weight: 800;
+    color: #ffffff;
+}
+
+.app-cart-bar-action {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: linear-gradient(135deg, var(--app-gold), #b8974a);
+    color: #0b0b0d;
+    font-size: 13px;
+    font-weight: 800;
+    padding: 10px 18px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(229, 207, 142, 0.4);
+}
+
+/* In-App Cart Bottom Sheet */
+.app-cart-sheet-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.75);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    z-index: 1000002;
+    display: none;
+    align-items: flex-end;
+    justify-content: center;
+}
+
+.app-cart-sheet-overlay.active {
+    display: flex;
+}
+
+.app-cart-sheet-content {
+    background: #141419;
+    border-top: 1.5px solid var(--app-gold);
+    border-radius: 24px 24px 0 0;
+    width: 100%;
+    max-width: 600px;
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.8);
+    animation: slideUpSheet 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes slideUpSheet {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+}
+
+.app-cart-sheet-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid rgba(229, 207, 142, 0.15);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.app-cart-sheet-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: #ffffff;
+}
+
+.app-cart-sheet-close {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.08);
+    border: none;
+    color: #ffffff;
+    font-size: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+.app-cart-item-remove {
+    width: 44px;
+    height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 44px;
+    background: transparent;
+    border: 0;
+    border-radius: 12px;
+    color: #ff6b6b;
+    font-size: 17px;
+    cursor: pointer;
+}
+
+.app-cart-item-remove:active {
+    background: rgba(255, 107, 107, 0.12);
+}
+
+.app-cart-sheet-body {
+    padding: 16px 20px;
+    overflow-y: auto;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.app-cart-item-row {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(229, 207, 142, 0.12);
+    border-radius: 14px;
+    padding: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.app-cart-item-img {
+    width: 48px;
+    height: 48px;
+    border-radius: 10px;
+    object-fit: cover;
+}
+
+.app-cart-item-info {
+    flex: 1;
+}
+
+.app-cart-item-name {
+    font-size: 14px;
+    font-weight: 700;
+    color: #ffffff;
+    margin-bottom: 2px;
+}
+
+.app-cart-item-price {
+    font-size: 13px;
+    font-weight: 800;
+    color: var(--app-gold);
+}
+
+.app-cart-sheet-footer {
+    padding: 16px 20px calc(env(safe-area-inset-bottom, 12px) + 80px) 20px;
+    border-top: 1px solid rgba(229, 207, 142, 0.15);
+    background: #0f0f14;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.app-cart-total-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 16px;
+    font-weight: 800;
+    color: #ffffff;
+}
+
+.app-cart-checkout-btn {
+    width: 100%;
+    background: linear-gradient(135deg, var(--app-gold), #b8974a);
+    border: none;
+    border-radius: 14px;
+    padding: 15px;
+    color: #0b0b0d;
+    font-size: 15px;
+    font-weight: 800;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(229, 207, 142, 0.35);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    text-decoration: none;
+}
+
+/* Dish Detail Modal */
+.app-detail-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    z-index: 1000003;
+    display: none;
+    align-items: flex-end;
+    justify-content: center;
+}
+
+.app-detail-modal-overlay.active {
+    display: flex;
+}
+
+.app-detail-content {
+    background: #141419;
+    border-top: 1.5px solid var(--app-gold);
+    border-radius: 24px 24px 0 0;
+    width: 100%;
+    max-width: 600px;
+    max-height: 90vh;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    animation: slideUpSheet 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.app-detail-hero-img-wrap {
+    position: relative;
+    width: 100%;
+    padding-top: 56.25%;
+    overflow: hidden;
+    background: #000;
+}
+
+.app-detail-hero-img {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.app-detail-close-btn {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #ffffff;
+    font-size: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 5;
+}
+
+.app-detail-body {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.app-detail-title {
+    font-size: 20px;
+    font-weight: 800;
+    color: #ffffff;
+}
+
+.app-detail-price {
+    font-size: 18px;
+    font-weight: 800;
+    color: var(--app-gold);
+}
+
+.app-detail-desc {
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.7);
+    line-height: 1.5;
+}
+
+.app-detail-note-input {
+    width: 100%;
+    background: #0f0f14;
+    border: 1px solid rgba(229, 207, 142, 0.2);
+    border-radius: 12px;
+    padding: 12px;
+    color: #ffffff;
+    font-size: 13px;
+    outline: none;
+    box-sizing: border-box;
+}
+
+.app-detail-note-input:focus {
+    border-color: var(--app-gold);
+}
+
+/* Dish Detail Options (Proteins: Tofu, Chicken, Duck, etc. / Sizes / Roll Pieces) */
+.app-detail-options-wrap {
+    margin-top: 6px;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(229, 207, 142, 0.2);
+    border-radius: 16px;
+    padding: 14px;
+}
+
+.app-detail-options-heading {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.app-detail-options-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.app-detail-options-badge {
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--app-gold);
+    background: rgba(229, 207, 142, 0.12);
+    border: 1px solid rgba(229, 207, 142, 0.3);
+    padding: 3px 8px;
+    border-radius: 8px;
+    letter-spacing: 0.3px;
+}
+
+.app-detail-options-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-height: 220px;
+    overflow-y: auto;
+    padding-right: 2px;
+}
+
+.app-option-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #0b0b0f;
+    border: 1.5px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    padding: 11px 14px;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    width: 100%;
+    color: inherit;
+    font: inherit;
+    text-align: left;
+    min-height: 48px;
+}
+
+.app-option-item:active {
+    transform: scale(0.98);
+}
+
+.app-option-item.selected {
+    border-color: var(--app-gold);
+    background: rgba(229, 207, 142, 0.08);
+    box-shadow: 0 0 14px rgba(229, 207, 142, 0.15);
+}
+
+.app-option-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.app-option-radio {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+}
+
+.app-option-item.selected .app-option-radio {
+    border-color: var(--app-gold);
+    background: var(--app-gold);
+}
+
+.app-option-radio-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #0b0b0d;
+    display: none;
+}
+
+.app-option-item.selected .app-option-radio-dot {
+    display: block;
+}
+
+.app-option-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: #ffffff;
+    line-height: 1.3;
+}
+
+.app-option-tag {
+    font-size: 10px;
+    color: #4ade80;
+    margin-left: 6px;
+    font-weight: 700;
+    background: rgba(74, 222, 128, 0.1);
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+
+.app-option-price {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--app-gold);
+    white-space: nowrap;
+    margin-left: 10px;
+}
+
+.app-card-option-btn {
+    transition: all 0.2s ease;
+}
+
+.app-card-option-btn:active {
+    transform: scale(0.92);
+    background: var(--app-gold) !important;
+    color: #0b0b0d !important;
+}
+
+.app-detail-footer {
+    padding: 16px 20px calc(env(safe-area-inset-bottom, 12px) + 16px) 20px;
+    border-top: 1px solid rgba(229, 207, 142, 0.15);
+    background: #0f0f14;
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+/* =========================================================
+   NATIVE APP SUBPAGES (Orders, Profile, Points, Reservation)
+   ========================================================= */
+
+/* Native Top Bar for Subpages */
+.app-subpage-topbar {
+    display: none;
+}
+
+body.is-capacitor-app .app-subpage-topbar,
+html.is-capacitor-app .app-subpage-topbar {
+    display: flex !important;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    background: rgba(11, 11, 13, 0.94);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-bottom: 1px solid rgba(229, 207, 142, 0.18);
+    position: sticky;
+    top: 0;
+    z-index: 999;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    padding-top: calc(env(safe-area-inset-top, 0px) + 12px);
+}
+
+.app-topbar-back-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    background: rgba(229, 207, 142, 0.1);
+    border: 1px solid rgba(229, 207, 142, 0.25);
+    color: var(--app-gold);
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+.app-topbar-back-btn:active {
+    transform: scale(0.92);
+    background: rgba(229, 207, 142, 0.2);
+}
+
+.app-topbar-title {
+    font-size: 16px;
+    font-weight: 800;
+    color: #ffffff;
+    margin: 0;
+    text-align: center;
+    flex: 1;
+    letter-spacing: -0.2px;
+    font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', Roboto, sans-serif;
+}
+
+.app-topbar-cart-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    background: rgba(229, 207, 142, 0.1);
+    border: 1px solid rgba(229, 207, 142, 0.25);
+    color: #ffffff;
+    position: relative;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.app-topbar-cart-btn:active {
+    transform: scale(0.92);
+}
+
+.app-topbar-cart-badge {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    background: #ff4757;
+    color: #ffffff;
+    font-size: 10px;
+    font-weight: 800;
+    min-width: 16px;
+    height: 16px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 4px;
+    border: 2px solid #0b0b0d;
+}
+
+/* Hide desktop sidebars and headers on subpages */
+body.is-capacitor-app .orders-sidebar,
+body.is-capacitor-app .profile-sidebar,
+body.is-capacitor-app .points-sidebar,
+body.is-capacitor-app .back-link,
+body.is-capacitor-app .orders-header .back-link,
+body.is-capacitor-app .profile-header .back-link {
+    display: none !important;
+}
+
+body.is-capacitor-app .orders-wrapper,
+body.is-capacitor-app .profile-wrapper,
+body.is-capacitor-app .points-wrapper,
+body.is-capacitor-app .reservation-wrapper,
+body.is-capacitor-app .checkout-wrapper {
+    max-width: 600px !important;
+    margin: 0 auto !important;
+    padding: 14px 16px calc(env(safe-area-inset-bottom, 20px) + 90px) 16px !important;
+    grid-template-columns: 1fr !important;
+    display: block !important;
+}
+
+body.is-capacitor-app .orders-main,
+body.is-capacitor-app .profile-main,
+body.is-capacitor-app .points-main {
+    min-height: auto !important;
+}
+
+body.is-capacitor-app .orders-header,
+body.is-capacitor-app .profile-header,
+body.is-capacitor-app .points-header {
+    display: none !important;
+}
+
+body.is-capacitor-app .orders-filter {
+    padding: 8px 12px !important;
+    margin-bottom: 14px !important;
+    gap: 8px !important;
+    overflow-x: auto !important;
+    flex-wrap: nowrap !important;
+    -webkit-overflow-scrolling: touch !important;
+    scrollbar-width: none !important;
+    border-radius: 14px !important;
+}
+
+body.is-capacitor-app .orders-filter::-webkit-scrollbar {
+    display: none !important;
+}
+
+body.is-capacitor-app .filter-btn {
+    white-space: nowrap !important;
+    padding: 6px 14px !important;
+    font-size: 12px !important;
+    border-radius: 10px !important;
+}
+
+body.is-capacitor-app .order-card,
+body.is-capacitor-app .profile-card,
+body.is-capacitor-app .points-card {
+    padding: 16px !important;
+    border-radius: 16px !important;
+    margin-bottom: 14px !important;
+}
+
+/* =========================================================
+   NATIVE APP MENU DASHBOARD (menu.html in App Mode)
+   ========================================================= */
+
+#appNativeMenuDashboard {
+    display: none;
+}
+
+html.is-capacitor-app #appNativeMenuDashboard,
+body.is-capacitor-app #appNativeMenuDashboard {
+    display: block !important;
+    padding: 0 16px 30px 16px;
+    max-width: 600px;
+    margin: 0 auto;
+    animation: fadeInApp 0.3s ease-out;
+}
+
+.app-menu-loading {
+    grid-column: 1 / -1;
+    padding: 40px 16px;
+    text-align: center;
+    color: rgba(255, 255, 255, 0.62);
+    font-size: 13px;
+}
+
+/* Hide ALL Web Menu Elements in App Mode */
+html.is-capacitor-app .menu-order-hero,
+body.is-capacitor-app .menu-order-hero,
+html.is-capacitor-app .branch-gate,
+body.is-capacitor-app .branch-gate,
+html.is-capacitor-app .menu-content,
+body.is-capacitor-app .menu-content,
+html.is-capacitor-app .menu-tabs-sidebar,
+body.is-capacitor-app .menu-tabs-sidebar,
+html.is-capacitor-app .category-dropdown-mobile,
+body.is-capacitor-app .category-dropdown-mobile,
+html.is-capacitor-app #welcomeSection,
+body.is-capacitor-app #welcomeSection,
+html.is-capacitor-app .welcome-pane,
+body.is-capacitor-app .welcome-pane,
+html.is-capacitor-app #tab-welcome,
+body.is-capacitor-app #tab-welcome,
+html.is-capacitor-app .category-hero-image,
+body.is-capacitor-app .category-hero-image,
+html.is-capacitor-app .category-title-wrapper,
+body.is-capacitor-app .category-title-wrapper,
+html.is-capacitor-app .category-footer-bar,
+body.is-capacitor-app .category-footer-bar,
+html.is-capacitor-app .menu-bg-luxury,
+body.is-capacitor-app .menu-bg-luxury {
+    display: none !important;
+}
+
+/* Filter Chips Row */
+.app-filter-chips-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    padding: 2px 0;
+}
+
+.app-filter-chips-row::-webkit-scrollbar {
+    display: none;
+}
+
+.app-chip-btn {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(229, 207, 142, 0.2);
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 11px;
+    font-weight: 600;
+    padding: 5px 12px;
+    border-radius: 20px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.2s ease;
+    min-height: 44px;
+}
+
+.app-chip-btn:active {
+    transform: scale(0.95);
+}
+
+.app-chip-btn.active {
+    background: rgba(229, 207, 142, 0.2);
+    border-color: var(--app-gold);
+    color: var(--app-gold);
+    box-shadow: 0 2px 8px rgba(229, 207, 142, 0.25);
+}
+
+/* Category Section Break Header inside Food Grid */
+.app-menu-category-header {
+    grid-column: span 2;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 0 8px 0;
+    margin-top: 10px;
+    border-bottom: 1px solid rgba(229, 207, 142, 0.18);
+}
+
+.app-menu-cat-title {
+    font-size: 15px;
+    font-weight: 800;
+    color: var(--app-gold);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    letter-spacing: -0.2px;
+    font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', Roboto, sans-serif;
+}
+
+.app-menu-cat-count {
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.5);
+    font-weight: 600;
+}
+
+/* ==========================================================================
+   16. Native App Checkout Page Styling (checkout.html in App Mode)
+   ========================================================================== */
+body.is-capacitor-app .checkout-container {
+    max-width: 600px !important;
+    margin: 0 auto !important;
+    padding: 14px 16px calc(env(safe-area-inset-bottom, 20px) + 95px) 16px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 16px !important;
+}
+
+body.is-capacitor-app .checkout-main,
+body.is-capacitor-app .checkout-sidebar {
+    background: #141419 !important;
+    border: 1px solid rgba(229, 207, 142, 0.2) !important;
+    border-radius: 20px !important;
+    padding: 20px 16px !important;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5) !important;
+    position: static !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+body.is-capacitor-app .checkout-main > h1 {
+    display: none !important;
+}
+
+body.is-capacitor-app .checkout-section-title {
+    font-size: 16px !important;
+    font-weight: 800 !important;
+    color: var(--app-gold) !important;
+    margin-bottom: 14px !important;
+    padding-bottom: 8px !important;
+    border-bottom: 1px solid rgba(229, 207, 142, 0.15) !important;
+    letter-spacing: -0.2px !important;
+    font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', Roboto, sans-serif !important;
+}
+
+body.is-capacitor-app .service-type-options {
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 8px !important;
+    margin-bottom: 16px !important;
+}
+
+body.is-capacitor-app .service-type-btn {
+    padding: 14px 8px !important;
+    border-radius: 14px !important;
+    background: rgba(255, 255, 255, 0.04) !important;
+    border: 1.5px solid rgba(255, 255, 255, 0.08) !important;
+    color: #a1a1aa !important;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    -webkit-tap-highlight-color: transparent !important;
+}
+
+body.is-capacitor-app .service-type-btn:active {
+    transform: scale(0.96) !important;
+}
+
+body.is-capacitor-app .service-type-btn.active {
+    border-color: var(--app-gold) !important;
+    background: linear-gradient(135deg, rgba(229, 207, 142, 0.22), rgba(184, 151, 74, 0.12)) !important;
+    color: #ffffff !important;
+    font-weight: 700 !important;
+    box-shadow: 0 2px 10px rgba(229, 207, 142, 0.15) !important;
+}
+
+body.is-capacitor-app .form-input {
+    background: rgba(255, 255, 255, 0.04) !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    border-radius: 12px !important;
+    color: #ffffff !important;
+    padding: 12px 14px !important;
+    font-size: 14px !important;
+    transition: all 0.2s ease !important;
+    font-family: inherit !important;
+}
+
+body.is-capacitor-app .form-input:focus {
+    border-color: var(--app-gold) !important;
+    background: rgba(255, 255, 255, 0.07) !important;
+    box-shadow: 0 0 0 3px rgba(229, 207, 142, 0.15) !important;
+}
+
+body.is-capacitor-app .discount-section {
+    background: rgba(255, 255, 255, 0.03) !important;
+    border: 1px dashed rgba(229, 207, 142, 0.3) !important;
+    border-radius: 14px !important;
+    padding: 14px !important;
+}
+
+body.is-capacitor-app .payment-options {
+    gap: 10px !important;
+}
+
+body.is-capacitor-app .payment-option {
+    border-radius: 14px !important;
+    background: rgba(255, 255, 255, 0.03) !important;
+    border: 1.5px solid rgba(255, 255, 255, 0.08) !important;
+    padding: 14px 16px !important;
+    transition: all 0.2s ease !important;
+    -webkit-tap-highlight-color: transparent !important;
+}
+
+body.is-capacitor-app .payment-option:active {
+    transform: scale(0.98) !important;
+}
+
+body.is-capacitor-app .payment-option.selected {
+    border-color: var(--app-gold) !important;
+    background: linear-gradient(135deg, rgba(229, 207, 142, 0.18), rgba(184, 151, 74, 0.08)) !important;
+    box-shadow: 0 2px 12px rgba(229, 207, 142, 0.15) !important;
+}
+
+body.is-capacitor-app .tip-options {
+    gap: 8px !important;
+}
+
+body.is-capacitor-app .tip-btn {
+    border-radius: 12px !important;
+    background: rgba(255, 255, 255, 0.04) !important;
+    border: 1.5px solid rgba(255, 255, 255, 0.08) !important;
+    color: #d1d5db !important;
+    font-weight: 700 !important;
+    padding: 10px 4px !important;
+    transition: all 0.2s ease !important;
+    -webkit-tap-highlight-color: transparent !important;
+}
+
+body.is-capacitor-app .tip-btn:active {
+    transform: scale(0.96) !important;
+}
+
+body.is-capacitor-app .tip-btn.active {
+    border-color: var(--app-gold) !important;
+    background: rgba(229, 207, 142, 0.2) !important;
+    color: var(--app-gold) !important;
+    box-shadow: 0 2px 8px rgba(229, 207, 142, 0.2) !important;
+}
+
+body.is-capacitor-app #confirmCheckoutBtn {
+    background: linear-gradient(135deg, var(--app-gold), #b8974a) !important;
+    color: #0b0b0d !important;
+    font-weight: 800 !important;
+    font-size: 16px !important;
+    border-radius: 16px !important;
+    padding: 16px !important;
+    box-shadow: 0 4px 20px rgba(229, 207, 142, 0.35) !important;
+    width: 100% !important;
+    border: none !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+    -webkit-tap-highlight-color: transparent !important;
+    margin-top: 16px !important;
+}
+
+body.is-capacitor-app #confirmCheckoutBtn:active {
+    transform: scale(0.98) !important;
+}
+
+body.is-capacitor-app .checkout-sidebar a.btn-secondary {
+    display: none !important;
+}
+
+body.is-capacitor-app #restaurantClosedBanner {
+    border-radius: 16px !important;
+    padding: 18px 16px !important;
+    margin-bottom: 18px !important;
 }

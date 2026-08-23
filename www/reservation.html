@@ -2,6 +2,16 @@
 <html lang="de">
 
 <head>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-868WTJTFBM"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-868WTJTFBM');
+    </script>
+
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Tisch Reservieren - LEO SUSHI</title>
@@ -16,14 +26,8 @@
     <link rel="stylesheet" href="styles.css?v=20260408">
     <link rel="stylesheet" href="styles-luxe.css?v=20260408">
     <link rel="stylesheet" href="menu-order.css?v=20260408">
-    <link rel="stylesheet" href="css/mobile-app.css?v=20260408">
-    <!-- API Configuration -->
-    <script>
-        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-            window.API_BASE_URL = window.location.origin + (window.location.pathname.includes('/leosushi') ? '/leosushi/api' : '/api');
-            window.API_PHP_BASE_URL = window.API_BASE_URL;
-        }
-    </script>
+    <link rel="stylesheet" href="css/mobile-app.css?v=20260824_v54">
+    <script src="js/app-mode-gate.js?v=20260824_v51"></script>
     <style>
         :root {
             --gold: #e5cf8e;
@@ -265,7 +269,7 @@
 
     <div class="reservation-page">
         <div class="reservation-container">
-            <a href="/" class="back-link">
+            <a href="index.html" class="back-link">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
                 Zurück zur Startseite
             </a>
@@ -391,7 +395,9 @@
             // Set minimum date to today
             const dateInput = document.getElementById('reserveDate');
             if (dateInput) {
-                const today = new Date().toISOString().split('T')[0];
+                const today = typeof formatLocalISODate === 'function'
+                    ? formatLocalISODate()
+                    : new Date().toLocaleDateString('en-CA');
                 dateInput.setAttribute('min', today);
                 dateInput.value = today;
             }
@@ -456,6 +462,7 @@
             localStorage.setItem('leoSelectedBranch', JSON.stringify(branchInfo));
         }
     </script>
+    <script src="js/mobile-app.js?v=20260824_v54"></script>
 </body>
 
 </html>

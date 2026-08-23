@@ -115,7 +115,9 @@ function listMenuItems() {
         
         $sql = 'SELECT mi.*, c.name as category_name 
                 FROM menu_items mi 
-                LEFT JOIN categories c ON mi.category_id = c.category_id';
+                LEFT JOIN categories c
+                  ON mi.category_id = c.category_id
+                 AND mi.branch_id = c.branch_id';
         $params = [];
         $types = '';
         

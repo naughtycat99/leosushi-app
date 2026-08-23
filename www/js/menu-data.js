@@ -914,3 +914,9 @@ if (typeof localStorage !== 'undefined') {
     }
   }
 }
+
+// Export to global window object
+if (typeof window !== 'undefined') {
+  window.MENU_DATA = MENU_DATA;
+  window.SPECIAL_ROLL_OPTIONS = SPECIAL_ROLL_OPTIONS;
+}

@@ -2,15 +2,32 @@
 <html lang="de">
 
 <head>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-868WTJTFBM"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-868WTJTFBM');
+    </script>
+
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Checkout - Leosushi</title>
+    <meta name="theme-color" content="#0b0b0c">
+    <link rel="icon" href="assets/logo.png">
     <link rel="stylesheet" href="styles.css?v=20260408">
+    <link rel="stylesheet" href="css/mobile-app.css?v=20260824_v54">
     <!-- Leaflet CSS and JS for Map Picker -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
         integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
         integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <!-- Stripe.js SDK -->
+    <script src="https://js.stripe.com/v3/"></script>
+
+    <script src="js/app-mode-gate.js?v=20260824_v51"></script>
     <style>
         .checkout-container {
             max-width: 1200px;
@@ -603,12 +620,12 @@
                         </div>
                         <div class="payment-check">✓</div>
                     </button>
-                    <button type="button" class="payment-option" id="paymentOptionCard"
-                        onclick="selectPaymentOption('card')">
-                        <div class="payment-icon">💳</div>
+                    <button type="button" class="payment-option" id="paymentOptionStripe"
+                        onclick="selectPaymentOption('stripe')">
+                        <div class="payment-icon">⚡</div>
                         <div class="payment-text">
-                            <div class="payment-title">Kartenzahlung</div>
-                            <div class="payment-subtitle">Vor Ort zahlen / Bei Lieferung</div>
+                            <div class="payment-title">Apple Pay / Google Pay / Karte</div>
+                            <div class="payment-subtitle">Schnelle Online-Zahlung via Stripe</div>
                         </div>
                         <div class="payment-check">✓</div>
                     </button>
@@ -620,6 +637,28 @@
                             <div class="payment-subtitle">Online-Zahlung</div>
                         </div>
                         <div class="payment-check">✓</div>
+                    </button>
+                </div>
+
+                <!-- Stripe Payment Container -->
+                <div id="stripePaymentContainer"
+                    style="display: none; margin-top: 20px; padding: 20px; background: rgba(255,255,255,.03); border-radius: 12px; border: 1px solid rgba(229,207,142,.3);">
+                    <div style="font-size: 14px; color: var(--gold); margin-bottom: 15px; font-weight: 600; display: flex; align-items: center; gap: 8px;">
+                        <span>🔒</span> Sichere Online-Zahlung (Apple Pay, Google Pay, Kreditkarte)
+                    </div>
+
+                    <div id="stripe-payment-element" style="min-height: 140px; margin-bottom: 15px;">
+                        <div id="stripeLoadingIndicator" style="color: rgba(255,255,255,0.6); font-size: 14px; text-align: center; padding: 25px 0;">
+                            <div style="display: inline-block; width: 24px; height: 24px; border: 3px solid rgba(229,207,142,0.3); border-top-color: var(--gold); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 8px;"></div>
+                            <div>Zahlungsformular wird sicher geladen...</div>
+                        </div>
+                    </div>
+                    <div id="stripe-error-message"
+                        style="color: #ff6b6b; margin-bottom: 12px; font-size: 14px; display: none; background: rgba(255, 107, 107, 0.1); padding: 10px; border-radius: 8px; border: 1px solid rgba(255, 107, 107, 0.3);"></div>
+                    <button type="button" id="stripePayBtn" class="btn btn-primary"
+                        style="width: 100%; font-size: 16px; font-weight: 700; padding: 14px;"
+                        onclick="handleStripePaymentSubmit()">
+                        💳 Jetzt bezahlen (<span id="stripePayAmount">€0,00</span>)
                     </button>
                 </div>
 
@@ -652,10 +691,10 @@
                         style="color: rgba(255,255,255,0.5); font-size: 14px; font-weight: normal;">(Optional)</span>
                 </h3>
                 <div class="tip-options">
-                    <button type="button" class="tip-btn" onclick="selectTip(5)">5%</button>
-                    <button type="button" class="tip-btn" onclick="selectTip(10)">10%</button>
-                    <button type="button" class="tip-btn" onclick="selectTip(15)">15%</button>
-                    <button type="button" class="tip-btn" onclick="openCustomTip()">Custom</button>
+                    <button type="button" class="tip-btn" onclick="selectTip(5, this)">5%</button>
+                    <button type="button" class="tip-btn" onclick="selectTip(10, this)">10%</button>
+                    <button type="button" class="tip-btn" onclick="selectTip(15, this)">15%</button>
+                    <button type="button" class="tip-btn" onclick="openCustomTip(this)">Betrag</button>
                 </div>
                 <div id="customTipContainer" style="display: none; margin-top: 10px;">
                     <input type="number" id="customTipAmount" class="form-input" placeholder="Betrag in €" step="0.01"
@@ -724,10 +763,10 @@
     <script src="js/auth-mysql.js?v=20260414_v4"></script>
     <script src="js/notifications.js?v=20260414_v4"></script>
     <script src="js/customer.js?v=20260414_v4"></script>
-    <script src="js/payment.js?v=20260619_2"></script>
+    <script src="js/payment.js?v=20260815_intl_v12"></script>
     <script src="js/cart.js?v=20260414_v3"></script>
     <script src="js/order-tracking.js?v=20260414_v3"></script>
-    <script src="js/checkout.js?v=20260414_v3"></script>
+    <script src="js/checkout.js?v=20260824_v54"></script>
     <script>
         // ⛔ NGĂN ENTER KEY KHỚI SUBMIT FORM KHI CHỌN PAYPAL
         // Tránh trường hợp user nhấn Enter rồi trigger confirmCheckout() đột ngột
@@ -752,6 +791,7 @@
             }
         }, true);
     </script>
+    <script src="js/mobile-app.js?v=20260824_v54"></script>
 </body>
 
 </html>

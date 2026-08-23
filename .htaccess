@@ -31,13 +31,13 @@
 Options -Indexes
 
 # Protect sensitive files
-<FilesMatch "\.(htaccess|htpasswd|ini|log|sh|sql|bak)$">
+<FilesMatch "\.(htaccess|htpasswd|ini|log|sh|sql|bak|env|git.*)$">
     Order Allow,Deny
     Deny from all
 </FilesMatch>
 
-# Protect config files
-<FilesMatch "^(config|security-config|admin-auth)\.php$">
+# Protect config and database files
+<FilesMatch "^(security-config|database_setup|schema)\.php$">
     Order Allow,Deny
     Deny from all
 </FilesMatch>
@@ -167,7 +167,7 @@ Options -Indexes
 </IfModule>
 
 
-# ======= PERFORMANCE CACHING (Added for SEO) =======
+# ======= PERFORMANCE CACHING (Images only - JS/CSS no-cache for instant live updates) =======
 <IfModule mod_expires.c>
   ExpiresActive On
   ExpiresByType image/jpg "access plus 1 year"
@@ -175,9 +175,9 @@ Options -Indexes
   ExpiresByType image/gif "access plus 1 year"
   ExpiresByType image/png "access plus 1 year"
   ExpiresByType image/webp "access plus 1 year"
-  ExpiresByType text/css "access plus 1 month"
-  ExpiresByType application/javascript "access plus 1 month"
-  ExpiresByType text/javascript "access plus 1 month"
+  ExpiresByType text/css "access plus 0 seconds"
+  ExpiresByType application/javascript "access plus 0 seconds"
+  ExpiresByType text/javascript "access plus 0 seconds"
 </IfModule>
 
 <IfModule mod_deflate.c>

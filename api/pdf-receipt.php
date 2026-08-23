@@ -158,9 +158,11 @@ class PdfReceipt {
         // Footer
         $this->y = max($this->y - 10, 60);
         $s .= $this->divider();
-        $s .= $this->text('Vielen Dank fuer Ihren Besuch!', $this->pageWidth / 2, $this->y, 9, 'H', [0.5, 0.5, 0.5], 'center');
-        $this->y -= 13;
-        $s .= $this->text('www.leo-sushi-berlin.de', $this->pageWidth / 2, $this->y, 8, 'H', [0.7, 0.55, 0.2], 'center');
+        $s .= $this->text('10% App-Rabatt: Code APP10 in der Leo Sushi App einloesen!', $this->pageWidth / 2, $this->y, 8, 'HB', [0.83, 0.81, 0.52], 'center');
+        $this->y -= 12;
+        $s .= $this->text('App Download: www.leo-sushi-berlin.de/download-app', $this->pageWidth / 2, $this->y, 7.5, 'H', [0.5, 0.5, 0.5], 'center');
+        $this->y -= 12;
+        $s .= $this->text('Vielen Dank fuer Ihren Besuch! · www.leo-sushi-berlin.de', $this->pageWidth / 2, $this->y, 7.5, 'H', [0.6, 0.6, 0.6], 'center');
 
         // ---- Assemble PDF objects ----
         return $this->assemblePdf($s);

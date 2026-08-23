@@ -1205,7 +1205,10 @@ function setupCart() {
       }
       // Redirect to checkout page
       setTimeout(() => {
-        window.location.href = 'checkout.html';
+        const isApp = (document.body && document.body.classList.contains('is-capacitor-app')) ||
+          window.location.search.includes('app=true') ||
+          sessionStorage.getItem('leo_app_preview') === 'true';
+        window.location.href = isApp ? 'checkout.html?app=true' : 'checkout.html';
       }, 200);
     });
   }

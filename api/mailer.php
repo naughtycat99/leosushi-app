@@ -128,6 +128,8 @@ function sendOrderConfirmationEmail($to, $variables = []) {
     $pmStr = strtolower((string)($variables['payment_method'] ?? 'cash'));
     if (strpos($pmStr, 'paypal') !== false) {
         $payLabel = 'PayPal';
+    } elseif (strpos($pmStr, 'stripe') !== false || strpos($pmStr, 'apple') !== false || strpos($pmStr, 'google') !== false || strpos($pmStr, 'online') !== false) {
+        $payLabel = 'Online-Zahlung (Karte / Apple Pay)';
     } elseif (strpos($pmStr, 'card') !== false || strpos($pmStr, 'kartenzahlung') !== false || strpos($pmStr, 'thẻ') !== false) {
         $payLabel = 'Kartenzahlung';
     } else {
@@ -191,6 +193,8 @@ function sendOrderConfirmationWithDiscountCode($to, $name, $orderData, $discount
     $pmStr = strtolower((string)($orderData['payment_method'] ?? 'cash'));
     if (strpos($pmStr, 'paypal') !== false) {
         $payLabel = 'PayPal';
+    } elseif (strpos($pmStr, 'stripe') !== false || strpos($pmStr, 'apple') !== false || strpos($pmStr, 'google') !== false || strpos($pmStr, 'online') !== false) {
+        $payLabel = 'Online-Zahlung (Karte / Apple Pay)';
     } elseif (strpos($pmStr, 'card') !== false || strpos($pmStr, 'kartenzahlung') !== false || strpos($pmStr, 'thẻ') !== false) {
         $payLabel = 'Kartenzahlung';
     } else {
@@ -281,7 +285,14 @@ function sendAdminNewOrderEmail($orderData) {
     }
 
     if ($serviceType === 'Lieferung' || $serviceType === 'delivery') {
-        $deliveryDetails .= '<div class="info-row"><span class="info-label">Adresse:</span><span class="info-value">' . htmlspecialchars((string)($orderData['delivery_address'] ?? '')) . '</span></div>';
+        $addrFormatted = '';
+        if (is_array($orderData['delivery_address'] ?? null)) {
+            $da = $orderData['delivery_address'];
+            $addrFormatted = trim(($da['street'] ?? '') . ' ' . ($da['house_number'] ?? ($da['houseNumber'] ?? '')) . ', ' . ($da['postal'] ?? '') . ' ' . ($da['city'] ?? ''));
+        } else {
+            $addrFormatted = (string)($orderData['delivery_address'] ?? '');
+        }
+        $deliveryDetails .= '<div class="info-row"><span class="info-label">Adresse:</span><span class="info-value">' . htmlspecialchars($addrFormatted) . '</span></div>';
     }
 
     $noteSection = '';
@@ -417,6 +428,8 @@ function sendOrderBillEmail($to, $name, $orderData) {
     $pmStr = strtolower((string)($orderData['payment_method'] ?? 'cash'));
     if (strpos($pmStr, 'paypal') !== false) {
         $payLabel = 'PayPal';
+    } elseif (strpos($pmStr, 'stripe') !== false || strpos($pmStr, 'apple') !== false || strpos($pmStr, 'google') !== false || strpos($pmStr, 'online') !== false) {
+        $payLabel = 'Online-Zahlung (Karte / Apple Pay)';
     } elseif (strpos($pmStr, 'card') !== false || strpos($pmStr, 'kartenzahlung') !== false || strpos($pmStr, 'thẻ') !== false) {
         $payLabel = 'Kartenzahlung';
     } else {

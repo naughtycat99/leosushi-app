@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="de">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -153,10 +153,23 @@
             flex-direction: column;
             align-items: center;
             gap: 4px;
-            padding: 8px 16px;
+            padding: 8px 4px;
             border-radius: 12px;
             transition: all 0.2s;
             cursor: pointer;
+            background: transparent;
+            border: 0;
+            font-family: inherit;
+            min-height: 48px;
+            flex: 1;
+        }
+
+        .field-label {
+            display: block;
+            margin: 0 0 7px;
+            color: rgba(255,255,255,.78);
+            font-size: 13px;
+            font-weight: 600;
         }
         
         .nav-item.active {
@@ -252,7 +265,7 @@
 <body>
 
     <!-- Toast Notification -->
-    <div id="toast">Benachrichtigung</div>
+    <div id="toast" role="status" aria-live="polite">Benachrichtigung</div>
 
     <!-- Screen 1: Login -->
     <div id="screen-login" class="screen">
@@ -261,16 +274,19 @@
             <p class="text-sm">Liefersystem</p>
         </div>
         
-        <div class="glass-card">
+        <form class="glass-card" id="shipperLoginForm" onsubmit="event.preventDefault(); app.login()">
             <h3 class="mb-4">Fahrer-Login</h3>
+            <label class="field-label" for="login-name">Name</label>
             <input type="text" id="login-name" class="input-field" placeholder="Dein Name" autocomplete="name">
+            <label class="field-label" for="login-branch">Filiale</label>
             <select id="login-branch" class="input-field" style="margin-bottom: 15px; background: rgba(255,255,255,0.05); color: #fff; appearance: auto;">
                 <option value="branch_flora" style="color: #000;">Filiale 1 (Florastraße 10A)</option>
                 <option value="branch_haupt" style="color: #000;">Filiale 2 (Hauptstraße 29a)</option>
             </select>
-            <input type="password" id="login-passcode" class="input-field" placeholder="Sicherheitscode">
-            <button class="btn" onclick="app.login()">Anmelden</button>
-        </div>
+            <label class="field-label" for="login-passcode">Sicherheitscode</label>
+            <input type="password" id="login-passcode" class="input-field" placeholder="Sicherheitscode" autocomplete="current-password">
+            <button type="submit" class="btn" id="shipperLoginButton">Anmelden</button>
+        </form>
     </div>
 
     <!-- Screen 2: Dashboard (Đơn chờ giao) -->
@@ -296,7 +312,7 @@
             <div id="qr-reader"></div>
         </div>
         
-        <button class="btn btn-outline mt-4" onclick="app.switchTab('dashboard')">Abbrechen & Zurück</button>
+        <button type="button" class="btn btn-outline mt-4" onclick="app.switchTab('dashboard')">Abbrechen & Zurück</button>
     </div>
 
     <!-- Screen 4: Active Delivery (Đang giao) -->
@@ -324,22 +340,26 @@
 
     <!-- Bottom Navigation -->
     <div id="bottom-nav" class="bottom-nav" style="display: none;">
-        <div class="nav-item" data-target="dashboard" onclick="app.switchTab('dashboard')">
+        <button type="button" class="nav-item" data-target="dashboard" onclick="app.switchTab('dashboard')" aria-label="Offene Lieferungen">
             <span class="nav-icon">📋</span>
             <span>Offen</span>
-        </div>
-        <div class="nav-item" data-target="scanner" onclick="app.switchTab('scanner')">
+        </button>
+        <button type="button" class="nav-item" data-target="scanner" onclick="app.switchTab('scanner')" aria-label="QR-Code scannen">
             <span class="nav-icon">📷</span>
             <span>QR-Scan</span>
-        </div>
-        <div class="nav-item" data-target="active" onclick="app.switchTab('active')">
+        </button>
+        <button type="button" class="nav-item" data-target="active" onclick="app.switchTab('active')" aria-label="Aktive Lieferung">
             <span class="nav-icon">🚚</span>
             <span>Aktiv</span>
-        </div>
-        <div class="nav-item" data-target="history" onclick="app.switchTab('history')">
+        </button>
+        <button type="button" class="nav-item" data-target="history" onclick="app.switchTab('history')" aria-label="Lieferhistorie">
             <span class="nav-icon">📊</span>
             <span>Historie</span>
-        </div>
+        </button>
+        <button type="button" class="nav-item" onclick="app.logout(true)" aria-label="Abmelden">
+            <span class="nav-icon">↪</span>
+            <span>Abmelden</span>
+        </button>
     </div>
 
     <!-- Scripts -->
@@ -364,7 +384,10 @@
                 map: null,
                 mapMarkers: {},
                 mapRoute: null,
-                qrScanner: null
+                qrScanner: null,
+                lastLocationSentAt: 0,
+                acceptingOrderId: null,
+                completingOrderId: null
             },
             
             // Utility: Get Base URL
@@ -400,7 +423,7 @@
                 try {
                     const response = await fetch(url, options);
                     const data = await response.json();
-                    if (!response.ok) throw new Error(data.error || 'API Error');
+                    if (!response.ok) throw new Error(data.message || data.error || `API Error (${response.status})`);
                     return data;
                 } catch (error) {
                     console.error('API Error:', error);
@@ -432,7 +455,12 @@
                 if (tabId !== 'login') {
                     document.getElementById('bottom-nav').style.display = 'flex';
                     document.querySelectorAll('.nav-item').forEach(item => {
-                        item.classList.toggle('active', item.dataset.target === tabId);
+                        const isActive = item.dataset.target === tabId;
+                        item.classList.toggle('active', isActive);
+                        if (item.dataset.target) {
+                            if (isActive) item.setAttribute('aria-current', 'page');
+                            else item.removeAttribute('aria-current');
+                        }
                     });
                 } else {
                     document.getElementById('bottom-nav').style.display = 'none';
@@ -465,27 +493,32 @@
                         this.acceptOrder(this.pendingScan);
                         this.pendingScan = null;
                     } else {
-                        // Restore active delivery if any
-                        this.apiCall(`orders.php?action=get-active-deliveries&branch_id=${this.state.shipperBranch}`)
-                            .then(data => {
-                                // Find any delivery by this shipper
-                                const active = (data.orders || []).find(o => {
-                                    try {
-                                        const sum = typeof o.summary === 'string' ? JSON.parse(o.summary) : o.summary;
-                                        return sum && sum.shipper_name === this.state.shipperName;
-                                    } catch(e) { return false; }
-                                });
-                                if (active) {
-                                    this.state.activeOrder = active;
-                                    this.switchTab('active');
-                                } else {
-                                    this.switchTab('dashboard');
-                                }
-                            })
-                            .catch(e => {
-                                console.error('Failed to restore active delivery', e);
-                                this.switchTab('dashboard');
+                        // Restore active delivery if any, and prefetch dashboard orders in parallel
+                        Promise.all([
+                            this.apiCall(`orders.php?action=get-active-deliveries&branch_id=${this.state.shipperBranch}`),
+                            this.apiCall(`orders.php?action=list&status=confirmed&branch_id=${this.state.shipperBranch}`)
+                        ]).then(([activeData, confirmedData]) => {
+                            // Find any delivery by this shipper
+                            const active = (activeData.orders || []).find(o => {
+                                try {
+                                    const sum = typeof o.summary === 'string' ? JSON.parse(o.summary) : o.summary;
+                                    return sum && sum.shipper_name === this.state.shipperName;
+                                } catch(e) { return false; }
                             });
+                            
+                            if (active) {
+                                this.state.activeOrder = active;
+                                this.switchTab('active');
+                            } else {
+                                // Prevent fetchOrders from making a redundant network call by injecting data
+                                this.cachedDashboardData = confirmedData;
+                                this.switchTab('dashboard');
+                            }
+                        })
+                        .catch(e => {
+                            console.error('Failed to init dashboard', e);
+                            this.switchTab('dashboard');
+                        });
                     }
                 } else {
                     this.switchTab('login');
@@ -493,7 +526,8 @@
                 
                 // Setup auto-refresh for dashboard
                 setInterval(() => {
-                    if (this.state.currentTab === 'dashboard') {
+                    // Only poll if dashboard is visible and tab is active
+                    if (this.state.currentTab === 'dashboard' && !document.hidden) {
                         this.fetchOrders(true);
                     }
                 }, 10000);
@@ -508,6 +542,13 @@
                 
                 if (!name || !pass) {
                     return this.showToast('Bitte alle Felder ausfüllen');
+                }
+
+                const loginButton = document.getElementById('shipperLoginButton');
+                if (loginButton?.disabled) return;
+                if (loginButton) {
+                    loginButton.disabled = true;
+                    loginButton.textContent = 'Wird geprüft…';
                 }
                 
                 try {
@@ -531,6 +572,11 @@
                     } else {
                         this.showToast('Falscher Sicherheitscode!');
                     }
+                } finally {
+                    if (loginButton) {
+                        loginButton.disabled = false;
+                        loginButton.textContent = 'Anmelden';
+                    }
                 }
             },
             
@@ -541,11 +587,24 @@
                 }
                 
                 try {
-                    const data = await this.apiCall(`orders.php?action=list&status=confirmed&branch_id=${this.state.shipperBranch}`);
+                    let data;
+                    if (this.cachedDashboardData) {
+                        data = this.cachedDashboardData;
+                        this.cachedDashboardData = null; // Use only once
+                    } else {
+                        data = await this.apiCall(`orders.php?action=list&status=confirmed&branch_id=${this.state.shipperBranch}`);
+                    }
                     let html = '';
                     
                     // Filter for delivery only
                     const deliveryOrders = (data.orders || []).filter(o => o.service_type === 'delivery');
+                    
+                    // Optimization: Skip re-rendering if data hasn't changed
+                    const ordersHash = JSON.stringify(deliveryOrders);
+                    if (silent && this.lastOrdersHash === ordersHash) {
+                        return; // No changes
+                    }
+                    this.lastOrdersHash = ordersHash;
                     
                     if (deliveryOrders.length === 0) {
                         html = '<div class="empty-state">Keine offenen Lieferungen</div>';
@@ -577,8 +636,8 @@
                                     <div class="mb-4 text-sm">📍 ${addressText}</div>
                                     
                                     <div class="flex gap-2">
-                                        <button class="btn btn-outline" style="flex: 1" onclick="app.switchTab('scanner')">📷 QR-Scan</button>
-                                        <button class="btn" style="flex: 1" onclick="app.acceptOrder('${orderId}')">Annehmen</button>
+                                        <button type="button" class="btn btn-outline" style="flex: 1" onclick="app.switchTab('scanner')">📷 QR-Scan</button>
+                                        <button type="button" class="btn" id="accept_${orderId}" style="flex: 1" onclick="app.acceptOrder('${orderId}')">Annehmen</button>
                                     </div>
                                 </div>
                             `;
@@ -596,6 +655,13 @@
             },
             
             async acceptOrder(orderId) {
+                if (!orderId || this.state.acceptingOrderId) return;
+                this.state.acceptingOrderId = orderId;
+                const acceptButton = document.getElementById(`accept_${orderId}`);
+                if (acceptButton) {
+                    acceptButton.disabled = true;
+                    acceptButton.textContent = 'Wird angenommen…';
+                }
                 try {
                     this.showToast('Bestellung wird angenommen...');
                     
@@ -625,6 +691,12 @@
                     
                 } catch (err) {
                     this.showToast('Fehler: ' + (err.message || 'Bestellung konnte nicht angenommen werden'));
+                } finally {
+                    this.state.acceptingOrderId = null;
+                    if (acceptButton && document.body.contains(acceptButton)) {
+                        acceptButton.disabled = false;
+                        acceptButton.textContent = 'Annehmen';
+                    }
                 }
             },
             
@@ -699,7 +771,7 @@
                 let rawAddress = {};
                 try { 
                     rawAddress = typeof order.delivery_address === 'string' ? JSON.parse(order.delivery_address) : (order.delivery_address || {});
-                    addressText = `${rawAddress.street || ''}, ${rawAddress.postal || ''} ${rawAddress.city || ''}`;
+                    addressText = `${rawAddress.street || ''} ${rawAddress.house_number || rawAddress.houseNumber || ''}, ${rawAddress.postal || ''} ${rawAddress.city || ''}`.trim();
                 } catch(e){}
                 
                 let destinationQuery = encodeURIComponent(addressText);
@@ -732,9 +804,9 @@
                         </div>
                         
                         <div class="flex gap-2">
-                            <button class="btn btn-outline" style="flex: 1; text-align: center;" onclick="app.openNavigation()">🧭 Navigation</button>
-                            <button class="btn btn-outline" style="flex: 1; text-align: center;" onclick="app.showRouteOnMap()">🗺️ Route</button>
-                            <button class="btn" style="flex: 1" onclick="app.completeDelivery('${activeOrderId}')">✅ Geliefert</button>
+                            <button type="button" class="btn btn-outline" style="flex: 1; text-align: center;" onclick="app.openNavigation()">🧭 Navigation</button>
+                            <button type="button" class="btn btn-outline" style="flex: 1; text-align: center;" onclick="app.showRouteOnMap()">🗺️ Route</button>
+                            <button type="button" class="btn" id="complete_${activeOrderId}" style="flex: 1" onclick="app.completeDelivery('${activeOrderId}')">✅ Geliefert</button>
                         </div>
                         
                     </div>
@@ -751,6 +823,8 @@
                 if (this.state.map) {
                     this.state.map.remove();
                 }
+                this.state.mapMarkers = {};
+                this.state.mapRoute = null;
                 
                 const mapEl = document.getElementById('map-container');
                 if (!mapEl) return;
@@ -766,16 +840,29 @@
                 this.geocodeAndAddCustomerMarker(customerAddress);
             },
             
+            // Simple in-memory cache for geocoded addresses to reduce external API dependency
+            addressGeocodeCache: {},
+            
             async geocodeAndAddCustomerMarker(address) {
                 if (!address.street) return;
-                const query = `${address.street}, ${address.postal || ''} ${address.city || ''}`;
+                const query = `${address.street} ${address.house_number || address.houseNumber || ''}, ${address.postal || ''} ${address.city || ''}`;
                 
                 try {
-                    const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1&email=contact@leosushi.de`);
-                    const data = await res.json();
-                    if (data && data.length > 0) {
-                        const lat = parseFloat(data[0].lat);
-                        const lng = parseFloat(data[0].lon);
+                    let lat, lng;
+                    if (this.addressGeocodeCache[query]) {
+                        lat = this.addressGeocodeCache[query].lat;
+                        lng = this.addressGeocodeCache[query].lng;
+                    } else {
+                        const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1&email=contact@leosushi.de`);
+                        const data = await res.json();
+                        if (data && data.length > 0) {
+                            lat = parseFloat(data[0].lat);
+                            lng = parseFloat(data[0].lon);
+                            this.addressGeocodeCache[query] = {lat, lng};
+                        }
+                    }
+                    
+                    if (lat && lng) {
                         
                         const icon = L.divIcon({
                             className: 'customer-marker',
@@ -803,16 +890,26 @@
                             // Update map
                             this.updateShipperMarker(lat, lng);
                             
-                            // Send to API
-                            this.apiCall('orders.php?action=update-location', 'POST', {
-                                order_id: orderId,
-                                lat: lat,
-                                lng: lng
-                            }).catch(console.error);
+                            // Limit network updates while still moving the marker smoothly.
+                            const now = Date.now();
+                            if (now - this.state.lastLocationSentAt >= 5000) {
+                                this.state.lastLocationSentAt = now;
+                                this.apiCall('orders.php?action=update-location', 'POST', {
+                                    order_id: orderId,
+                                    shipper_name: this.state.shipperName,
+                                    lat: lat,
+                                    lng: lng
+                                }).catch(console.error);
+                            }
                         },
-                        (err) => console.error("GPS error", err),
+                        (err) => {
+                            console.error("GPS error", err);
+                            if (err.code === 1) this.showToast('Standortzugriff fehlt – bitte GPS-Berechtigung aktivieren.');
+                        },
                         { enableHighAccuracy: true, maximumAge: 10000, timeout: 5000 }
                     );
+                } else {
+                    this.showToast('GPS ist auf diesem Gerät nicht verfügbar.');
                 }
             },
             
@@ -870,6 +967,7 @@
                     navigator.geolocation.clearWatch(this.state.locationWatchId);
                     this.state.locationWatchId = null;
                 }
+                this.state.lastLocationSentAt = 0;
             },
             
             updateShipperMarker(lat, lng) {
@@ -893,7 +991,14 @@
             },
             
             async completeDelivery(orderId) {
+                if (!orderId || this.state.completingOrderId) return;
                 if (!confirm('Lieferung als abgeschlossen markieren?')) return;
+                this.state.completingOrderId = orderId;
+                const completeButton = document.getElementById(`complete_${orderId}`);
+                if (completeButton) {
+                    completeButton.disabled = true;
+                    completeButton.textContent = 'Wird abgeschlossen…';
+                }
                 
                 try {
                     this.showToast('Wird aktualisiert...');
@@ -908,6 +1013,12 @@
                     this.switchTab('dashboard');
                 } catch (err) {
                     this.showToast('Fehler: ' + err.message);
+                } finally {
+                    this.state.completingOrderId = null;
+                    if (completeButton && document.body.contains(completeButton)) {
+                        completeButton.disabled = false;
+                        completeButton.textContent = '✅ Geliefert';
+                    }
                 }
             },
             
@@ -918,9 +1029,15 @@
                 try {
                     const data = await this.apiCall(`orders.php?action=list&status=completed&branch_id=${this.state.shipperBranch}`);
                     
-                    // Filter history to today and for this shipper if backend supports it.
-                    // For now just show recent completed.
-                    const deliveries = (data.orders || []).filter(o => o.service_type === 'delivery').slice(0, 20); // show last 20
+                    const todayKey = new Date().toLocaleDateString('en-CA');
+                    const deliveries = (data.orders || []).filter(order => {
+                        if (order.service_type !== 'delivery') return false;
+                        let summary = {};
+                        try { summary = typeof order.summary === 'string' ? JSON.parse(order.summary) : (order.summary || {}); } catch (e) {}
+                        const deliveredBy = summary.delivered_by || summary.shipper_name || '';
+                        const deliveredDate = new Date(summary.delivered_at || order.updated_at || order.created_at);
+                        return deliveredBy === this.state.shipperName && deliveredDate.toLocaleDateString('en-CA') === todayKey;
+                    }).slice(0, 20);
                     
                     if (deliveries.length === 0) {
                         document.getElementById('history-orders').innerHTML = '<div class="empty-state">Noch keine Lieferhistorie</div>';
@@ -929,7 +1046,9 @@
                     
                     let html = '';
                     deliveries.forEach(order => {
-                        const date = new Date(order.created_at).toLocaleString('de-DE');
+                        let historySummary = {};
+                        try { historySummary = typeof order.summary === 'string' ? JSON.parse(order.summary) : (order.summary || {}); } catch (e) {}
+                        const date = new Date(historySummary.delivered_at || order.updated_at || order.created_at).toLocaleString('de-DE');
                         const historyOrderId = order.order_id || order.id || '';
                         let historyCustomerName = 'Kunde';
                         try {
@@ -972,7 +1091,16 @@
                 }
             },
             
-            logout() {
+            logout(askForConfirmation = false) {
+                if (askForConfirmation && !confirm('Möchtest du dich wirklich abmelden?')) return;
+                this.stopLocationTracking();
+                if (this.state.qrScanner?.isScanning) this.state.qrScanner.stop().catch(() => {});
+                if (this.state.map) {
+                    this.state.map.remove();
+                    this.state.map = null;
+                }
+                this.state.mapMarkers = {};
+                this.state.mapRoute = null;
                 localStorage.removeItem('shipper_name');
                 localStorage.removeItem('shipper_passcode');
                 localStorage.removeItem('shipper_branch');

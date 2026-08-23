@@ -16,6 +16,7 @@ function openAuthModal(formType = 'login') {
   
   // Show modal
   modal.classList.add('active');
+  modal.setAttribute('aria-hidden', 'false');
   document.body.style.overflow = 'hidden';
   
   // Show correct form
@@ -83,6 +84,7 @@ function closeAuthModal() {
   if (!modal) return;
   
   modal.classList.remove('active');
+  modal.setAttribute('aria-hidden', 'true');
   document.body.style.overflow = '';
   
   // Clear forms and messages

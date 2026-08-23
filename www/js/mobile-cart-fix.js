@@ -4,6 +4,11 @@
 (function () {
   console.log('📱 Mobile Cart Fix loaded');
 
+  // Dynamic app navigation can add cart controls after first paint. Keep track of
+  // controls that are already wired instead of cloning/replacing them on every
+  // retry, which would otherwise discard handlers registered by other modules.
+  const boundCartElements = new WeakSet();
+
   // Global click handler to catch ANY element with WARENKORB text
   document.addEventListener('click', function (e) {
     const target = e.target;
@@ -17,7 +22,9 @@
       e.stopImmediatePropagation();
 
       // Open cart
-      if (typeof window.openCart === 'function') {
+      if (typeof window.openAppCartModal === 'function') {
+        window.openAppCartModal();
+      } else if (typeof window.openCart === 'function') {
         window.openCart();
       } else if (typeof window.toggleCart === 'function') {
         window.toggleCart();
@@ -81,17 +88,15 @@
       return;
     }
 
-    console.log(`✅ Found ${cartElements.length} cart element(s), setting up mobile-specific handlers`);
+    let newlyBoundCount = 0;
 
-    cartElements.forEach((element, index) => {
-      console.log(`Setting up cart element ${index + 1}:`, element.tagName, element.id || element.className);
-
-      // Remove all existing click handlers by cloning
-      const newElement = element.cloneNode(true);
-      element.parentNode.replaceChild(newElement, element);
+    cartElements.forEach((element) => {
+      if (boundCartElements.has(element)) return;
+      boundCartElements.add(element);
+      newlyBoundCount += 1;
 
       // Add new click handler that always opens cart
-      newElement.addEventListener('click', function (e) {
+      element.addEventListener('click', function (e) {
         e.preventDefault();
         e.stopPropagation();
         e.stopImmediatePropagation();
@@ -99,7 +104,10 @@
         console.log('🛒 Cart element clicked in mobile app');
 
         // Try to open cart using existing functions
-        if (typeof window.openCart === 'function') {
+        if (typeof window.openAppCartModal === 'function') {
+          console.log('✅ Opening native app cart');
+          window.openAppCartModal();
+        } else if (typeof window.openCart === 'function') {
           console.log('✅ Opening cart using window.openCart()');
           window.openCart();
         } else if (typeof window.toggleCart === 'function') {
@@ -129,12 +137,14 @@
       }, true); // Use capture phase
 
       // Also prevent default on touchstart for mobile
-      newElement.addEventListener('touchstart', function (e) {
+      element.addEventListener('touchstart', function () {
         console.log('👆 Cart element touched');
       }, { passive: true });
     });
 
-    console.log('✅ Mobile cart fix initialized for all cart elements');
+    if (newlyBoundCount > 0) {
+      console.log(`✅ Mobile cart fix initialized for ${newlyBoundCount} new cart element(s)`);
+    }
   }
 
   // Initialize when DOM is ready

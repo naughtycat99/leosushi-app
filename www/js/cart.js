@@ -663,8 +663,20 @@ function setupCart() {
     // Remove ALL inline styles first, then set new ones with !important
     const showFixedOrderBtn = () => {
       const allFixedOrderBtns = document.querySelectorAll('.fixed-order-btn, #fixedOrderBtn');
-      const isApp = document.body.classList.contains('is-capacitor-app');
+      const isApp = document.body.classList.contains('is-capacitor-app') || document.documentElement.classList.contains('is-capacitor-app') || window.location.search.includes('app=true');
       console.log('🔍 Found fixed order buttons:', allFixedOrderBtns.length, 'isApp:', isApp);
+
+      if (isApp) {
+        allFixedOrderBtns.forEach(btn => {
+          if (btn) {
+            btn.style.setProperty('display', 'none', 'important');
+            btn.style.setProperty('visibility', 'hidden', 'important');
+            btn.style.setProperty('opacity', '0', 'important');
+            btn.style.setProperty('pointer-events', 'none', 'important');
+          }
+        });
+        return;
+      }
 
       allFixedOrderBtns.forEach((btn, index) => {
         if (btn) {
@@ -681,8 +693,6 @@ function setupCart() {
           btn.style.removeProperty('top');
           btn.style.removeProperty('z-index');
           btn.style.removeProperty('position');
-
-
 
           // Add force-show class to override CSS rules
           btn.classList.add('force-show');
@@ -788,7 +798,10 @@ function setupCart() {
       // Redirect to checkout page
       setTimeout(() => {
         console.log('✅ Redirecting to checkout');
-        window.location.href = 'checkout.html';
+        const isApp = document.body.classList.contains('is-capacitor-app') ||
+          window.location.search.includes('app=true') ||
+          sessionStorage.getItem('leo_app_preview') === 'true';
+        window.location.href = isApp ? 'checkout.html?app=true' : 'checkout.html';
       }, 200);
     });
   }
@@ -828,11 +841,22 @@ function setupCart() {
   // Expose setupCart to window for manual initialization if needed
   window.setupCart = setupCart;
 
-  // Monitor button visibility and force show if hidden when cart is closed
+  // Monitor button visibility and force show if hidden when cart is closed (web mode only)
   function monitorButtonVisibility() {
+    const isApp = document.body.classList.contains('is-capacitor-app') || document.documentElement.classList.contains('is-capacitor-app') || window.location.search.includes('app=true');
+    const btn = document.getElementById('fixedOrderBtn');
+    if (isApp) {
+      if (btn) {
+        btn.style.setProperty('display', 'none', 'important');
+        btn.style.setProperty('visibility', 'hidden', 'important');
+        btn.style.setProperty('opacity', '0', 'important');
+        btn.style.setProperty('pointer-events', 'none', 'important');
+      }
+      return;
+    }
+
     // Only monitor if cart is closed
     if (!document.body.classList.contains('cart-open')) {
-      const btn = document.getElementById('fixedOrderBtn');
       if (btn) {
         const computed = window.getComputedStyle(btn);
         if (computed.display === 'none' || computed.visibility === 'hidden' || parseFloat(computed.opacity) < 0.1) {

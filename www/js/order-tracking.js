@@ -10,6 +10,99 @@ let trackingMarkers = {
 };
 let trackingRoute = null;
 
+const LEO_ORDER_HISTORY_KEY = 'leoOrderHistory';
+const LEO_ORDER_HISTORY_LIMIT = 20;
+
+function parseOrderJson(value, fallback) {
+  if (typeof value !== 'string') return value || fallback;
+  try { return JSON.parse(value); } catch (e) { return fallback; }
+}
+
+// Keep a privacy-scoped history on this device. It makes recent orders and
+// one-click reorder available during a temporary API outage without storing
+// payment tokens or other provider responses.
+function rememberLeoOrder(orderData, officialOrderId) {
+  if (!orderData) return null;
+  const orderId = officialOrderId || orderData.order_id || orderData.orderId || orderData._id;
+  if (!orderId) return null;
+
+  const customer = parseOrderJson(orderData.customer, {});
+  const deliveryAddress = parseOrderJson(orderData.delivery_address, null) ||
+    parseOrderJson(orderData.delivery?.address, null) || {
+      first_name: customer.firstName || customer.first_name || '',
+      last_name: customer.lastName || customer.last_name || '',
+      phone: customer.phone || '',
+      street: customer.street || '',
+      house_number: customer.houseNumber || customer.house_number || '',
+      postal: customer.postal || '',
+      city: customer.city || '',
+      note: customer.note || ''
+    };
+  const existingSummary = parseOrderJson(orderData.summary, {});
+  const summary = {
+    subtotal: existingSummary.subtotal ?? orderData.subtotal ?? null,
+    delivery_fee: existingSummary.delivery_fee ?? orderData.deliveryFee ?? null,
+    discount: existingSummary.discount ?? orderData.discount ?? null,
+    tip: existingSummary.tip ?? orderData.tip ?? null,
+    total: existingSummary.total ?? orderData.order_total ?? orderData.total ?? null,
+    shipper_name: existingSummary.shipper_name || null,
+    shipper_accepted_at: existingSummary.shipper_accepted_at || null,
+    delivered_at: existingSummary.delivered_at || null,
+    delivered_by: existingSummary.delivered_by || null,
+    scheduled_delivery_time: existingSummary.scheduled_delivery_time || orderData.scheduled_delivery_time || null,
+    delivery_distance_km: existingSummary.delivery_distance_km ?? orderData.delivery_distance_km ?? null
+  };
+  const items = parseOrderJson(orderData.items, []).map(item => ({
+    name: item.name || '',
+    qty: Number(item.qty || item.quantity || 1),
+    price: item.price ?? null,
+    total: item.total ?? null,
+    image: item.image || '',
+    note: item.note || ''
+  }));
+  const snapshot = {
+    order_id: String(orderId),
+    status: orderData.status || 'pending',
+    service_type: orderData.service_type || orderData.serviceType || 'delivery',
+    created_at: orderData.created_at || orderData.createdAt || orderData.date || new Date().toISOString(),
+    updated_at: orderData.updated_at || new Date().toISOString(),
+    estimated_time: orderData.estimated_time || orderData.estimatedTime || null,
+    branch_id: orderData.branch_id || orderData.branch?.id || orderData.branch || null,
+    delivery_address: deliveryAddress,
+    items,
+    summary
+  };
+
+  try {
+    const history = parseOrderJson(localStorage.getItem(LEO_ORDER_HISTORY_KEY), []);
+    const safeHistory = Array.isArray(history) ? history : [];
+    const existingIndex = safeHistory.findIndex(order => String(order.order_id || order._id) === String(orderId));
+    if (existingIndex >= 0) {
+      snapshot.created_at = safeHistory[existingIndex].created_at || snapshot.created_at;
+      safeHistory.splice(existingIndex, 1);
+    }
+    safeHistory.unshift(snapshot);
+    localStorage.setItem(LEO_ORDER_HISTORY_KEY, JSON.stringify(safeHistory.slice(0, LEO_ORDER_HISTORY_LIMIT)));
+
+    const recentIds = parseOrderJson(localStorage.getItem('leoRecentOrders'), []);
+    const ids = Array.isArray(recentIds) ? recentIds.filter(id => String(id) !== String(orderId)) : [];
+    ids.unshift(String(orderId));
+    localStorage.setItem('leoRecentOrders', JSON.stringify(ids.slice(0, LEO_ORDER_HISTORY_LIMIT)));
+  } catch (error) {
+    console.warn('Could not remember order on this device:', error);
+  }
+  return snapshot;
+}
+
+function getRememberedLeoOrders() {
+  try {
+    const history = parseOrderJson(localStorage.getItem(LEO_ORDER_HISTORY_KEY), []);
+    return Array.isArray(history) ? history : [];
+  } catch (e) {
+    return [];
+  }
+}
+
 // Restaurant coordinates (Fallback to Florastraße 10A if dynamic fails)
 function getBaseRestaurantCoords() {
   if (typeof window.getBranchCoords === 'function') {
@@ -418,6 +511,8 @@ if (typeof window !== 'undefined') {
   window.checkDeliveryRangeOSM = checkDeliveryRangeOSM;
   window.startOrderTracking = startOrderTracking;
   window.stopOrderTracking = stopOrderTracking;
+  window.rememberLeoOrder = rememberLeoOrder;
+  window.getRememberedLeoOrders = getRememberedLeoOrders;
 }
 
 

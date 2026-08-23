@@ -409,7 +409,10 @@ function setServiceType(type) {
 // Payment Method Modal Functions
 function openPaymentModal() {
   // Redirect to checkout page instead of opening modal
-  window.location.href = 'checkout.html';
+  const isApp = (document.body && document.body.classList.contains('is-capacitor-app')) ||
+    window.location.search.includes('app=true') ||
+    sessionStorage.getItem('leo_app_preview') === 'true';
+  window.location.href = isApp ? 'checkout.html?app=true' : 'checkout.html';
   return;
 
   console.log('🔍 openPaymentModal called');
@@ -947,7 +950,9 @@ function selectPaymentOption(method) {
   const cashOption = document.getElementById('paymentOptionCash');
   const cardOption = document.getElementById('paymentOptionCard');
   const paypalOption = document.getElementById('paymentOptionPayPal');
+  const stripeOption = document.getElementById('paymentOptionStripe');
   const paypalButtonContainer = document.getElementById('paypalButtonContainer');
+  const stripePaymentContainer = document.getElementById('stripePaymentContainer');
 
   // Support both modal (confirmPaymentBtn) and checkout page (confirmCheckoutBtn)
   const confirmPaymentBtn = document.getElementById('confirmPaymentBtn');
@@ -956,24 +961,28 @@ function selectPaymentOption(method) {
   if (cashOption) cashOption.classList.remove('selected');
   if (cardOption) cardOption.classList.remove('selected');
   if (paypalOption) paypalOption.classList.remove('selected');
+  if (stripeOption) stripeOption.classList.remove('selected');
 
   // Hide PayPal button container by default
   if (paypalButtonContainer) {
     paypalButtonContainer.style.display = 'none';
-    // Clear existing PayPal buttons
     const container = document.getElementById('paypal-button-container');
     if (container) container.innerHTML = '';
   }
 
-  if (method === 'paypal') {
-    // Ẩn nút đặt hàng thường - chỉ cho phép đặt qua PayPal button
+  // Hide Stripe payment container by default
+  if (stripePaymentContainer) {
+    stripePaymentContainer.style.display = 'none';
+  }
+
+  if (method === 'paypal' || method === 'stripe') {
+    // Ẩn nút đặt hàng thường - chỉ cho phép đặt qua PayPal / Stripe submit button
     if (confirmPaymentBtn) {
       confirmPaymentBtn.style.display = 'none';
     }
     if (confirmCheckoutBtn) {
       confirmCheckoutBtn.style.display = 'none';
     }
-    // Đánh dấu PayPal chưa thanh toán
     window._paypalPaymentCompleted = false;
   } else {
     // Hiện lại nút đặt hàng cho cash/card
@@ -993,7 +1002,6 @@ function selectPaymentOption(method) {
   } else if (method === 'paypal' && paypalOption) {
     console.log('💳 [selectPaymentOption] PayPal selected');
     paypalOption.classList.add('selected');
-    // Show PayPal button container and render PayPal button
     if (paypalButtonContainer) {
       paypalButtonContainer.style.display = 'block';
       if (typeof renderPayPalButton === 'function') {
@@ -1004,10 +1012,512 @@ function selectPaymentOption(method) {
     } else {
       console.error('❌ [selectPaymentOption] paypalButtonContainer not found!');
     }
+  } else if (method === 'stripe' && stripeOption) {
+    console.log('⚡ [selectPaymentOption] Stripe (Apple Pay/Google Pay/Card) selected');
+    stripeOption.classList.add('selected');
+    if (stripePaymentContainer) {
+      stripePaymentContainer.style.display = 'block';
+      if (typeof initStripePaymentElement === 'function') {
+        initStripePaymentElement();
+      }
+    }
   }
 }
 
 window.selectPaymentOption = selectPaymentOption;
+
+// ==========================================
+// 💳 STRIPE PAYMENT INTEGRATION (Apple Pay, Google Pay, Credit/Debit Card)
+// ==========================================
+
+function getCheckoutTotalAmount() {
+  // 1. First priority: Check the actual calculated total text on the checkout page (e.g. "16,11 €")
+  const totalEl = document.getElementById('summaryTotal');
+  if (totalEl && totalEl.textContent) {
+    const text = totalEl.textContent.trim();
+    const match = text.match(/[\d.,]+/);
+    if (match) {
+      const numStr = match[0].replace(/\./g, '').replace(',', '.');
+      const val = parseFloat(numStr);
+      if (!isNaN(val) && val > 0) {
+        return val;
+      }
+    }
+  }
+
+  // 2. Fallback: Parse from localStorage leoCart
+  let cart = [];
+  try {
+    cart = JSON.parse(localStorage.getItem('leoCart') || '[]');
+  } catch(e) { cart = []; }
+
+  let subtotal = 0;
+  cart.forEach(item => {
+    const qty = parseInt(item.qty || item.quantity || 1) || 1;
+    let price = typeof item.price === 'number' ? item.price : parseFloat(String(item.price).replace(',', '.').replace(/[^\d.-]/g, '')) || 0;
+    subtotal += (price * qty);
+  });
+
+  let autoDiscount = subtotal > 15 ? (subtotal * 0.10) : 0;
+  let couponDiscount = 0;
+  if (window.appliedDiscount) {
+    const after = subtotal - autoDiscount;
+    couponDiscount = (window.appliedDiscount.percentage > 0) ? (after * window.appliedDiscount.percentage / 100) : (parseFloat(window.appliedDiscount.discount) || 0);
+  }
+
+  let tip = 0;
+  if (window.selectedTip && window.selectedTip.amount) {
+    tip = parseFloat(window.selectedTip.amount) || 0;
+  }
+
+  return Math.max(0, subtotal - autoDiscount - couponDiscount + tip);
+}
+
+let _stripeObj = null;
+let _stripeElements = null;
+let _stripePaymentElement = null;
+let _currentStripeClientSecret = null;
+let _isStripeInitializing = false;
+let _mountedStripeTotal = 0;
+
+async function initStripePaymentElement() {
+  console.log('💳 [Stripe] Initializing Payment Element...');
+  const container = document.getElementById('stripePaymentContainer');
+  const elementDiv = document.getElementById('stripe-payment-element');
+  const amountSpan = document.getElementById('stripePayAmount');
+  const errorDiv = document.getElementById('stripe-error-message');
+  const payBtn = document.getElementById('stripePayBtn');
+
+  if (!container || !elementDiv) return;
+  if (errorDiv) { errorDiv.style.display = 'none'; errorDiv.textContent = ''; }
+
+  if (typeof Stripe === 'undefined') {
+    console.error('❌ Stripe.js SDK not loaded!');
+    elementDiv.innerHTML = '<p style="color: #ef4444; padding: 10px;">Stripe SDK konnte nicht geladen werden. Bitte Seite neu laden.</p>';
+    return;
+  }
+
+  const total = getCheckoutTotalAmount();
+  console.log('💰 [Stripe] Exact total amount to charge:', total);
+
+  if (amountSpan) {
+    amountSpan.textContent = total.toLocaleString('de-DE', { style: 'currency', currency: 'EUR' });
+  }
+
+  if (total <= 0) {
+    if (_stripePaymentElement) {
+      try { _stripePaymentElement.destroy(); } catch (e) {}
+      _stripePaymentElement = null;
+    }
+    elementDiv.innerHTML = '<p style="color: #e5cf8e; padding: 15px; text-align: center; background: rgba(229,207,142,0.08); border-radius: 8px; border: 1px dashed rgba(229,207,142,0.3);">🛒 Ihr Warenkorb ist leer (0,00 €). Bitte wählen Sie zuerst Speisen auf der <a href="menu.html" style="color: #e5cf8e; text-decoration: underline; font-weight: bold;">Speisekarte</a> aus.</p>';
+    if (payBtn) {
+      payBtn.disabled = true;
+      payBtn.style.opacity = '0.5';
+      payBtn.style.cursor = 'not-allowed';
+    }
+    return;
+  }
+
+  // If already mounted with the exact same total and valid element, do not re-create
+  if (_stripePaymentElement && _mountedStripeTotal === total && _stripeElements) {
+    console.log('⚡ [Stripe] Element already mounted for current total, reusing.');
+    return;
+  }
+
+  // If initializing right now, wait
+  if (_isStripeInitializing) return;
+  _isStripeInitializing = true;
+
+  // Cleanly destroy existing element if any
+  if (_stripePaymentElement) {
+    try {
+      _stripePaymentElement.destroy();
+    } catch (e) {
+      console.warn('Error destroying old stripe element:', e);
+    }
+    _stripePaymentElement = null;
+  }
+
+  // Show loading indicator
+  elementDiv.innerHTML = `
+    <div id="stripeLoadingIndicator" style="color: rgba(255,255,255,0.6); font-size: 14px; text-align: center; padding: 30px 0;">
+        <div style="display: inline-block; width: 28px; height: 28px; border: 3px solid rgba(229,207,142,0.3); border-top-color: #e5cf8e; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 10px;"></div>
+        <div>Zahlungsformular wird sicher geladen...</div>
+    </div>
+  `;
+
+  try {
+    const publishableKey = (window.STRIPE_CONFIG && window.STRIPE_CONFIG.PUBLISHABLE_KEY) || 'pk_live_51U4LumD62AOvzFwzgvQfwbAZAAbXXeWK5zu5yWYbMl5qLrIo9DY5pWdPuVXM8AWX98XXvHzNci1P2duYmWI1eWD100MPWiUQUs';
+    if (!_stripeObj) {
+      _stripeObj = Stripe(publishableKey);
+    }
+
+    const addr = getDeliveryAddress();
+    const apiUrl = (window.API_BASE_URL || '/api') + '/create-payment-intent.php';
+
+    const response = await fetch(apiUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        amount: total,
+        customer_email: addr.email || '',
+        customer_name: `${addr.firstName} ${addr.lastName}`.trim(),
+        order_id: 'LEO-' + Date.now()
+      })
+    });
+
+    const data = await response.json();
+    if (!data.success || !data.clientSecret) {
+      throw new Error(data.message || 'Fehler beim Erstellen der Zahlung');
+    }
+
+    _currentStripeClientSecret = data.clientSecret;
+    window._currentStripePaymentIntentId = data.paymentIntentId;
+
+    _stripeElements = _stripeObj.elements({
+      clientSecret: _currentStripeClientSecret,
+      locale: 'de',
+      appearance: {
+        theme: 'night',
+        variables: {
+          colorPrimary: '#e5cf8e',
+          colorBackground: '#1f1f1f',
+          colorText: '#ffffff',
+          colorDanger: '#ff6b6b',
+          borderRadius: '8px',
+          fontFamily: 'Inter, system-ui, sans-serif'
+        }
+      }
+    });
+
+    // Clear loading indicator right before mounting
+    elementDiv.innerHTML = '';
+
+    _stripePaymentElement = _stripeElements.create('payment', {
+      layout: 'tabs',
+      wallets: {
+        applePay: 'auto',
+        googlePay: 'auto',
+        link: 'auto'
+      },
+      fields: {
+        billingDetails: {
+          address: {
+            country: 'auto'
+          }
+        }
+      }
+    });
+
+    _stripePaymentElement.on('ready', () => {
+      console.log('🎉 [Stripe] Payment Element is READY and rendered!');
+      if (payBtn) {
+        payBtn.disabled = false;
+        payBtn.style.opacity = '1';
+        payBtn.style.cursor = 'pointer';
+      }
+    });
+
+    _stripePaymentElement.on('loaderror', (event) => {
+      console.error('❌ [Stripe] Element load error:', event);
+      if (errorDiv) {
+        errorDiv.style.display = 'block';
+        errorDiv.textContent = event.error?.message || 'Zahlungsformular konnte nicht geladen werden.';
+      }
+    });
+
+    _stripePaymentElement.mount('#stripe-payment-element');
+    _mountedStripeTotal = total;
+    console.log('✅ [Stripe] Payment Element mounted successfully for €' + total);
+  } catch (err) {
+    console.error('❌ [Stripe] Error initializing:', err);
+    elementDiv.innerHTML = `<p style="color: #ef4444; padding: 15px; text-align: center;">Fehler: ${err.message || 'Verbindung zu Stripe fehlgeschlagen.'}</p>`;
+  } finally {
+    _isStripeInitializing = false;
+  }
+}
+
+async function handleStripePaymentSubmit() {
+  console.log('💳 [Stripe] Submitting payment...');
+  const payBtn = document.getElementById('stripePayBtn');
+  const errorDiv = document.getElementById('stripe-error-message');
+  if (errorDiv) { errorDiv.style.display = 'none'; errorDiv.textContent = ''; }
+
+  // Validate form fields
+  const addr = getDeliveryAddress();
+  const missing = [];
+  if (!addr.email) missing.push('E-Mail-Adresse');
+  if (!addr.firstName) missing.push('Vorname');
+  if (!addr.lastName) missing.push('Nachname');
+  if (!addr.phone) missing.push('Telefonnummer');
+
+  const svcType = window.selectedServiceType || selectedServiceType || 'delivery';
+  if (svcType === 'delivery') {
+    if (!addr.street) missing.push('Straße');
+    if (!addr.postal) missing.push('PLZ');
+    if (!addr.city) missing.push('Stadt');
+  }
+
+  if (missing.length > 0) {
+    alert('Bitte füllen Sie folgende Felder aus, bevor Sie bezahlen:\n\n• ' + missing.join('\n• '));
+    const firstEmptyId = !addr.firstName ? 'customerFirstName' :
+      !addr.lastName ? 'customerLastName' :
+        !addr.email ? 'customerEmail' :
+          !addr.phone ? 'customerPhone' :
+            !addr.street ? 'deliveryStreet' :
+              !addr.postal ? 'deliveryPostal' : 'deliveryCity';
+    const el = document.getElementById(firstEmptyId);
+    if (el) { el.focus(); el.style.borderColor = '#ef4444'; setTimeout(() => el.style.borderColor = '', 3000); }
+    return;
+  }
+
+  if (!_stripeObj || !_stripeElements || !_stripePaymentElement) {
+    alert('Zahlungsformular wird noch geladen. Bitte einen Moment warten.');
+    initStripePaymentElement();
+    return;
+  }
+
+  if (payBtn) {
+    payBtn.disabled = true;
+    payBtn.innerHTML = '⏳ Zahlung wird sicher verarbeitet...';
+  }
+
+  try {
+    const { error, paymentIntent } = await _stripeObj.confirmPayment({
+      elements: _stripeElements,
+      confirmParams: {
+        return_url: window.location.href,
+        receipt_email: addr.email || undefined
+      },
+      redirect: 'if_required'
+    });
+
+    if (error) {
+      console.error('❌ [Stripe] Payment confirmation error:', error);
+      if (errorDiv) {
+        errorDiv.style.display = 'block';
+        errorDiv.textContent = error.message || 'Die Zahlung konnte nicht durchgeführt werden.';
+      }
+      if (payBtn) {
+        payBtn.disabled = false;
+        payBtn.innerHTML = '💳 Jetzt bezahlen (' + (document.getElementById('stripePayAmount')?.textContent || '€0,00') + ')';
+      }
+      return;
+    }
+
+    if (paymentIntent && (paymentIntent.status === 'succeeded' || paymentIntent.status === 'processing')) {
+      console.log('🎉 [Stripe] Payment SUCCEEDED:', paymentIntent.id);
+      
+      // Show overlay
+      const loadingDiv = document.createElement('div');
+      loadingDiv.id = 'stripeProcessingOverlay';
+      loadingDiv.innerHTML = `
+          <div style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.85); z-index: 99999; display: flex; flex-direction: column; justify-content: center; align-items: center; color: white; font-family: sans-serif;">
+              <div style="width: 50px; height: 50px; border: 5px solid #fff; border-top: 5px solid #e5cf8e; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 20px;"></div>
+              <h2 style="margin:0; padding:0; text-align:center;">Zahlung erfolgreich!</h2>
+              <p style="font-size: 18px; font-weight: bold; margin-top: 10px; color: #e5cf8e; text-align:center;">Ihre Bestellung wird gespeichert. Bitte warten...</p>
+              <style>@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }</style>
+          </div>
+      `;
+      document.body.appendChild(loadingDiv);
+
+      await processSuccessfulStripeOrder(paymentIntent);
+    }
+  } catch (err) {
+    console.error('❌ [Stripe] Exception during payment:', err);
+    if (errorDiv) {
+      errorDiv.style.display = 'block';
+      errorDiv.textContent = err.message || 'Unerwarteter Fehler bei der Zahlung.';
+    }
+    if (payBtn) {
+      payBtn.disabled = false;
+      payBtn.innerHTML = '💳 Jetzt bezahlen (' + (document.getElementById('stripePayAmount')?.textContent || '€0,00') + ')';
+    }
+  }
+}
+
+async function processSuccessfulStripeOrder(paymentIntent) {
+  try {
+    const deliveryAddress = getDeliveryAddress();
+    let orderId = 'LEO-' + Date.now();
+    const orderTimestamp = new Date().toISOString();
+
+    let customerCode = null;
+    let user = null;
+    if (typeof getCurrentUser === 'function') {
+      user = getCurrentUser();
+      if (user) customerCode = user.customerCode || null;
+    }
+
+    const total = getCheckoutTotalAmount();
+    const cart = (typeof window.getCart === 'function' ? window.getCart() : (typeof cart !== 'undefined' ? cart : JSON.parse(localStorage.getItem('leoCart') || '[]')));
+    const branch = typeof window.getSelectedBranch === 'function' ? window.getSelectedBranch() : null;
+
+    const subtotal = typeof window.getTotal === 'function' ? window.getTotal() : total;
+    let autoDiscount = subtotal > 15 ? (subtotal * 10 / 100) : 0;
+    let couponDiscount = 0;
+    let discountCode = null;
+    if (window.appliedDiscount) {
+      const afterAuto = subtotal - autoDiscount;
+      couponDiscount = window.appliedDiscount.percentage > 0 ? (afterAuto * window.appliedDiscount.percentage / 100) : (window.appliedDiscount.discount || 0);
+      discountCode = window.appliedDiscount.code || null;
+    }
+
+    let tipAmount = 0;
+    if (window.selectedTip) tipAmount = window.selectedTip.amount || 0;
+
+    const svcType = window.selectedServiceType || (typeof selectedServiceType !== 'undefined' ? selectedServiceType : 'delivery');
+
+    const apiOrderData = {
+      order_id: orderId,
+      branch: branch,
+      branch_id: branch ? branch.id : 'branch_flora',
+      items: cart.map(item => ({
+        name: item.name,
+        quantity: item.qty || item.quantity || 1,
+        total: ((item.price || 0) * (item.qty || item.quantity || 1)).toFixed(2) + ' €'
+      })),
+      service_type: (svcType === 'pickup') ? 'Abholung' : ((svcType === 'dinein') ? 'Vor Ort' : 'Lieferung'),
+      payment_method: 'Stripe (Apple Pay/Karte)',
+      payment_status: 'paid',
+      order_total: total.toFixed(2) + ' €',
+      customer: {
+        firstName: deliveryAddress.firstName || '',
+        lastName: deliveryAddress.lastName || '',
+        email: deliveryAddress.email || '',
+        phone: deliveryAddress.phone || '',
+        street: deliveryAddress.street || '',
+        houseNumber: deliveryAddress.houseNumber || '',
+        postal: deliveryAddress.postal || '',
+        city: deliveryAddress.city || '',
+        note: deliveryAddress.note || ''
+      },
+      discount_code: discountCode,
+      promotion_id: window.appliedDiscount ? window.appliedDiscount.promotion_id : null,
+      automatic_discount: autoDiscount > 0 ? { percentage: 10, amount: autoDiscount.toFixed(2) + ' €' } : null,
+      tip: tipAmount > 0 ? tipAmount.toFixed(2) + ' €' : null,
+      scheduled_delivery_time: (window.getScheduledDeliveryTime && window.getScheduledDeliveryTime()) || null,
+      delivery_distance_km: window.selectedServiceType === 'delivery' ? (window.selectedDeliveryDistanceKm || null) : null,
+      stripe_payment_id: paymentIntent.id
+    };
+
+    let apiResult = null;
+    if (window.api && window.api.orders && window.api.orders.saveOrder) {
+      console.log('📦 Sending Stripe order to API:', apiOrderData);
+      apiResult = await window.api.orders.saveOrder(apiOrderData);
+      console.log('📦 API Result:', apiResult);
+      if (apiResult && apiResult.order_id) {
+        orderId = apiResult.order_id;
+      }
+    }
+
+    if (apiResult?.success && typeof window.rememberLeoOrder === 'function') {
+      window.rememberLeoOrder({ ...apiOrderData, status: 'pending' }, orderId);
+    }
+
+    // Save customer info to localStorage
+    try {
+      const customerKey = (deliveryAddress.email || '').toLowerCase().trim();
+      const customerInfo = {
+        firstName: deliveryAddress.firstName || '',
+        lastName: deliveryAddress.lastName || '',
+        email: deliveryAddress.email || '',
+        phone: deliveryAddress.phone || '',
+        street: deliveryAddress.street || '',
+        houseNumber: deliveryAddress.houseNumber || '',
+        postal: deliveryAddress.postal || '',
+        city: deliveryAddress.city || '',
+        note: deliveryAddress.note || '',
+        customerCode: apiResult?.customer_code || null
+      };
+      if (customerKey) {
+        const savedCustomers = JSON.parse(localStorage.getItem('leoCustomers') || '{}');
+        savedCustomers[customerKey] = customerInfo;
+        localStorage.setItem('leoCustomers', JSON.stringify(savedCustomers));
+      }
+      localStorage.setItem('leo_last_customer_info', JSON.stringify(customerInfo));
+      localStorage.setItem('leo_checkout_customer', JSON.stringify(customerInfo));
+    } catch (e) {
+      console.error('Error saving customer info to localStorage:', e);
+    }
+
+    // Save recent order
+    const recentOrders = JSON.parse(localStorage.getItem('leoRecentOrders') || '[]');
+    if (orderId && !recentOrders.includes(orderId)) {
+      recentOrders.unshift(orderId);
+      if (recentOrders.length > 10) recentOrders.pop();
+      localStorage.setItem('leoRecentOrders', JSON.stringify(recentOrders));
+    }
+
+    // Clear cart
+    try {
+      localStorage.removeItem('leoCart');
+      localStorage.removeItem('cart');
+      localStorage.setItem('leoCart', '[]');
+      localStorage.setItem('cart', '[]');
+      if (typeof window.clearAppCart === 'function') window.clearAppCart();
+      if (typeof window.clearCart === 'function') window.clearCart();
+      if (typeof window.cart !== 'undefined') window.cart = [];
+      window.dispatchEvent(new Event('cartUpdated'));
+      window.dispatchEvent(new Event('cart:updated'));
+    } catch (e) {
+      console.error('Error clearing cart:', e);
+    }
+
+    if (document.getElementById('stripeProcessingOverlay')) {
+      document.getElementById('stripeProcessingOverlay').remove();
+    }
+
+    const orderData = {
+      summary: {
+        item_count: cart.reduce((sum, item) => sum + (item.qty || item.quantity || 1), 0),
+        total: total.toFixed(2)
+      }
+    };
+
+    showOrderSuccessNotification(orderData, deliveryAddress, orderId);
+  } catch (e) {
+    console.error('Error processing successful Stripe order:', e);
+    if (document.getElementById('stripeProcessingOverlay')) {
+      document.getElementById('stripeProcessingOverlay').remove();
+    }
+    alert('Zahlung war erfolgreich! Ihre Bestellung wurde erfasst.');
+  }
+}
+
+// Auto-check for 3D secure return on page load
+async function checkStripeRedirectResult() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const clientSecret = urlParams.get('payment_intent_client_secret');
+  const redirectStatus = urlParams.get('redirect_status');
+
+  if (clientSecret && (redirectStatus === 'succeeded' || redirectStatus === 'processing')) {
+    console.log('🔄 [Stripe] Detected 3D Secure return URL!');
+    const publishableKey = (window.STRIPE_CONFIG && window.STRIPE_CONFIG.PUBLISHABLE_KEY) || 'pk_live_51U4LumD62AOvzFwzgvQfwbAZAAbXXeWK5zu5yWYbMl5qLrIo9DY5pWdPuVXM8AWX98XXvHzNci1P2duYmWI1eWD100MPWiUQUs';
+    if (!_stripeObj && typeof Stripe !== 'undefined') {
+      _stripeObj = Stripe(publishableKey);
+    }
+    if (_stripeObj) {
+      try {
+        const { paymentIntent } = await _stripeObj.retrievePaymentIntent(clientSecret);
+        if (paymentIntent && (paymentIntent.status === 'succeeded' || paymentIntent.status === 'processing')) {
+          window.history.replaceState({}, document.title, window.location.pathname);
+          await processSuccessfulStripeOrder(paymentIntent);
+        }
+      } catch (err) {
+        console.error('Error retrieving 3D Secure payment intent:', err);
+      }
+    }
+  }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  checkStripeRedirectResult();
+});
+
+window.initStripePaymentElement = initStripePaymentElement;
+window.handleStripePaymentSubmit = handleStripePaymentSubmit;
+
 
 // Apply discount code
 async function applyDiscountCode() {
@@ -1801,6 +2311,27 @@ Object.defineProperty(window, 'selectedPaymentMethod', {
 
 // Show order success notification
 function showOrderSuccessNotification(orderData, deliveryAddress, orderId) {
+  // Trigger Google Analytics 4 Ecommerce Purchase Event
+  if (typeof window.gtag === 'function') {
+    try {
+      const rawTotal = parseFloat(String(orderData.summary.total || 0).replace(/[^\d.,]/g, '').replace(',', '.')) || 0;
+      window.gtag('event', 'purchase', {
+        transaction_id: orderId,
+        value: rawTotal,
+        currency: 'EUR',
+        items: (orderData.items || []).map(item => ({
+          item_id: item.id || item.name,
+          item_name: item.name,
+          price: parseFloat(item.price || 0),
+          quantity: parseInt(item.quantity || item.qty || 1, 10)
+        }))
+      });
+      console.log('📊 GA4 Purchase event tracked:', orderId, rawTotal);
+    } catch(e) {
+      console.warn('GA4 tracking error:', e);
+    }
+  }
+
   // Create notification modal
   const notification = document.createElement('div');
   notification.className = 'order-success-notification';
@@ -1856,6 +2387,23 @@ function showOrderSuccessNotification(orderData, deliveryAddress, orderId) {
           <span>Die Bestätigungs-E-Mail wurde an <strong>${deliveryAddress.email || 'Ihre E-Mail-Adresse'}</strong> gesendet.</span>
         </div>
       </div>
+      <!-- App Download Incentive Section (Web users) -->
+      ${(!document.body.classList.contains('is-capacitor-app') && !window.location.search.includes('mock-app')) ? `
+      <div class="order-success-app-banner" style="background: linear-gradient(135deg, rgba(229,207,142,.12), rgba(194,163,85,.06)); border: 1px solid rgba(229,207,142,.3); border-radius: 14px; padding: 18px; margin: 20px 0; text-align: center;">
+        <div style="font-size: 15px; font-weight: 700; color: var(--gold); margin-bottom: 6px;">📱 LEO SUSHI App herunterladen</div>
+        <div style="font-size: 12px; color: rgba(255,255,255,.8); line-height: 1.5; margin-bottom: 14px;">
+          Bestellen Sie beim nächsten Mal über unsere App & sichern Sie sich <strong>10% Rabatt (Code: APP10)</strong> + Live-Tracking!
+        </div>
+        <div style="display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;">
+          <a href="https://apps.apple.com/de/app/leo-sushi/id6758460309" target="_blank" rel="noopener" style="display: inline-flex; align-items: center; gap: 6px; background: #1a1a1e; border: 1px solid rgba(255,255,255,.15); color: #fff; padding: 8px 16px; border-radius: 10px; font-size: 12px; font-weight: 600; text-decoration: none; transition: 0.2s;">
+            <span>🍎</span> App Store
+          </a>
+          <a href="https://play.google.com/store/apps/details?id=com.leosushi.berlin" target="_blank" rel="noopener" style="display: inline-flex; align-items: center; gap: 6px; background: #1a1a1e; border: 1px solid rgba(255,255,255,.15); color: #fff; padding: 8px 16px; border-radius: 10px; font-size: 12px; font-weight: 600; text-decoration: none; transition: 0.2s;">
+            <span>▶️</span> Google Play
+          </a>
+        </div>
+      </div>
+      ` : ''}
       <button class="order-success-btn" onclick="closeOrderSuccessNotification()">Verstanden</button>
     </div>
   `;
@@ -2635,6 +3183,7 @@ async function renderPayPalButton() {
             vat: vatAmount > 0 ? vatAmount.toFixed(2) + ' €' : null,
             serviceFee: serviceFee > 0 ? serviceFee.toFixed(2) + ' €' : null,
             scheduled_delivery_time: (window.getScheduledDeliveryTime && window.getScheduledDeliveryTime()) || null,
+            delivery_distance_km: window.selectedServiceType === 'delivery' ? (window.selectedDeliveryDistanceKm || null) : null,
             paypal_payment_id: details.id
           };
 
@@ -2685,6 +3234,9 @@ async function renderPayPalButton() {
             alert('Interner Systemfehler. Zahlung erfolgreich, aber Bestellung konnte nicht übermittelt werden.');
             return;
           }
+          if (typeof window.rememberLeoOrder === 'function') {
+            window.rememberLeoOrder({ ...apiOrderData, status: 'pending' }, orderId);
+          }
           // Save customer info to localStorage for profile page (matching Cash flow)
           try {
             const customerKey = payerEmail.toLowerCase().trim();
@@ -2733,10 +3285,18 @@ async function renderPayPalButton() {
           }
 
           // Clear cart
-          if (typeof window.clearCart === 'function') {
-            window.clearCart();
-          } else {
+          try {
+            localStorage.removeItem('leoCart');
+            localStorage.removeItem('cart');
             localStorage.setItem('leoCart', '[]');
+            localStorage.setItem('cart', '[]');
+            if (typeof window.clearAppCart === 'function') window.clearAppCart();
+            if (typeof window.clearCart === 'function') window.clearCart();
+            if (typeof window.cart !== 'undefined') window.cart = [];
+            window.dispatchEvent(new Event('cartUpdated'));
+            window.dispatchEvent(new Event('cart:updated'));
+          } catch (e) {
+            console.error('Error clearing cart:', e);
           }
 
           // Close payment modal

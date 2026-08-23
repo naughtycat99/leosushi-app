@@ -1,1029 +1,1732 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="de">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>LEO SUSHI - Lieferung</title>
-    <meta name="theme-color" content="#0a0a0c">
-    
-    <!-- Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
-    
-    <link rel="manifest" href="shipper-manifest.json">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>LEO SUSHI — Vietnamesische Küche, modern & elegant</title>
+    <meta name="description"
+        content="LEO SUSHI in Berlin: moderne vietnamesische Küche, Sushi & warme Gerichte. Reservieren Sie jetzt und genießen Sie stilvolles Ambiente.">
+    <meta name="theme-color" content="#0b0b0c">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="LEO SUSHI">
     <link rel="apple-touch-icon" href="assets/logo.png">
-    
-    <!-- Leaflet CSS -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
-    
-    <style>
-        :root {
-            --gold: #e5cf8e;
-            --gold-2: #c2a355;
-            --bg-dark: #0a0a0c;
-            --card-bg: rgba(18, 18, 20, 0.95);
-            --card-border: rgba(229, 207, 142, 0.15);
-        }
-        
-        body {
-            margin: 0;
-            padding: 0;
-            font-family: 'Inter', sans-serif;
-            background-color: var(--bg-dark);
-            color: #fff;
-            overscroll-behavior: none;
-            -webkit-tap-highlight-color: transparent;
-        }
-        
-        * {
-            box-sizing: border-box;
-        }
-        
-        h1, h2, h3 {
-            font-family: 'Playfair Display', serif;
-            margin-top: 0;
-        }
-        
-        /* Screens */
-        .screen {
-            display: none;
-            padding-bottom: 70px;
-            min-height: 100vh;
-            padding-top: 20px;
-            padding-left: 16px;
-            padding-right: 16px;
-        }
-        .screen.active {
-            display: block;
-            animation: fadeIn 0.3s ease-out;
-        }
-        
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        
-        /* Components */
-        .glass-card {
-            background: linear-gradient(135deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%);
-            backdrop-filter: blur(10px);
-            border: 1px solid var(--card-border);
-            border-radius: 16px;
-            padding: 20px;
-            margin-bottom: 16px;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .header {
-            text-align: center;
-            margin-bottom: 24px;
-        }
-        .header h1 {
-            color: var(--gold);
-            font-size: 24px;
-            margin-bottom: 4px;
-        }
-        
-        .btn {
-            background: linear-gradient(135deg, var(--gold), var(--gold-2));
-            color: #000;
-            font-weight: 600;
-            padding: 14px 20px;
-            border-radius: 12px;
-            border: none;
-            width: 100%;
-            font-size: 16px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            transition: opacity 0.2s;
-        }
-        .btn:active { opacity: 0.8; }
-        
-        .btn-outline {
-            background: rgba(229, 207, 142, 0.1);
-            border: 1px solid var(--gold);
-            color: var(--gold);
-        }
-        
-        .input-field {
-            width: 100%;
-            padding: 14px;
-            border-radius: 12px;
-            background: rgba(255,255,255,0.05);
-            border: 1px solid rgba(255,255,255,0.1);
-            color: #fff;
-            margin-bottom: 16px;
-            font-size: 16px;
-            font-family: inherit;
-        }
-        .input-field:focus {
-            outline: none;
-            border-color: var(--gold);
-        }
-        
-        /* Bottom Navigation */
-        .bottom-nav {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: rgba(10, 10, 12, 0.95);
-            backdrop-filter: blur(20px);
-            border-top: 1px solid var(--card-border);
-            display: flex;
-            justify-content: space-around;
-            padding: 12px 0;
-            padding-bottom: calc(12px + env(safe-area-inset-bottom));
-            z-index: 1000;
-        }
-        
-        .nav-item {
-            text-align: center;
-            color: rgba(255,255,255,0.5);
-            text-decoration: none;
-            font-size: 12px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 4px;
-            padding: 8px 16px;
-            border-radius: 12px;
-            transition: all 0.2s;
-            cursor: pointer;
-        }
-        
-        .nav-item.active {
-            color: var(--gold);
-            background: rgba(229, 207, 142, 0.1);
-        }
-        
-        .nav-icon {
-            font-size: 24px;
-        }
-        
-        /* Typography */
-        .text-gold { color: var(--gold); }
-        .text-sm { font-size: 13px; opacity: 0.7; }
-        .text-xs { font-size: 11px; opacity: 0.5; }
-        .font-bold { font-weight: 600; }
-        
-        /* Margin & Padding utilities */
-        .mb-2 { margin-bottom: 8px; }
-        .mb-4 { margin-bottom: 16px; }
-        .mt-2 { margin-top: 8px; }
-        .mt-4 { margin-top: 16px; }
-        .flex { display: flex; }
-        .justify-between { justify-content: space-between; }
-        .items-center { align-items: center; }
-        .gap-2 { gap: 8px; }
-        
-        /* Badges */
-        .badge {
-            display: inline-block;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 12px;
-            font-weight: 600;
-        }
-        .badge-pending { background: rgba(245, 158, 11, 0.2); color: #fbbf24; }
-        
-        /* Map */
-        #map-container {
-            height: 350px;
-            width: 100%;
-            border-radius: 12px;
-            margin-bottom: 16px;
-            z-index: 1;
-        }
-        
-        /* QR Scanner */
-        #qr-reader {
-            width: 100%;
-            border-radius: 16px;
-            overflow: hidden;
-            border: 2px solid var(--gold);
-        }
-        
-        /* Toast Notification */
-        #toast {
-            position: fixed;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%) translateY(-100px);
-            background: rgba(18, 18, 20, 0.95);
-            backdrop-filter: blur(10px);
-            border: 1px solid var(--gold);
-            padding: 12px 24px;
-            border-radius: 24px;
-            z-index: 2000;
-            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            font-weight: 500;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
-        }
-        #toast.show {
-            transform: translateX(-50%) translateY(0);
-        }
-        
-        .loading-spinner {
-            border: 3px solid rgba(255,255,255,0.1);
-            border-radius: 50%;
-            border-top: 3px solid var(--gold);
-            width: 24px;
-            height: 24px;
-            animation: spin 1s linear infinite;
-            margin: 20px auto;
-        }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        
-        .empty-state {
-            text-align: center;
-            padding: 40px 20px;
-            color: rgba(255,255,255,0.5);
-        }
-    </style>
-</head>
-<body>
+    <link rel="manifest" href="manifest.json">
+    <meta property="og:title" content="LEO SUSHI — Vietnamesische Küche, modern & elegant">
+    <meta property="og:description" content="Moderne vietnamesische Küche in Berlin. Reservieren Sie jetzt.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.leo-sushi-berlin.de/">
 
-    <!-- Toast Notification -->
-    <div id="toast">Benachrichtigung</div>
-
-    <!-- Screen 1: Login -->
-    <div id="screen-login" class="screen">
-        <div class="header" style="margin-top: 40px;">
-            <h1>LEO SUSHI</h1>
-            <p class="text-sm">Liefersystem</p>
-        </div>
-        
-        <div class="glass-card">
-            <h3 class="mb-4">Fahrer-Login</h3>
-            <input type="text" id="login-name" class="input-field" placeholder="Dein Name" autocomplete="name">
-            <select id="login-branch" class="input-field" style="margin-bottom: 15px; background: rgba(255,255,255,0.05); color: #fff; appearance: auto;">
-                <option value="branch_flora" style="color: #000;">Filiale 1 (Florastraße 10A)</option>
-                <option value="branch_haupt" style="color: #000;">Filiale 2 (Hauptstraße 29a)</option>
-            </select>
-            <input type="password" id="login-passcode" class="input-field" placeholder="Sicherheitscode">
-            <button class="btn" onclick="app.login()">Anmelden</button>
-        </div>
-    </div>
-
-    <!-- Screen 2: Dashboard (Đơn chờ giao) -->
-    <div id="screen-dashboard" class="screen">
-        <div class="header">
-            <h2>Offene Lieferungen</h2>
-            <p class="text-sm">Nach unten ziehen zum Aktualisieren</p>
-        </div>
-        
-        <div id="dashboard-orders">
-            <div class="loading-spinner"></div>
-        </div>
-    </div>
-
-    <!-- Screen 3: QR Scanner -->
-    <div id="screen-scanner" class="screen">
-        <div class="header">
-            <h2>QR-Code scannen</h2>
-            <p class="text-sm">Kamera auf den Code auf der Rechnung richten</p>
-        </div>
-        
-        <div class="glass-card" style="padding: 0; background: transparent;">
-            <div id="qr-reader"></div>
-        </div>
-        
-        <button class="btn btn-outline mt-4" onclick="app.switchTab('dashboard')">Abbrechen & Zurück</button>
-    </div>
-
-    <!-- Screen 4: Active Delivery (Đang giao) -->
-    <div id="screen-active" class="screen">
-        <div class="header">
-            <h2>Aktive Lieferung</h2>
-        </div>
-        
-        <div id="active-delivery-content">
-            <div class="empty-state">Keine aktive Lieferung</div>
-        </div>
-    </div>
-
-    <!-- Screen 5: History -->
-    <div id="screen-history" class="screen">
-        <div class="header">
-            <h2>Lieferhistorie</h2>
-            <p class="text-sm">Heute abgeschlossen</p>
-        </div>
-        
-        <div id="history-orders">
-            <div class="loading-spinner"></div>
-        </div>
-    </div>
-
-    <!-- Bottom Navigation -->
-    <div id="bottom-nav" class="bottom-nav" style="display: none;">
-        <div class="nav-item" data-target="dashboard" onclick="app.switchTab('dashboard')">
-            <span class="nav-icon">📋</span>
-            <span>Offen</span>
-        </div>
-        <div class="nav-item" data-target="scanner" onclick="app.switchTab('scanner')">
-            <span class="nav-icon">📷</span>
-            <span>QR-Scan</span>
-        </div>
-        <div class="nav-item" data-target="active" onclick="app.switchTab('active')">
-            <span class="nav-icon">🚚</span>
-            <span>Aktiv</span>
-        </div>
-        <div class="nav-item" data-target="history" onclick="app.switchTab('history')">
-            <span class="nav-icon">📊</span>
-            <span>Historie</span>
-        </div>
-    </div>
-
-    <!-- Scripts -->
-    <!-- Leaflet JS -->
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-    <!-- HTML5 QR Code -->
-    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
-
+    <meta property="og:image" content="assets/logo.png">
+    <link rel="icon" href="assets/logo.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=Inter:wght@300;400;600&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="styles.css?v=20260824_v50">
+    <link rel="stylesheet" href="styles-luxe.css?v=20260824_v50">
+    <link rel="stylesheet" href="menu-order.css?v=20260824_v50">
+    <link rel="stylesheet" href="css/mobile-app.css?v=20260824_v54">
+    <script src="js/app-mode-gate.js?v=20260824_v51"></script>
+    <!-- Leaflet CSS for OpenStreetMap -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <!-- API Configuration -->
     <script>
-        const app = {
-            state: {
-                shipperName: localStorage.getItem('shipper_name') || '',
-                shipperBranch: localStorage.getItem('shipper_branch') || 'branch_flora',
-                currentMapUrl: null,
-                passcode: localStorage.getItem('shipper_passcode') || '',
-                currentTab: 'login',
-                orders: [],
-                activeOrder: null, // order currently being delivered
-                history: [],
-                refreshInterval: null,
-                locationWatchId: null,
-                map: null,
-                mapMarkers: {},
-                mapRoute: null,
-                qrScanner: null
-            },
-            
-            // Utility: Get Base URL
-            getBaseURL() {
-                const isCapacitor = window.Capacitor !== undefined || !!window.webkit?.messageHandlers?.capacitor;
-                const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-                
-                let baseUrl = '/api/';
-                if (isCapacitor || (!isLocal && window.location.protocol === 'file:')) {
-                    baseUrl = 'https://www.leo-sushi-berlin.de/api/';
-                }
-                return baseUrl;
-            },
-            
-            // Utility: API Call
-            async apiCall(endpoint, method = 'GET', body = null) {
-                // Always append passcode to URL to avoid header stripping issues
-                const separator = endpoint.includes('?') ? '&' : '?';
-                const url = this.getBaseURL() + endpoint + (this.state.passcode ? `${separator}passcode=${encodeURIComponent(this.state.passcode)}` : '');
-                
-                const options = {
-                    method,
-                    headers: {
-                        'X-Shipper-Passcode': this.state.passcode
-                    }
-                };
-                
-                if (body) {
-                    options.headers['Content-Type'] = 'application/json';
-                    options.body = JSON.stringify(body);
-                }
-                
-                try {
-                    const response = await fetch(url, options);
-                    const data = await response.json();
-                    if (!response.ok) throw new Error(data.error || 'API Error');
-                    return data;
-                } catch (error) {
-                    console.error('API Error:', error);
-                    throw error;
-                }
-            },
-            
-            // UI Utilities
-            showToast(msg) {
-                const toast = document.getElementById('toast');
-                toast.textContent = msg;
-                toast.classList.add('show');
-                setTimeout(() => toast.classList.remove('show'), 3000);
-            },
-            
-            switchTab(tabId) {
-                // Stop QR scanner if navigating away
-                if (this.state.qrScanner && this.state.qrScanner.isScanning && tabId !== 'scanner') {
-                    this.state.qrScanner.stop().catch(console.error);
-                }
-                
-                // Hide all screens
-                document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-                
-                // Show target screen
-                document.getElementById(`screen-${tabId}`).classList.add('active');
-                
-                // Update bottom nav
-                if (tabId !== 'login') {
-                    document.getElementById('bottom-nav').style.display = 'flex';
-                    document.querySelectorAll('.nav-item').forEach(item => {
-                        item.classList.toggle('active', item.dataset.target === tabId);
-                    });
-                } else {
-                    document.getElementById('bottom-nav').style.display = 'none';
-                }
-                
-                this.state.currentTab = tabId;
-                
-                // Trigger tab-specific actions
-                if (tabId === 'dashboard') this.fetchOrders();
-                if (tabId === 'history') this.fetchHistory();
-                if (tabId === 'scanner') this.startScanner();
-                if (tabId === 'active') this.renderActiveDelivery();
-            },
-            
-            // Init
-            init() {
-                console.log('📦 Giao Hàng App Init');
-                
-                // Check for ?scan= URL parameter
-                const urlParams = new URLSearchParams(window.location.search);
-                const scanId = urlParams.get('scan');
-                if (scanId) {
-                    this.pendingScan = scanId;
-                    // Clean up URL so it doesn't rescan on refresh
-                    window.history.replaceState({}, document.title, window.location.pathname);
-                }
+        // API base URL is auto-detected by js/api.js from current location
+        // Only override for localhost development
+        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+            window.API_BASE_URL = window.location.origin + (window.location.pathname.includes('/leosushi') ? '/leosushi/api' : '/api');
+            window.API_PHP_BASE_URL = window.API_BASE_URL;
+        }
+        // Production: js/api.js will auto-detect HTTPS and correct path
+    </script>
+    <!-- EmailJS for sending order emails -->
+    <script async type="text/javascript"
+        src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+    <!-- PayPal SDK -->
+    <script async
+        src="https://www.paypal.com/sdk/js?client-id=AVX7OWzjn1GaFrih0WfAIBFScH66UYxBTAdMiB9WcUCOWUDX4msBREdpRdxgJiRQpiN0ExswysrQNL-K&currency=EUR&locale=de_DE&enable-funding=card&disable-funding=venmo,paylater"></script>
 
-                if (this.state.passcode && this.state.shipperName) {
-                    if (this.pendingScan) {
-                        this.acceptOrder(this.pendingScan);
-                        this.pendingScan = null;
-                    } else {
-                        // Restore active delivery if any, and prefetch dashboard orders in parallel
-                        Promise.all([
-                            this.apiCall(`orders.php?action=get-active-deliveries&branch_id=${this.state.shipperBranch}`),
-                            this.apiCall(`orders.php?action=list&status=confirmed&branch_id=${this.state.shipperBranch}`)
-                        ]).then(([activeData, confirmedData]) => {
-                            // Find any delivery by this shipper
-                            const active = (activeData.orders || []).find(o => {
-                                try {
-                                    const sum = typeof o.summary === 'string' ? JSON.parse(o.summary) : o.summary;
-                                    return sum && sum.shipper_name === this.state.shipperName;
-                                } catch(e) { return false; }
-                            });
-                            
-                            if (active) {
-                                this.state.activeOrder = active;
-                                this.switchTab('active');
-                            } else {
-                                // Prevent fetchOrders from making a redundant network call by injecting data
-                                this.cachedDashboardData = confirmedData;
-                                this.switchTab('dashboard');
-                            }
-                        })
-                        .catch(e => {
-                            console.error('Failed to init dashboard', e);
-                            this.switchTab('dashboard');
-                        });
-                    }
-                } else {
-                    this.switchTab('login');
-                }
-                
-                // Setup auto-refresh for dashboard
-                setInterval(() => {
-                    // Only poll if dashboard is visible and tab is active
-                    if (this.state.currentTab === 'dashboard' && !document.hidden) {
-                        this.fetchOrders(true);
-                    }
-                }, 10000);
-            },
-            
-            // Screen 1: Login
-            async login() {
-                const name = document.getElementById('login-name').value.trim();
-                const pass = document.getElementById('login-passcode').value.trim();
-                const branchEl = document.getElementById('login-branch');
-                const branch = branchEl ? branchEl.value : 'branch_flora';
-                
-                if (!name || !pass) {
-                    return this.showToast('Bitte alle Felder ausfüllen');
-                }
-                
-                try {
-                    // Test credentials by fetching orders
-                    this.state.passcode = pass;
-                    await this.apiCall(`orders.php?action=list&status=confirmed&branch_id=${branch}`);
-                    
-                    // Success
-                    this.state.shipperName = name;
-                    this.state.shipperBranch = branch;
-                    localStorage.setItem('shipper_name', name);
-                    localStorage.setItem('shipper_branch', branch);
-                    localStorage.setItem('shipper_passcode', pass);
-                    
-                    this.showToast(`Willkommen ${name}`);
-                    this.switchTab('dashboard');
-                } catch (err) {
-                    this.state.passcode = '';
-                    if (err.message && (err.message.includes('Failed to fetch') || err.message.includes('NetworkError') || err.message.includes('network'))) {
-                        this.showToast('Netzwerkfehler! Bitte WLAN/4G prüfen.');
-                    } else {
-                        this.showToast('Falscher Sicherheitscode!');
-                    }
-                }
-            },
-            
-            // Screen 2: Dashboard
-            async fetchOrders(silent = false) {
-                if (!silent) {
-                    document.getElementById('dashboard-orders').innerHTML = '<div class="loading-spinner"></div>';
-                }
-                
-                try {
-                    let data;
-                    if (this.cachedDashboardData) {
-                        data = this.cachedDashboardData;
-                        this.cachedDashboardData = null; // Use only once
-                    } else {
-                        data = await this.apiCall(`orders.php?action=list&status=confirmed&branch_id=${this.state.shipperBranch}`);
-                    }
-                    let html = '';
-                    
-                    // Filter for delivery only
-                    const deliveryOrders = (data.orders || []).filter(o => o.service_type === 'delivery');
-                    
-                    // Optimization: Skip re-rendering if data hasn't changed
-                    const ordersHash = JSON.stringify(deliveryOrders);
-                    if (silent && this.lastOrdersHash === ordersHash) {
-                        return; // No changes
-                    }
-                    this.lastOrdersHash = ordersHash;
-                    
-                    if (deliveryOrders.length === 0) {
-                        html = '<div class="empty-state">Keine offenen Lieferungen</div>';
-                    } else {
-                        deliveryOrders.forEach(order => {
-                            let itemsText = 'N/A';
-                            let addressText = 'N/A';
-                            let customerName = 'Kunde';
-                            let customerPhone = '';
-                            try { 
-                                const summary = typeof order.summary === 'string' ? JSON.parse(order.summary) : (order.summary || {});
-                                itemsText = summary.items_count ? `${summary.items_count} Artikel` : ''; 
-                            } catch(e){}
-                            try { 
-                                const addr = typeof order.delivery_address === 'string' ? JSON.parse(order.delivery_address) : (order.delivery_address || {});
-                                addressText = `${addr.street || ''} ${addr.house_number || ''}, ${addr.postal || ''} ${addr.city || ''}`;
-                                customerName = [addr.first_name, addr.last_name].filter(Boolean).join(' ') || 'Kunde';
-                                customerPhone = addr.phone || '';
-                            } catch(e){}
-                            
-                            const orderId = order.order_id || order.id || '';
-                            html += `
-                                <div class="glass-card">
-                                    <div class="flex justify-between items-center mb-2">
-                                        <span class="font-bold text-gold" style="font-size: 18px;">#${orderId.slice(-6).toUpperCase()}</span>
-                                        <span class="text-xs">${itemsText}</span>
-                                    </div>
-                                    <div class="mb-2">👤 ${customerName} • ${customerPhone}</div>
-                                    <div class="mb-4 text-sm">📍 ${addressText}</div>
-                                    
-                                    <div class="flex gap-2">
-                                        <button class="btn btn-outline" style="flex: 1" onclick="app.switchTab('scanner')">📷 QR-Scan</button>
-                                        <button class="btn" style="flex: 1" onclick="app.acceptOrder('${orderId}')">Annehmen</button>
-                                    </div>
-                                </div>
-                            `;
-                        });
-                    }
-                    
-                    document.getElementById('dashboard-orders').innerHTML = html;
-                    
-                } catch (err) {
-                    if (err.message.includes('401') || err.message.includes('Sicherheitscode')) {
-                        this.logout();
-                    }
-                    document.getElementById('dashboard-orders').innerHTML = '<div class="empty-state">Fehler: ' + (err.message || 'Netzwerk-/Analysefehler') + '</div>';
-                }
-            },
-            
-            async acceptOrder(orderId) {
-                try {
-                    this.showToast('Bestellung wird angenommen...');
-                    
-                    // Fire API call
-                    const result = await this.apiCall('orders.php?action=accept-delivery', 'POST', {
-                        order_id: orderId,
-                        shipper_name: this.state.shipperName
-                    });
-                    
-                    if (result.order) {
-                        this.state.activeOrder = result.order;
-                    } else if (result.success) {
-                        // Fallback: fetch order details
-                        const data = await this.apiCall(`orders.php?action=get&order_id=${orderId}`);
-                        if (data.order) {
-                            this.state.activeOrder = data.order;
-                        }
-                    }
-                    
-                    if (this.state.activeOrder) {
-                        this.showToast('Bestellung angenommen! 🚚');
-                        this.switchTab('active');
-                    } else {
-                        this.showToast('Fehler: Bestelldaten nicht verfügbar');
-                        this.switchTab('dashboard');
-                    }
-                    
-                } catch (err) {
-                    this.showToast('Fehler: ' + (err.message || 'Bestellung konnte nicht angenommen werden'));
-                }
-            },
-            
-            // Screen 3: QR Scanner
-            async startScanner() {
-                if (this.state.qrScanner) {
-                    try { await this.state.qrScanner.stop(); } catch(e) {}
-                    this.state.qrScanner.clear();
-                }
-                
-                this.state.qrScanner = new Html5Qrcode("qr-reader");
-                const config = { fps: 10, qrbox: { width: 250, height: 250 }, aspectRatio: 1.0 };
-                
-                this.state.qrScanner.start(
-                    { facingMode: "environment" },
-                    config,
-                    (decodedText, decodedResult) => {
-                        // success
-                        this.state.qrScanner.stop().catch(console.error);
-                        this.handleQRScan(decodedText);
-                    },
-                    (errorMessage) => {
-                        // ignore background scanning errors
-                    }
-                ).catch(err => {
-                    console.error("Kamerafehler:", err);
-                    this.showToast("Kamera konnte nicht geöffnet werden");
+    <!-- Capacitor Detection & Early App Styling -->
+    <script>
+        (function () {
+            const isCapacitor = (window.Capacitor && window.Capacitor.isNativePlatform()) ||
+                window.location.search.includes('mock-app') ||
+                localStorage.getItem('leo_mock_app') === 'true';
+            if (isCapacitor) {
+                document.documentElement.classList.add('is-capacitor-app');
+                // Also add to body as soon as it exists
+                document.addEventListener('DOMContentLoaded', function () {
+                    document.body.classList.add('is-capacitor-app');
                 });
-            },
-            
-            handleQRScan(text) {
-                console.log('Scanned:', text);
-                // Expected format: URL with ?scan= or leosushi://delivery/{order_id} or just order_id
-                let orderId = text;
-                if (text.startsWith('leosushi://delivery/')) {
-                    orderId = text.split('/').pop();
-                } else if (text.includes('delivery.html?scan=')) {
-                    try {
-                        // Use current origin as base to handle relative URLs
-                        const url = new URL(text, window.location.origin);
-                        orderId = url.searchParams.get('scan') || orderId;
-                    } catch(e) {
-                        // Fallback: extract scan param with regex
-                        const match = text.match(/[?&]scan=([^&]+)/);
-                        if (match) orderId = decodeURIComponent(match[1]);
-                    }
-                } else if (text.includes('?scan=')) {
-                    const match = text.match(/[?&]scan=([^&]+)/);
-                    if (match) orderId = decodeURIComponent(match[1]);
-                }
-                
-                if (orderId) {
-                    this.acceptOrder(orderId);
-                } else {
-                    this.showToast("Ungültiger QR-Code");
-                    this.switchTab('dashboard');
-                }
-            },
-            
-            // Screen 4: Active Delivery
-            async renderActiveDelivery() {
-                const order = this.state.activeOrder;
-                const container = document.getElementById('active-delivery-content');
-                
-                if (!order) {
-                    container.innerHTML = '<div class="empty-state">Keine aktive Lieferung</div>';
-                    this.stopLocationTracking();
-                    return;
-                }
-                
-                let addressText = 'N/A';
-                let rawAddress = {};
-                try { 
-                    rawAddress = typeof order.delivery_address === 'string' ? JSON.parse(order.delivery_address) : (order.delivery_address || {});
-                    addressText = `${rawAddress.street || ''}, ${rawAddress.postal || ''} ${rawAddress.city || ''}`;
-                } catch(e){}
-                
-                let destinationQuery = encodeURIComponent(addressText);
-                let mapUrl = `https://www.google.com/maps/dir/?api=1&destination=${destinationQuery}`;
-                // Store mapUrl for the navigate button
-                this.state.currentMapUrl = mapUrl;
-                
-                const activeOrderId = order.order_id || order.id || '';
-                const customerName = [rawAddress.first_name, rawAddress.last_name].filter(Boolean).join(' ') || 'Kunde';
-                const customerPhone = rawAddress.phone || '';
-                
-                container.innerHTML = `
-                    <div class="glass-card mb-4">
-                        <div class="flex justify-between items-center mb-4">
-                            <span class="font-bold text-gold" style="font-size: 20px;">#${activeOrderId.slice(-6).toUpperCase()}</span>
-                            <span class="badge badge-pending">Unterwegs</span>
-                        </div>
-                        
-                        <div id="map-container"></div>
-                        
-                        <div class="mb-4">
-                            <div class="font-bold mb-2">👤 Kunde</div>
-                            <div class="mb-2">${customerName}</div>
-                            <div class="text-gold mb-2"><a href="tel:${customerPhone}" class="text-gold" style="text-decoration:none">📞 ${customerPhone}</a></div>
-                        </div>
-                        
-                        <div class="mb-4">
-                            <div class="font-bold mb-2">📍 Lieferadresse</div>
-                            <div class="text-sm">${addressText}</div>
-                        </div>
-                        
-                        <div class="flex gap-2">
-                            <button class="btn btn-outline" style="flex: 1; text-align: center;" onclick="app.openNavigation()">🧭 Navigation</button>
-                            <button class="btn btn-outline" style="flex: 1; text-align: center;" onclick="app.showRouteOnMap()">🗺️ Route</button>
-                            <button class="btn" style="flex: 1" onclick="app.completeDelivery('${activeOrderId}')">✅ Geliefert</button>
-                        </div>
-                        
-                    </div>
-                `;
-                
-                // Init map slightly after render
-                setTimeout(() => this.initMap(rawAddress), 100);
-                
-                // Start tracking
-                this.startLocationTracking(activeOrderId);
-            },
-            
-            initMap(customerAddress) {
-                if (this.state.map) {
-                    this.state.map.remove();
-                }
-                
-                const mapEl = document.getElementById('map-container');
-                if (!mapEl) return;
-                
-                this.state.map = L.map('map-container').setView([52.5659, 13.3970], 13);
-                
-                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                    maxZoom: 19,
-                    attribution: '© OSM'
-                }).addTo(this.state.map);
-                
-                // We'll add markers when location updates
-                this.geocodeAndAddCustomerMarker(customerAddress);
-            },
-            
-            // Simple in-memory cache for geocoded addresses to reduce external API dependency
-            addressGeocodeCache: {},
-            
-            async geocodeAndAddCustomerMarker(address) {
-                if (!address.street) return;
-                const query = `${address.street}, ${address.postal || ''} ${address.city || ''}`;
-                
-                try {
-                    let lat, lng;
-                    if (this.addressGeocodeCache[query]) {
-                        lat = this.addressGeocodeCache[query].lat;
-                        lng = this.addressGeocodeCache[query].lng;
-                    } else {
-                        const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1&email=contact@leosushi.de`);
-                        const data = await res.json();
-                        if (data && data.length > 0) {
-                            lat = parseFloat(data[0].lat);
-                            lng = parseFloat(data[0].lon);
-                            this.addressGeocodeCache[query] = {lat, lng};
-                        }
-                    }
-                    
-                    if (lat && lng) {
-                        
-                        const icon = L.divIcon({
-                            className: 'customer-marker',
-                            html: '<div style="background: #3b82f6; width: 24px; height: 24px; border-radius: 50%; border: 2px solid white; display: flex; align-items: center; justify-content: center; font-size: 12px;">📍</div>',
-                            iconSize: [24, 24]
-                        });
-                        
-                        this.state.mapMarkers.customer = L.marker([lat, lng], {icon}).addTo(this.state.map);
-                        this.state.map.setView([lat, lng], 14);
-                    }
-                } catch(e) {
-                    console.error('Geocode err', e);
-                }
-            },
-            
-            startLocationTracking(orderId) {
-                this.stopLocationTracking();
-                
-                if ("geolocation" in navigator) {
-                    this.state.locationWatchId = navigator.geolocation.watchPosition(
-                        (position) => {
-                            const lat = position.coords.latitude;
-                            const lng = position.coords.longitude;
-                            
-                            // Update map
-                            this.updateShipperMarker(lat, lng);
-                            
-                            // Send to API
-                            this.apiCall('orders.php?action=update-location', 'POST', {
-                                order_id: orderId,
-                                lat: lat,
-                                lng: lng
-                            }).catch(console.error);
-                        },
-                        (err) => console.error("GPS error", err),
-                        { enableHighAccuracy: true, maximumAge: 10000, timeout: 5000 }
-                    );
-                }
-            },
-            
-            async showRouteOnMap() {
-                if (!this.state.map) return;
-                
-                const shipperMarker = this.state.mapMarkers.shipper;
-                const customerMarker = this.state.mapMarkers.customer;
-                
-                if (!shipperMarker) {
-                    this.showToast('GPS-Position wird ermittelt, bitte warten...');
-                    return;
-                }
-                if (!customerMarker) {
-                    this.showToast('Kundenadresse konnte nicht georeferenziert werden.');
-                    return;
-                }
-                
-                const sLatLng = shipperMarker.getLatLng();
-                const cLatLng = customerMarker.getLatLng();
-                
-                try {
-                    const res = await fetch(`https://router.project-osrm.org/route/v1/driving/${sLatLng.lng},${sLatLng.lat};${cLatLng.lng},${cLatLng.lat}?overview=full&geometries=geojson`);
-                    const data = await res.json();
-                    
-                    if (data.routes && data.routes.length > 0) {
-                        if (this.state.mapRoute) {
-                            this.state.map.removeLayer(this.state.mapRoute);
-                        }
-                        
-                        const routeCoords = data.routes[0].geometry.coordinates.map(c => [c[1], c[0]]);
-                        this.state.mapRoute = L.polyline(routeCoords, {
-                            color: '#3b82f6',
-                            weight: 5,
-                            opacity: 0.8,
-                            dashArray: '10, 10',
-                            lineCap: 'round'
-                        }).addTo(this.state.map);
-                        
-                        // Show distance and ETA
-                        const distKm = (data.routes[0].distance / 1000).toFixed(1);
-                        const etaMin = Math.ceil(data.routes[0].duration / 60);
-                        this.showToast(`📍 ${distKm} km — ca. ${etaMin} Min.`);
-                        
-                        this.state.map.fitBounds(this.state.mapRoute.getBounds(), { padding: [30, 30] });
-                    }
-                } catch(e) {
-                    console.error('Routing err', e);
-                    this.showToast('Route konnte nicht geladen werden');
-                }
-            },
-            
-            stopLocationTracking() {
-                if (this.state.locationWatchId !== null) {
-                    navigator.geolocation.clearWatch(this.state.locationWatchId);
-                    this.state.locationWatchId = null;
-                }
-            },
-            
-            updateShipperMarker(lat, lng) {
-                if (!this.state.map) return;
-                
-                if (this.state.mapMarkers.shipper) {
-                    this.state.mapMarkers.shipper.setLatLng([lat, lng]);
-                } else {
-                    const icon = L.divIcon({
-                        className: 'shipper-marker',
-                        html: '<div style="background: #10b981; width: 28px; height: 28px; border-radius: 50%; border: 2px solid white; display: flex; align-items: center; justify-content: center; font-size: 14px;">🚚</div>',
-                        iconSize: [28, 28]
-                    });
-                    this.state.mapMarkers.shipper = L.marker([lat, lng], {icon}).addTo(this.state.map);
-                    
-                    // Auto-draw route when shipper position is first acquired
-                    if (this.state.mapMarkers.customer) {
-                        this.showRouteOnMap();
-                    }
-                }
-            },
-            
-            async completeDelivery(orderId) {
-                if (!confirm('Lieferung als abgeschlossen markieren?')) return;
-                
-                try {
-                    this.showToast('Wird aktualisiert...');
-                    await this.apiCall('orders.php?action=complete-delivery', 'POST', {
-                        order_id: orderId,
-                        shipper_name: this.state.shipperName
-                    });
-                    
-                    this.showToast('Lieferung abgeschlossen! 🎉');
-                    this.state.activeOrder = null;
-                    this.stopLocationTracking();
-                    this.switchTab('dashboard');
-                } catch (err) {
-                    this.showToast('Fehler: ' + err.message);
-                }
-            },
-            
-            // Screen 5: History
-            async fetchHistory() {
-                document.getElementById('history-orders').innerHTML = '<div class="loading-spinner"></div>';
-                
-                try {
-                    const data = await this.apiCall(`orders.php?action=list&status=completed&branch_id=${this.state.shipperBranch}`);
-                    
-                    // Filter history to today and for this shipper if backend supports it.
-                    // For now just show recent completed.
-                    const deliveries = (data.orders || []).filter(o => o.service_type === 'delivery').slice(0, 20); // show last 20
-                    
-                    if (deliveries.length === 0) {
-                        document.getElementById('history-orders').innerHTML = '<div class="empty-state">Noch keine Lieferhistorie</div>';
-                        return;
-                    }
-                    
-                    let html = '';
-                    deliveries.forEach(order => {
-                        const date = new Date(order.created_at).toLocaleString('de-DE');
-                        const historyOrderId = order.order_id || order.id || '';
-                        let historyCustomerName = 'Kunde';
-                        try {
-                            const addr = typeof order.delivery_address === 'string' ? JSON.parse(order.delivery_address) : (order.delivery_address || {});
-                            historyCustomerName = [addr.first_name, addr.last_name].filter(Boolean).join(' ') || 'Kunde';
-                        } catch(e) {}
-                        html += `
-                            <div class="glass-card mb-2" style="padding: 12px 16px;">
-                                <div class="flex justify-between items-center">
-                                    <div class="font-bold text-gold">#${historyOrderId.slice(-6).toUpperCase()}</div>
-                                    <div class="text-xs">${date}</div>
-                                </div>
-                                <div class="text-sm mt-2">👤 ${historyCustomerName}</div>
-                            </div>
-                        `;
-                    });
-                    
-                    document.getElementById('history-orders').innerHTML = html;
-                } catch (err) {
-                    document.getElementById('history-orders').innerHTML = '<div class="empty-state">Verbindungsfehler</div>';
-                }
-            },
-            openNavigation() {
-                const url = this.state.currentMapUrl;
-                if (!url) {
-                    this.showToast('Keine Adresse für Navigation vorhanden');
-                    return;
-                }
-                // Open Google Maps externally (not inside WebView)
-                // Try Capacitor Browser plugin first, then fallback to window.open
-                if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Browser) {
-                    window.Capacitor.Plugins.Browser.open({ url: url });
-                } else {
-                    // window.open with _system opens the system browser/app on Android WebView
-                    // _blank also works and is the standard fallback
-                    const opened = window.open(url, '_system');
-                    if (!opened) {
-                        window.open(url, '_blank');
-                    }
-                }
-            },
-            
-            logout() {
-                localStorage.removeItem('shipper_name');
-                localStorage.removeItem('shipper_passcode');
-                localStorage.removeItem('shipper_branch');
-                this.state.passcode = '';
-                this.state.shipperName = '';
-                this.switchTab('login');
             }
-        };
+        })();
+    </script>
+</head>
 
-        // Initialize app when DOM is loaded
-        document.addEventListener('DOMContentLoaded', () => {
-            app.init();
-            
-            // Register Service Worker for PWA
-            if ('serviceWorker' in navigator) {
-                navigator.serviceWorker.register('/shipper-sw.js')
-                .then(() => console.log('Shipper Service Worker Registered'));
+<body>
+    <!-- Intro/Loading Screen -->
+    <div class="intro-screen" id="introScreen">
+        <div class="intro-background">
+            <div class="intro-gradient-orb orb-1"></div>
+            <div class="intro-gradient-orb orb-2"></div>
+            <div class="intro-gradient-orb orb-3"></div>
+        </div>
+        <div class="intro-particles">
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+        </div>
+        <div class="intro-sparkles">
+            <span class="sparkle">✨</span>
+            <span class="sparkle">✨</span>
+            <span class="sparkle">✨</span>
+            <span class="sparkle">✨</span>
+            <span class="sparkle">✨</span>
+            <span class="sparkle">✨</span>
+        </div>
+        <div class="intro-content">
+            <div class="intro-logo-wrapper">
+                <div class="logo-ring ring-1"></div>
+                <div class="logo-ring ring-2"></div>
+                <div class="logo-ring ring-3"></div>
+                <img src="assets/logo.png" alt="LEO SUSHI" class="intro-logo" loading="lazy" width="256" height="256">
+            </div>
+            <div class="intro-text">
+                <h1 class="intro-title">LEO SUSHI</h1>
+                <p class="intro-subtitle">Premium Vietnamesische Küche</p>
+            </div>
+            <div class="intro-loader">
+                <div class="loader-line"></div>
+                <div class="loader-glow"></div>
+            </div>
+        </div>
+    </div>
+
+    <header class="site-header">
+        <div class="container nav">
+            <a class="brand" href="#home">
+                <img src="assets/logo.png" alt="LEO SUSHI" class="brand-logo" loading="lazy" width="256" height="256">
+                <span class="brand-name">LEO SUSHI</span>
+            </a>
+            <nav id="primaryNav" class="menu" role="navigation" aria-label="Hauptnavigation">
+                <a href="menu.html" id="menuLink">Menü</a>
+                <a href="#about">Über uns</a>
+                <a href="#reviews">Bewertungen</a>
+                <a href="#contact">Kontakt</a>
+                <a href="reservation.html" style="color: var(--gold); font-weight: 600;">Reservieren</a>
+                <!-- Auth Links (shown when not logged in) -->
+                <div class="auth-links" id="authLinks">
+                    <a href="#" onclick="event.preventDefault(); openAuthModal('login');"
+                        class="auth-link login-link">Anmelden</a>
+                    <a href="#" onclick="event.preventDefault(); openAuthModal('register');"
+                        class="auth-link register-link">Registrieren</a>
+                </div>
+                <!-- User Menu (shown when logged in) -->
+                <div class="user-menu-wrapper" id="userMenuWrapper" style="display: none;">
+                    <button class="notification-toggle" id="notificationToggle" aria-label="Benachrichtigungen">
+                        <span class="notification-icon">🔔</span>
+                        <span class="notification-badge" id="notificationBadge" style="display: none;">0</span>
+                    </button>
+                    <div class="user-menu">
+                        <button class="user-menu-toggle" id="userMenuToggle" aria-label="Benutzermenü">
+                            <span class="user-menu-avatar">👤</span>
+                            <span class="user-menu-name" id="userNameDisplay">Mein Profil</span>
+                            <span class="user-menu-chevron">▼</span>
+                        </button>
+                        <div class="user-menu-dropdown" id="userMenuDropdown">
+                            <a href="profile.html#orders" class="payment-option">
+                                <div class="payment-icon">📦</div>
+                                <div class="payment-text">
+                                    <div class="payment-title">Meine Bestellungen</div>
+                                </div>
+                            </a>
+                            <a href="profile.html#reservations" class="payment-option">
+                                <div class="payment-icon">📅</div>
+                                <div class="payment-text">
+                                    <div class="payment-title">Meine Reservierungen</div>
+                                </div>
+                            </a>
+                            <a href="profile.html#points" class="payment-option">
+                                <div class="payment-icon">⭐</div>
+                                <div class="payment-text">
+                                    <div class="payment-title">Treuepunkte</div>
+                                </div>
+                            </a>
+                            <a href="profile.html#settings" class="payment-option">
+                                <div class="payment-icon">⚙️</div>
+                                <div class="payment-text">
+                                    <div class="payment-title">Einstellungen</div>
+                                </div>
+                            </a>
+                            <div style="border-top: 1px solid rgba(255,255,255,0.1); margin: 8px 0;"></div>
+                            <button id="logoutBtn" class="payment-option" style="color: #ff6b6b; width: 100%;">
+                                <div class="payment-icon"
+                                    style="color: #ff6b6b; border-color: rgba(255,107,107,0.2); background: rgba(255,107,107,0.1);">
+                                    🚪</div>
+                                <div class="payment-text">
+                                    <div class="payment-title" style="color: #ff6b6b;">Abmelden</div>
+                                </div>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+
+                <button class="cart-toggle" id="cartToggle" aria-label="Warenkorb">
+                    <span class="cart-icon">🛒</span>
+                    <span class="cart-badge" id="cartBadge">0</span>
+                </button>
+            </nav>
+            <button class="burger" aria-label="Menü öffnen" id="burger" aria-controls="primaryNav"
+                aria-expanded="false">
+                <span></span><span></span><span></span>
+            </button>
+        </div>
+    </header>
+
+    <main>
+        <!-- NATIVE APP IMMERSIVE SUPER DASHBOARD (Visible in Mobile App Mode Only) -->
+        <div id="appNativeDashboard" class="app-native-dashboard">
+            <!-- App Header: Delivery Location + Quick Search + Cart -->
+            <div class="app-topbar">
+                <div class="app-location-pill" onclick="window.toggleAppBranchModal()" role="button" tabindex="0" aria-label="Filiale oder Lieferadresse wählen">
+                    <span class="app-loc-icon">📍</span>
+                    <div class="app-loc-text">
+                        <span class="app-loc-label">STANDORT / FILIALE</span>
+                        <span class="app-loc-val" id="appSelectedBranch">Filiale wählen</span>
+                    </div>
+                    <span class="app-loc-chevron">▼</span>
+                </div>
+                <div class="app-topbar-actions">
+                    <button type="button" class="app-icon-btn" onclick="window.toggleAppSearch()" aria-label="Gerichte durchsuchen">
+                        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                    </button>
+                    <button type="button" class="app-icon-btn app-top-cart-btn" onclick="window.openAppCartModal()" aria-label="Warenkorb öffnen">
+                        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
+                        <span class="app-top-cart-badge" id="appTopCartBadge" style="display: none;">0</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Service Mode Selector (Lieferung vs Abholung) -->
+            <div class="app-service-toggle">
+                <button type="button" class="app-service-tab active" id="appTabDelivery" onclick="window.setAppServiceMode('delivery')">
+                    <span class="app-tab-icon">🛵</span>
+                    <span class="app-tab-title">Lieferung</span>
+                    <span class="app-tab-time">(ca. 35-45m)</span>
+                </button>
+                <button type="button" class="app-service-tab" id="appTabPickup" onclick="window.setAppServiceMode('pickup')">
+                    <span class="app-tab-icon">🛍️</span>
+                    <span class="app-tab-title">Abholung</span>
+                    <span class="app-tab-time">(ca. 15-20m)</span>
+                </button>
+            </div>
+
+            <!-- Search Bar (Collapsible/Expandable) -->
+            <div class="app-search-wrap" id="appSearchWrap" style="display: none;">
+                <input type="text" id="appSearchInput" class="app-search-input" placeholder="Sushi, Maki, Bowls, Menüs suchen..." oninput="window.handleAppSearchInput(this.value)">
+                <button type="button" id="appSearchClear" class="app-search-clear" onclick="window.clearAppSearch()" aria-label="Suche löschen">✕</button>
+            </div>
+
+            <!-- VIP & Special Deals Luxury Member Card -->
+            <div class="app-vip-hero">
+                <div class="app-vip-hero-glow"></div>
+                <div class="app-vip-hero-watermark">🍣</div>
+
+                <!-- Top Row: Greeting & VIP Tier -->
+                <div class="app-vip-top-row">
+                    <div class="app-vip-user-section">
+                        <div class="app-vip-greeting-pill" id="appGreetingText">
+                            <span class="app-greeting-dot"></span>
+                            <span>Guten Tag ✨</span>
+                        </div>
+                        <div class="app-vip-name" id="appVipUserName">Willkommen bei LEO SUSHI</div>
+                    </div>
+                    <div class="app-vip-tier-badge" id="appVipTierBadge">
+                        <div class="app-tier-icon">👑</div>
+                        <div class="app-tier-info">
+                            <span class="app-tier-title">VIP CLUB</span>
+                            <span class="app-tier-subtitle" id="appHeroPointsText">Mitglied</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bottom Promo / Voucher Ticket -->
+                <div class="app-vip-promo-card">
+                    <div class="app-promo-left">
+                        <div class="app-promo-tag">
+                            <span class="app-promo-percent">-10%</span>
+                        </div>
+                        <div class="app-promo-info">
+                            <div class="app-promo-heading">App-Willkommensrabatt</div>
+                            <div class="app-promo-code-box">
+                                <span>Code:</span>
+                                <span class="app-promo-code-val">APP10</span>
+                                <span class="app-promo-subhint">• Für Deine Bestellung</span>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="button" class="app-promo-action-btn" onclick="window.applyAppVoucher('APP10')" aria-label="Gutschein APP10 einlösen">
+                        <span>Einlösen</span>
+                        <span class="app-promo-arrow">➔</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Category Filter Pills (Horizontal Scroll) -->
+            <div class="app-category-pills-wrap" id="appCategoryPills">
+                <button type="button" class="app-cat-pill active" data-cat="all" onclick="window.selectAppCategory('all')">✨ Alle Gerichte</button>
+                <button type="button" class="app-cat-pill" data-cat="bestseller" onclick="window.selectAppCategory('bestseller')">🔥 Meistbestellt</button>
+                <button type="button" class="app-cat-pill" data-cat="specialrolls" onclick="window.selectAppCategory('specialrolls')">🍣 Special Rolls</button>
+                <button type="button" class="app-cat-pill" data-cat="sushimenu" onclick="window.selectAppCategory('sushimenu')">🍱 Sushi Sets</button>
+                <button type="button" class="app-cat-pill" data-cat="nigirimaki" onclick="window.selectAppCategory('nigirimaki')">🍙 Nigiri & Maki</button>
+                <button type="button" class="app-cat-pill" data-cat="warmekueche" onclick="window.selectAppCategory('warmekueche')">🍜 Warme Küche</button>
+                <button type="button" class="app-cat-pill" data-cat="bowls" onclick="window.selectAppCategory('bowls')">🥗 Bowls & Salate</button>
+                <button type="button" class="app-cat-pill" data-cat="vorspeisen" onclick="window.selectAppCategory('vorspeisen')">🥟 Vorspeisen</button>
+                <button type="button" class="app-cat-pill" data-cat="drinks" onclick="window.selectAppCategory('drinks')">🍹 Drinks & Desserts</button>
+            </div>
+
+            <!-- Section Title with Counter -->
+            <div class="app-section-title" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+                <span id="appMenuSectionTitle">🔥 Meistbestellt &amp; empfohlen</span>
+                <span id="appItemCountBadge" style="font-size: 11px; font-weight: 700; color: var(--app-gold); background: rgba(229,207,142,0.12); border: 1px solid rgba(229,207,142,0.25); padding: 3px 8px; border-radius: 12px;">30+ Gerichte</span>
+            </div>
+
+            <!-- Interactive 2-Column Food Grid -->
+            <div class="app-food-grid" id="appFoodGrid">
+                <!-- Dynamically populated & interactive -->
+            </div>
+
+            <!-- Quick Action Grid -->
+            <div class="app-section-title" style="margin-top: 10px;">
+                <span>Schnellzugriff & Services</span>
+            </div>
+            <div class="app-quick-grid">
+                <a href="menu.html" class="app-grid-tile">
+                    <span class="app-tile-icon">🍣</span>
+                    <div>
+                        <div class="app-tile-title">Große Speisekarte</div>
+                        <div class="app-tile-subtitle">Vollständige Karte</div>
+                    </div>
+                </a>
+                <a href="reservation.html" class="app-grid-tile">
+                    <span class="app-tile-icon">📅</span>
+                    <div>
+                        <div class="app-tile-title">Tisch Reservieren</div>
+                        <div class="app-tile-subtitle">Tisch vorbestellen</div>
+                    </div>
+                </a>
+                <a href="points.html" class="app-grid-tile">
+                    <span class="app-tile-icon">⭐</span>
+                    <div>
+                        <div class="app-tile-title">Treuepunkte</div>
+                        <div class="app-tile-subtitle">Prämien einlösen</div>
+                    </div>
+                </a>
+                <a href="profile.html" class="app-grid-tile">
+                    <span class="app-tile-icon">👤</span>
+                    <div>
+                        <div class="app-tile-title">VIP Profil</div>
+                        <div class="app-tile-subtitle">Gutscheine & Daten</div>
+                    </div>
+                </a>
+            </div>
+        </div>
+
+        <!-- WEB ONLY LANDING CONTENT (Hidden in Mobile App Mode) -->
+        <div id="webLandingContent">
+        <section id="home" class="hero-luxe">
+            <div class="hero-backdrop">
+                <div class="hero-backdrop-overlay"></div>
+                <img src="assets/bua-tiec-shushi.webp" alt="Leo Sushi Atmosphere" class="hero-backdrop-img"
+                    loading="lazy" width="1024" height="1536">
+            </div>
+            <div class="hero-ambient-effects">
+                <div class="ambient-glow ambient-glow-1"></div>
+                <div class="ambient-glow ambient-glow-2"></div>
+                <div class="ambient-particles">
+                    <span class="particle"></span>
+                    <span class="particle"></span>
+                    <span class="particle"></span>
+                    <span class="particle"></span>
+                    <span class="particle"></span>
+                </div>
+            </div>
+            <div class="container wide hero-content">
+                <div class="hero-main">
+                    <div class="hero-badge-top">
+                        <span class="badge-icon">✨</span>
+                        <span>Berlin · Premium Vietnamesische Küche</span>
+                    </div>
+                    <h1 class="hero-title-luxe">
+                        <span class="hero-title-line">Wo Genuss</span>
+                        <span class="hero-title-line">zum Erlebnis wird</span>
+                    </h1>
+                    <p class="hero-description-luxe">
+                        Moderne vietnamesische Haute Cuisine, die Tradition und Innovation vereint.
+                        Jede Kreation wird mit Hingabe komponiert – für Momente, die bleiben.
+                    </p>
+                    <div class="hero-actions">
+                        <a class="btn-luxe btn-luxe-primary" href="menu.html" id="heroMenuLink">
+                            <span class="btn-luxe-text">Online Bestellen</span>
+                            <svg class="btn-luxe-icon" width="20" height="20" viewBox="0 0 20 20" fill="none">
+                                <path d="M4 10H16M16 10L11 5M16 10L11 15" stroke="currentColor" stroke-width="2"
+                                    stroke-linecap="round" stroke-linejoin="round" />
+                            </svg>
+                        </a>
+                        <a class="btn-luxe btn-luxe-ghost" href="reservation.html">
+                            <span class="btn-luxe-text">Tisch Reservieren</span>
+                            <svg class="btn-luxe-icon" width="20" height="20" viewBox="0 0 20 20" fill="none">
+                                <path d="M4 10H16M16 10L11 5M16 10L11 15" stroke="currentColor" stroke-width="2"
+                                    stroke-linecap="round" stroke-linejoin="round" />
+                            </svg>
+                        </a>
+                    </div>
+                    <div class="hero-stats-grid">
+                        <div class="hero-stat-card">
+                            <div class="stat-icon">⭐</div>
+                            <div class="stat-content">
+                                <div class="stat-value">4.9</div>
+                                <div class="stat-label">Google Rating</div>
+                            </div>
+                        </div>
+                        <div class="hero-stat-card">
+                            <div class="stat-icon">🏆</div>
+                            <div class="stat-content">
+                                <div class="stat-value">5+</div>
+                                <div class="stat-label">Jahre Exzellenz</div>
+                            </div>
+                        </div>
+                        <div class="hero-stat-card">
+                            <div class="stat-icon">💎</div>
+                            <div class="stat-content">
+                                <div class="stat-value">98%</div>
+                                <div class="stat-label">Stammgäste</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="hero-featured">
+                    <div class="hero-featured-card">
+                        <div class="featured-card-image">
+                            <img src="assets/close-up-sushi-served-table 1.webp" alt="Signature Sushi" loading="eager"
+                                fetchpriority="high" width="1920" height="1920">
+                            <div class="featured-card-badge">
+                                <span class="badge-dot"></span>
+                                <span>Signature Collection</span>
+                            </div>
+                        </div>
+                        <div class="featured-card-body">
+                            <h3 class="featured-card-title">Handverlesene Kreationen</h3>
+                            <p class="featured-card-desc">Jedes Gericht ein Meisterwerk – komponiert aus
+                                Premium-Zutaten, serviert mit Leidenschaft.</p>
+                            <div class="featured-card-tags">
+                                <span class="featured-tag">Fresh Daily</span>
+                                <span class="featured-tag">Premium Cuts</span>
+                                <span class="featured-tag">Handcrafted</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="hero-scroll-indicator">
+                <div class="scroll-indicator-line"></div>
+                <span class="scroll-indicator-text">Scrollen Sie</span>
+            </div>
+        </section>
+
+        <div class="divider" aria-hidden="true">
+            <svg viewBox="0 0 1440 90" preserveAspectRatio="none" role="img">
+                <path
+                    d="M0,64L80,80C160,96,320,128,480,117.3C640,107,800,53,960,42.7C1120,32,1280,64,1360,80L1440,96L1440,0L1360,0C1280,0,1120,0,960,0C800,0,640,0,480,0C320,0,160,0,80,0L0,0Z"
+                    fill="currentColor" />
+            </svg>
+        </div>
+
+        <section id="gallery" class="gallery-luxe section-luxe">
+            <div class="container wide">
+                <header class="section-header-luxe text-center">
+                    <div class="section-eyebrow">
+                        <span class="eyebrow-icon">📸</span>
+                        <span>Visual Journey</span>
+                    </div>
+                    <h2 class="section-title-luxe">Gallery</h2>
+                    <p class="section-desc-luxe">Tauchen Sie ein in die Welt unserer kulinarischen Kreationen – von der
+                        Zubereitung bis zur eleganten Präsentation.</p>
+                </header>
+                <div class="gallery-luxe-scroller" id="galleryScroller">
+                    <!-- Images will be dynamically injected by script.js -->
+                </div>
+            </div>
+        </section>
+
+        <section id="about" class="about-luxe-premium section-luxe">
+            <div class="about-premium-bg">
+                <div class="about-bg-pattern"></div>
+                <div class="about-bg-glow"></div>
+                <div class="about-bg-glow about-bg-glow-2"></div>
+                <div class="about-grid-pattern"></div>
+                <div class="about-floating-elements">
+                    <span class="float-element float-element-1">🌸</span>
+                    <span class="float-element float-element-2">🍃</span>
+                    <span class="float-element float-element-3">✨</span>
+                    <span class="float-element float-element-4">🌸</span>
+                    <span class="float-element float-element-5">🍃</span>
+                    <span class="float-element float-element-6">✨</span>
+                </div>
+                <div class="about-particles-bg">
+                    <span class="bg-particle"></span>
+                    <span class="bg-particle"></span>
+                    <span class="bg-particle"></span>
+                    <span class="bg-particle"></span>
+                    <span class="bg-particle"></span>
+                    <span class="bg-particle"></span>
+                    <span class="bg-particle"></span>
+                    <span class="bg-particle"></span>
+                </div>
+                <div class="about-wave-effect"></div>
+            </div>
+            <div class="container wide">
+                <div class="about-premium-header">
+                    <div class="section-eyebrow">
+                        <span class="eyebrow-icon">🏮</span>
+                        <span>Unsere Geschichte</span>
+                    </div>
+                    <h2 class="about-premium-title">
+                        <span class="title-line title-line-1">From Mother</span>
+                        <span class="title-divider">|</span>
+                        <span class="title-line title-line-2">From Sisters</span>
+                    </h2>
+                    <p class="about-premium-subtitle">Eine kulinarische Reise durch Generationen von Leidenschaft,
+                        Tradition und Innovation</p>
+                </div>
+
+                <div class="about-premium-content">
+                    <div class="about-story-main">
+                        <div class="story-visual-grid">
+                            <div class="story-image-primary">
+                                <div class="story-image-wrapper">
+                                    <img src="assets/498665275_17863755624399871_7773501872179564451_n 1.webp"
+                                        alt="Tradition trifft Innovation" loading="lazy" decoding="async" width="1920"
+                                        height="1920">
+                                    <div class="story-image-frame"></div>
+                                    <div class="story-image-overlay"></div>
+                                    <div class="story-image-quote">
+                                        <svg class="quote-icon" width="48" height="48" viewBox="0 0 24 24" fill="none">
+                                            <path
+                                                d="M3 21C3 17.4 5.4 15 9 15C13.2 15 16.5 11.7 16.5 7.5C16.5 3.3 13.2 0 9 0C4.8 0 1.5 3.3 1.5 7.5C1.5 8.4 1.65 9.25 1.9 10.05C0.9 11.25 0 12.15 0 15C0 17.85 0.75 21 3 21Z"
+                                                fill="currentColor" opacity="0.3" />
+                                        </svg>
+                                        <p class="quote-text">Tradition trifft Innovation</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="story-image-secondary">
+                                <div class="story-image-small">
+                                    <img src="assets/526755952_122145800660617493_8652643431098218812_n.webp"
+                                        alt="Handwerk" loading="lazy" width="1638" height="2047">
+                                    <div class="story-image-label">
+                                        <span class="label-dot"></span>
+                                        <span>Handwerk</span>
+                                    </div>
+                                </div>
+                                <div class="story-image-small">
+                                    <img src="assets/dsc06551_master.webp" alt="Präzision" loading="lazy" width="1920"
+                                        height="1275">
+                                    <div class="story-image-label">
+                                        <span class="label-dot"></span>
+                                        <span>Präzision</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="story-content-main">
+                            <div class="story-intro">
+                                <p class="story-intro-text">Unsere Küche ist eine Hommage an Generationen kulinarischer
+                                    Exzellenz. Wir verbinden traditionelle Rezepturen mit zeitgemäßer Finesse – jedes
+                                    Gericht ein Balance-Akt zwischen Respekt und Innovation.</p>
+                            </div>
+
+                            <div class="story-values-grid">
+                                <div class="story-value-card">
+                                    <div class="value-card-header">
+                                        <div class="value-icon-wrapper">
+                                            <span class="value-icon">✨</span>
+                                            <div class="value-icon-glow"></div>
+                                        </div>
+                                        <div class="value-number">01</div>
+                                    </div>
+                                    <h3 class="value-title">Meisterliches Handwerk</h3>
+                                    <p class="value-desc">Jede Kreation wird mit höchster Präzision und Hingabe
+                                        gefertigt. Unsere Köche verbringen Jahre damit, die Kunst der vietnamesischen
+                                        Küche zu perfektionieren.</p>
+                                </div>
+
+                                <div class="story-value-card">
+                                    <div class="value-card-header">
+                                        <div class="value-icon-wrapper">
+                                            <span class="value-icon">🌿</span>
+                                            <div class="value-icon-glow"></div>
+                                        </div>
+                                        <div class="value-number">02</div>
+                                    </div>
+                                    <h3 class="value-title">Saisonale Frische</h3>
+                                    <p class="value-desc">Wir arbeiten ausschließlich mit Zutaten der Saison – für
+                                        maximalen Geschmack und Nachhaltigkeit. Frisch, lokal und verantwortungsvoll.
+                                    </p>
+                                </div>
+
+                                <div class="story-value-card">
+                                    <div class="value-card-header">
+                                        <div class="value-icon-wrapper">
+                                            <span class="value-icon">🎯</span>
+                                            <div class="value-icon-glow"></div>
+                                        </div>
+                                        <div class="value-number">03</div>
+                                    </div>
+                                    <h3 class="value-title">Perfekt Komponiert</h3>
+                                    <p class="value-desc">Jede Geschmacksnuance wird sorgfältig abgestimmt und
+                                        harmonisiert. Wie ein Orchester, bei dem jedes Instrument seine Rolle spielt.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="story-heritage-section">
+                        <div class="heritage-card">
+                            <div class="heritage-icon">🌸</div>
+                            <div class="heritage-content">
+                                <h3 class="heritage-title">Generationen der Leidenschaft</h3>
+                                <p class="heritage-text">Von der Großmutter, die in der Küche ihrer Heimat kochte, bis
+                                    zu den Schwestern, die diese Tradition in die Moderne tragen – unsere Geschichte ist
+                                    geprägt von Liebe zum Detail und Respekt vor den Zutaten.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="reviews" class="reviews-luxe-premium section-luxe">
+            <div class="reviews-premium-bg">
+                <div class="reviews-bg-pattern"></div>
+                <div class="reviews-bg-glow reviews-glow-1"></div>
+                <div class="reviews-bg-glow reviews-glow-2"></div>
+                <div class="reviews-stars-bg">
+                    <span class="star-bg">⭐</span>
+                    <span class="star-bg">⭐</span>
+                    <span class="star-bg">⭐</span>
+                    <span class="star-bg">⭐</span>
+                    <span class="star-bg">⭐</span>
+                </div>
+            </div>
+            <div class="container wide">
+                <div class="reviews-premium-header">
+                    <div class="section-eyebrow">
+                        <span class="eyebrow-icon">💬</span>
+                        <span>Gästestimmen</span>
+                    </div>
+                    <h2 class="reviews-premium-title">Was unsere Gäste sagen</h2>
+                    <p class="reviews-premium-subtitle">Authentische Bewertungen von unseren Kunden, die unsere
+                        Leidenschaft für exzellente Küche teilen. Jede Stimme ist ein Zeugnis unserer Hingabe.</p>
+                    <div class="reviews-stats-badge">
+                        <div class="stat-badge-item">
+                            <span class="stat-number">4.9</span>
+                            <span class="stat-stars">⭐⭐⭐⭐⭐</span>
+                        </div>
+                        <div class="stat-divider"></div>
+                        <div class="stat-badge-item">
+                            <span class="stat-label">Über</span>
+                            <span class="stat-value">1.200+</span>
+                            <span class="stat-label">Bewertungen</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="reviews-premium-grid" id="reviewsContainer">
+                    <!-- Reviews will be dynamically loaded here -->
+                    <div class="review-loading-premium">
+                        <div class="loading-spinner-premium">
+                            <div class="spinner-ring"></div>
+                            <div class="spinner-ring"></div>
+                            <div class="spinner-ring"></div>
+                        </div>
+                        <span>Lade Bewertungen...</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="contact" class="contact-ultimate section-luxe">
+            <div class="contact-bg-layers">
+                <div class="contact-bg-radial"></div>
+                <div class="contact-bg-grid"></div>
+                <div class="contact-bg-pattern"></div>
+                <div class="contact-bg-shimmer"></div>
+                <div class="contact-orb orb-1"></div>
+                <div class="contact-orb orb-2"></div>
+                <div class="contact-orb orb-3"></div>
+                <div class="contact-orb orb-4"></div>
+                <div class="contact-floating-elements">
+                    <div class="floating-shape shape-1"></div>
+                    <div class="floating-shape shape-2"></div>
+                    <div class="floating-shape shape-3"></div>
+                    <div class="floating-shape shape-4"></div>
+                </div>
+            </div>
+
+            <div class="contact-hero-section">
+                <div class="container">
+                    <div class="contact-hero-content">
+                        <div class="section-eyebrow">
+                            <span class="eyebrow-icon">📍</span>
+                            <span>Besuchen Sie uns</span>
+                        </div>
+                        <h2 class="contact-hero-title">Kontakt & Standort</h2>
+                        <p class="contact-hero-subtitle">Wir freuen uns auf Ihren Besuch in unserem Restaurant im Herzen
+                            von Berlin</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="contact-content-wrapper">
+                <div class="contact-map-compact">
+                    <div class="map-compact-wrapper">
+                        <div id="restaurantMap" class="map-compact-iframe"
+                            style="width: 100%; height: 100%; min-height: 400px; background: #1a1a1c url('assets/bua-tiec-shushi.webp') center/cover no-repeat; position: relative;">
+                            <!-- Placeholder content shown if map fails to load -->
+                            <div class="map-placeholder-info"
+                                style="position: absolute; bottom: 20px; left: 20px; right: 20px; background: rgba(0,0,0,0.8); padding: 15px; border-radius: 10px; border-left: 3px solid var(--gold); z-index: 1;">
+                                <div style="color: var(--gold); font-weight: 600; margin-bottom: 4px;">LEO SUSHI Berlin
+                                </div>
+                                <div style="font-size: 13px; opacity: 0.9;">Florastraße 10A, 13187 Berlin</div>
+                            </div>
+                        </div>
+                        <div class="map-compact-overlay" style="pointer-events: none;">
+                            <div class="map-compact-pin">
+                                <div class="pin-ripple-compact"></div>
+                                <div class="pin-core-compact">
+                                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+                                        <path
+                                            d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"
+                                            fill="currentColor" />
+                                    </svg>
+                                </div>
+                                <div class="pin-label-compact">LEO SUSHI</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="map-compact-address-bar">
+                        <div class="address-bar-content">
+                            <div class="address-bar-icon">📍</div>
+                            <div class="address-bar-text">
+                                <strong>Florastraße 10A</strong>
+                                <span>13187 Berlin, Deutschland</span>
+                            </div>
+                            <a href="https://www.openstreetmap.org/?mlat=52.5505&mlon=13.4304&zoom=16" target="_blank"
+                                rel="noopener" class="address-bar-link">
+                                <span>Route öffnen</span>
+                                <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
+                                    <path d="M4 10H16M16 10L11 5M16 10L11 15" stroke="currentColor" stroke-width="2"
+                                        stroke-linecap="round" stroke-linejoin="round" />
+                                </svg>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="contact-info-grid">
+                    <div class="contact-info-card card-address">
+                        <div class="info-card-decoration"></div>
+                        <div class="info-card-pattern"></div>
+                        <div class="info-card-glow"></div>
+                        <div class="info-card-shine"></div>
+                        <div class="info-card-header">
+                            <div class="info-card-icon">
+                                <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
+                                    <path
+                                        d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"
+                                        fill="currentColor" />
+                                </svg>
+                            </div>
+                            <h3 class="info-card-title">Standorte</h3>
+                        </div>
+                        <div class="info-card-body" style="display: flex; flex-direction: column; gap: 15px; text-align: left;">
+                            <div>
+                                <strong style="color: var(--gold); display: block; margin-bottom: 2px;">Filiale 1 (Florastraße):</strong>
+                                <span class="info-card-main" style="font-size: 14px; line-height: 1.4;">Florastraße 10A, 13187 Berlin</span>
+                            </div>
+                            <div style="border-top: 1px dashed rgba(255,255,255,0.1); padding-top: 10px;">
+                                <strong style="color: var(--gold); display: block; margin-bottom: 2px;">Filiale 2 (Hauptstraße):</strong>
+                                <span class="info-card-main" style="font-size: 14px; line-height: 1.4;">Hauptstraße 29a, 13158 Berlin</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="contact-info-card card-phone">
+                        <div class="info-card-decoration"></div>
+                        <div class="info-card-pattern"></div>
+                        <div class="info-card-glow"></div>
+                        <div class="info-card-shine"></div>
+                        <div class="info-card-header">
+                            <div class="info-card-icon">
+                                <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
+                                    <path
+                                        d="M20.01 15.38c-1.23 0-2.42-.2-3.53-.56-.35-.12-.74-.03-1.01.24l-1.57 1.97c-2.83-1.35-5.48-3.9-6.89-6.83l1.95-1.66c.27-.28.35-.67.24-1.02-.37-1.11-.56-2.3-.56-3.53 0-.54-.45-.99-.99-.99H4.19C3.65 3 3 3.24 3 3.99 3 13.28 10.73 21 20.01 21c.71 0 .99-.63.99-1.18v-3.45c0-.54-.45-.99-.99-.99z"
+                                        fill="currentColor" />
+                                </svg>
+                            </div>
+                            <h3 class="info-card-title">Telefon</h3>
+                        </div>
+                        <div class="info-card-body" style="display: flex; flex-direction: column; gap: 15px; text-align: left;">
+                            <div>
+                                <strong style="color: var(--gold); display: block; margin-bottom: 2px;">Filiale 1 (Florastraße):</strong>
+                                <a href="tel:03071055810" class="info-card-main info-link" style="font-size: 15px; font-weight: 600;">030 71055810</a>
+                            </div>
+                            <div style="border-top: 1px dashed rgba(255,255,255,0.1); padding-top: 10px;">
+                                <strong style="color: var(--gold); display: block; margin-bottom: 2px;">Filiale 2 (Hauptstraße):</strong>
+                                <a href="tel:03063912199" class="info-card-main info-link" style="font-size: 15px; font-weight: 600;">030 63912199</a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="contact-info-card card-email">
+                        <div class="info-card-decoration"></div>
+                        <div class="info-card-pattern"></div>
+                        <div class="info-card-glow"></div>
+                        <div class="info-card-shine"></div>
+                        <div class="info-card-header">
+                            <div class="info-card-icon">
+                                <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
+                                    <path
+                                        d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"
+                                        fill="currentColor" />
+                                </svg>
+                            </div>
+                            <h3 class="info-card-title">E-Mail</h3>
+                        </div>
+                        <div class="info-card-body">
+                            <a href="mailto:leosushi.service@gmail.com"
+                                class="info-card-main info-link">leosushi.service@gmail.com</a>
+                            <p class="info-card-sub">Wir antworten innerhalb von 24 Stunden</p>
+                        </div>
+                    </div>
+
+                    <div class="contact-info-card card-website">
+                        <div class="info-card-decoration"></div>
+                        <div class="info-card-pattern"></div>
+                        <div class="info-card-glow"></div>
+                        <div class="info-card-shine"></div>
+                        <div class="info-card-header">
+                            <div class="info-card-icon">
+                                <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
+                                    <path
+                                        d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zm6.93 6h-2.95c-.32-1.25-.78-2.45-1.38-3.56 1.84.63 3.37 1.91 4.33 3.56zM12 4.04c.83 1.2 1.48 2.53 1.91 3.96h-3.82c.43-1.43 1.08-2.76 1.91-3.96zM4.26 14C4.1 13.36 4 12.69 4 12s.1-1.36.26-2h3.38c-.08.66-.14 1.32-.14 2 0 .68.06 1.34.14 2H4.26zm.82 2h2.95c.32 1.25.78 2.45 1.38 3.56-1.84-.63-3.37-1.9-4.33-3.56zm2.95-8H5.08c.96-1.66 2.49-2.93 4.33-3.56C8.81 5.55 8.35 6.75 8.03 8zM12 19.96c-.83-1.2-1.48-2.53-1.91-3.96h3.82c-.43 1.43-1.08 2.76-1.91 3.96zM14.34 14H9.66c-.09-.66-.16-1.32-.16-2 0-.68.07-1.35.16-2h4.68c.09.65.16 1.32.16 2 0 .68-.07 1.34-.16 2zm.25 5.56c.6-1.11 1.06-2.31 1.38-3.56h2.95c-.96 1.65-2.49 2.93-4.33 3.56zM16.36 14c.08-.66.14-1.32.14-2 0-.68-.06-1.34-.14-2h3.38c.16.64.26 1.31.26 2s-.1 1.36-.26 2h-3.38z"
+                                        fill="currentColor" />
+                                </svg>
+                            </div>
+                            <h3 class="info-card-title">Website</h3>
+                        </div>
+                        <div class="info-card-body">
+                            <a href="https://www.leo-sushi-berlin.de/" target="_blank" rel="noopener"
+                                class="info-card-main info-link">www.leo-sushi-berlin.de</a>
+                            <p class="info-card-sub">Besuchen Sie unsere Website</p>
+                        </div>
+                    </div>
+
+                    <div class="contact-info-card card-hours">
+                        <div class="info-card-decoration"></div>
+                        <div class="info-card-pattern"></div>
+                        <div class="info-card-glow"></div>
+                        <div class="info-card-shine"></div>
+                        <div class="info-card-header">
+                            <div class="info-card-icon">
+                                <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
+                                    <path
+                                        d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"
+                                        fill="currentColor" />
+                                </svg>
+                            </div>
+                            <h3 class="info-card-title">Öffnungszeiten</h3>
+                        </div>
+                        <div class="info-card-body" style="display: flex; flex-direction: column; gap: 15px; text-align: left;">
+                            <div>
+                                <strong style="color: var(--gold); display: block; margin-bottom: 2px;">Filiale 1 (Florastraße):</strong>
+                                <span class="info-card-main" style="font-size: 14px;">Mo. – So.: 12:00 – 22:00</span>
+                            </div>
+                            <div style="border-top: 1px dashed rgba(255,255,255,0.1); padding-top: 10px;">
+                                <strong style="color: var(--gold); display: block; margin-bottom: 2px;">Filiale 2 (Hauptstraße):</strong>
+                                <span class="info-card-main" style="font-size: 14px;">Mo. – So.: 11:30 – 22:00</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="contact-actions-wrapper" style="display: flex; gap: 15px; flex-wrap: wrap; justify-content: center;">
+                    <a href="tel:03071055810" class="contact-btn-primary">
+                        <div class="btn-icon-wrapper">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                                <path
+                                    d="M20.01 15.38c-1.23 0-2.42-.2-3.53-.56-.35-.12-.74-.03-1.01.24l-1.57 1.97c-2.83-1.35-5.48-3.9-6.89-6.83l1.95-1.66c.27-.28.35-.67.24-1.02-.37-1.11-.56-2.3-.56-3.53 0-.54-.45-.99-.99-.99H4.19C3.65 3 3 3.24 3 3.99 3 13.28 10.73 21 20.01 21c.71 0 .99-.63.99-1.18v-3.45c0-.54-.45-.99-.99-.99z"
+                                    fill="currentColor" />
+                            </svg>
+                        </div>
+                        <div class="btn-content">
+                            <span class="btn-label">Anrufen Florastraße</span>
+                            <span class="btn-value">030 71055810</span>
+                        </div>
+                    </a>
+                    <a href="tel:03063912199" class="contact-btn-primary">
+                        <div class="btn-icon-wrapper">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                                <path
+                                    d="M20.01 15.38c-1.23 0-2.42-.2-3.53-.56-.35-.12-.74-.03-1.01.24l-1.57 1.97c-2.83-1.35-5.48-3.9-6.89-6.83l1.95-1.66c.27-.28.35-.67.24-1.02-.37-1.11-.56-2.3-.56-3.53 0-.54-.45-.99-.99-.99H4.19C3.65 3 3 3.24 3 3.99 3 13.28 10.73 21 20.01 21c.71 0 .99-.63.99-1.18v-3.45c0-.54-.45-.99-.99-.99z"
+                                    fill="currentColor" />
+                            </svg>
+                        </div>
+                        <div class="btn-content">
+                            <span class="btn-label">Anrufen Hauptstraße</span>
+                            <span class="btn-value">030 63912199</span>
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </section>
+        </div><!-- /#webLandingContent -->
+    </main>
+
+    <!-- Cart Sidebar -->
+    <div class="cart-sidebar" id="cartSidebar">
+        <div class="cart-header">
+            <h3>Warenkorb</h3>
+            <button class="cart-close" id="cartClose" aria-label="Warenkorb schließen">×</button>
+        </div>
+        <div class="cart-items" id="cartItems">
+            <div class="cart-empty">Ihr Warenkorb ist leer</div>
+        </div>
+        <div class="cart-footer">
+            <div class="cart-total">
+                <strong>Gesamt: <span id="cartTotal">€0,00</span></strong>
+            </div>
+            <div style="display: flex; gap: 10px; flex-direction: column;">
+                <button class="btn primary cart-checkout" id="checkoutBtn" disabled>💳 Zur Kasse</button>
+            </div>
+        </div>
+    </div>
+    <div class="cart-overlay" id="cartOverlay"></div>
+
+    <!-- Payment Method Modal -->
+    <div class="payment-modal" id="paymentModal">
+        <div class="payment-modal-content">
+            <div class="payment-modal-header">
+                <h3>Bestellung abschließen</h3>
+                <button class="payment-modal-close" onclick="closePaymentModal()" aria-label="Schließen">×</button>
+            </div>
+            <div class="payment-modal-body">
+                <!-- Service Type Selection -->
+                <div class="payment-section">
+                    <h4 class="payment-section-title">Service wählen</h4>
+                    <div class="service-type-options" style="display: flex; gap: 12px; flex-wrap: wrap;">
+                        <button type="button" class="service-type-btn active" data-service="delivery"
+                            onclick="selectServiceType('delivery')"
+                            style="flex: 1; min-width: 150px; padding: 16px; background: rgba(255,255,255,.05); border: 2px solid rgba(229,207,142,.2); border-radius: 12px; color: #fff; cursor: pointer; transition: all .3s;">
+                            <div style="font-size: 28px; margin-bottom: 10px;">🚴</div>
+                            <div style="font-weight: 600; margin-bottom: 6px; font-size: 16px;">Lieferung</div>
+                            <div style="font-size: 13px; opacity: .7;">Kostenlos innerhalb 5km</div>
+                        </button>
+                        <!-- Reservation button removed - use separate reservation modal instead (via cart button) -->
+                    </div>
+                </div>
+
+                <!-- Delivery Address Section -->
+                <div class="payment-section" id="deliveryAddressSection">
+                    <h4 class="payment-section-title">Kundendaten</h4>
+                    <div class="payment-form-row">
+                        <div class="payment-form-group">
+                            <label for="customerFirstName">Vorname *</label>
+                            <input type="text" id="customerFirstName" class="payment-input" placeholder="z.B. Max"
+                                required>
+                        </div>
+                        <div class="payment-form-group">
+                            <label for="customerLastName">Nachname *</label>
+                            <input type="text" id="customerLastName" class="payment-input" placeholder="z.B. Mustermann"
+                                required>
+                        </div>
+                    </div>
+                    <div class="payment-form-group">
+                        <label for="deliveryStreet">Straße & Hausnummer *</label>
+                        <div style="display: flex; gap: 8px;">
+                            <input type="text" id="deliveryStreet" class="payment-input"
+                                placeholder="z.B. Musterstraße 123" required style="flex: 1;">
+                            <button type="button" onclick="getCurrentLocation()"
+                                style="padding: 12px 16px; background: rgba(229,207,142,.1); border: 1px solid rgba(229,207,142,.3); border-radius: 8px; color: var(--gold); cursor: pointer; white-space: nowrap; font-size: 14px;"
+                                title="Aktuelle Position verwenden">
+                                📍
+                            </button>
+                        </div>
+                    </div>
+                    <div class="payment-form-row">
+                        <div class="payment-form-group">
+                            <label for="deliveryPostal">PLZ *</label>
+                            <input type="text" id="deliveryPostal" class="payment-input" placeholder="12345" required
+                                pattern="[0-9]{5}">
+                        </div>
+                        <div class="payment-form-group">
+                            <label for="deliveryCity">Stadt *</label>
+                            <input type="text" id="deliveryCity" class="payment-input" placeholder="Berlin" required>
+                        </div>
+                    </div>
+                    <div class="payment-form-group">
+                        <label for="deliveryNote">Zusätzliche Hinweise (optional)</label>
+                        <textarea id="deliveryNote" class="payment-textarea"
+                            placeholder="z.B. Klingel: Mustermann, 2. Stock, etc." rows="3"></textarea>
+                    </div>
+                    <div class="payment-section" id="orderTableStatusSection" style="display: none;">
+                        <h4 class="payment-section-title">Tischstatus</h4>
+                        <div id="orderTableStatusContainer">
+                            <p style="color: rgba(255,255,255,.7); text-align: center; padding: 20px;">
+                                Wird geprüft...
+                            </p>
+                        </div>
+                    </div>
+                    <div class="payment-form-group">
+                        <label for="customerPhone">Telefonnummer *</label>
+                        <input type="tel" id="customerPhone" class="payment-input" placeholder="z.B. 0176 12345678"
+                            required>
+                        <small
+                            style="color: rgba(255,255,255,.6); font-size: 12px; margin-top: 4px; display: block;">Für
+                            die Lieferung/Abholung/Reservierung benötigt</small>
+                    </div>
+                    <div class="payment-form-group">
+                        <label for="customerEmail">E-Mail-Adresse *</label>
+                        <input type="email" id="customerEmail" class="payment-input"
+                            placeholder="ihre.email@example.com" required>
+                        <small
+                            style="color: rgba(255,255,255,.6); font-size: 12px; margin-top: 4px; display: block;">Wir
+                            senden Ihnen eine Bestätigungs-E-Mail</small>
+                    </div>
+                    <div class="payment-form-group" id="scheduledDeliveryTimeGroup" style="display: none;">
+                        <label for="scheduledDeliveryTime">Gewünschte Lieferzeit (optional)</label>
+                        <div style="display: flex; gap: 8px; align-items: center;">
+                            <input type="date" id="scheduledDeliveryDate" class="payment-input"
+                                style="flex: 1; min-width: 0;">
+                            <input type="time" id="scheduledDeliveryTime" class="payment-input"
+                                style="flex: 1; min-width: 0;">
+                        </div>
+                        <small
+                            style="color: rgba(255,255,255,.6); font-size: 12px; margin-top: 4px; display: block;">Mindestens
+                            30 Minuten ab jetzt. Lassen Sie leer für sofortige Lieferung.</small>
+                        <div id="scheduledDeliveryTimeError"
+                            style="display: none; color: #ff6b6b; font-size: 12px; margin-top: 4px;"></div>
+                    </div>
+                </div>
+
+                <!-- Reservation Section removed - use separate reservation modal instead -->
+
+                <!-- Payment Method Section -->
+                <div class="payment-section">
+                    <h4 class="payment-section-title">Zahlungsmethode</h4>
+                    <div class="payment-options">
+                        <button class="payment-option" id="paymentOptionCash" onclick="selectPaymentOption('cash')">
+                            <div class="payment-icon">💵</div>
+                            <div class="payment-text">
+                                <div class="payment-title">Barzahlung</div>
+                                <div class="payment-subtitle">Bei Lieferung / Abholung</div>
+                            </div>
+                            <div class="payment-check">✓</div>
+                        </button>
+                        <button class="payment-option" id="paymentOptionCard" onclick="selectPaymentOption('card')">
+                            <div class="payment-icon">💳</div>
+                            <div class="payment-text">
+                                <div class="payment-title">Visa / Mastercard</div>
+                                <div class="payment-subtitle">Online-Zahlung per Karte</div>
+                            </div>
+                            <div class="payment-check">✓</div>
+                        </button>
+                        <button class="payment-option" id="paymentOptionPayPal" onclick="selectPaymentOption('paypal')">
+                            <div class="payment-icon">🅿️</div>
+                            <div class="payment-text">
+                                <div class="payment-title">PayPal</div>
+                                <div class="payment-subtitle">Online-Zahlung</div>
+                            </div>
+                            <div class="payment-check">✓</div>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Order Summary -->
+                <div class="payment-section payment-summary">
+                    <div class="payment-summary-row">
+                        <span>Zwischensumme:</span>
+                        <span id="paymentSubtotal">€0,00</span>
+                    </div>
+                    <div class="payment-summary-row">
+                        <span>Lieferung:</span>
+                        <span id="paymentDelivery">€2,50</span>
+                    </div>
+                    <div class="payment-summary-row payment-total">
+                        <span>Gesamt:</span>
+                        <span id="paymentTotal">€0,00</span>
+                    </div>
+                </div>
+            </div>
+            <div class="payment-modal-footer">
+                <button class="btn ghost" onclick="closePaymentModal()">Abbrechen</button>
+                <button class="btn primary" id="confirmPaymentBtn" onclick="confirmPayment()">Bestellung
+                    bestätigen</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reservation Modal -->
+    <div class="payment-modal" id="reservationModal">
+        <div class="payment-modal-content">
+            <div class="payment-modal-header">
+                <h3>Tisch reservieren</h3>
+                <button class="payment-modal-close" onclick="closeReservationModal()" aria-label="Schließen">×</button>
+            </div>
+            <div class="payment-modal-body">
+                <form id="reservationForm" onsubmit="handleReservation(event); return false;">
+                    <div class="payment-section">
+                        <h4 class="payment-section-title">Ihre Daten</h4>
+                        <div class="payment-form-row">
+                            <div class="payment-form-group">
+                                <label for="reserveFirstName">Vorname *</label>
+                                <input type="text" id="reserveFirstName" class="payment-input" placeholder="z.B. Max"
+                                    required>
+                            </div>
+                            <div class="payment-form-group">
+                                <label for="reserveLastName">Nachname *</label>
+                                <input type="text" id="reserveLastName" class="payment-input"
+                                    placeholder="z.B. Mustermann" required>
+                            </div>
+                        </div>
+                        <div class="payment-form-group">
+                            <label for="reservePhone">Telefonnummer *</label>
+                            <input type="tel" id="reservePhone" class="payment-input" placeholder="z.B. 0176 12345678"
+                                required>
+                        </div>
+                        <div class="payment-form-group">
+                            <label for="reserveEmail">E-Mail-Adresse *</label>
+                            <input type="email" id="reserveEmail" class="payment-input"
+                                placeholder="ihre.email@example.com" required>
+                            <small
+                                style="color: rgba(255,255,255,.6); font-size: 12px; margin-top: 4px; display: block;">Wir
+                                senden Ihnen eine Bestätigungs-E-Mail</small>
+                        </div>
+                    </div>
+
+                    <div class="payment-section">
+                        <h4 class="payment-section-title">Reservierungsdetails</h4>
+                        <div class="payment-form-row">
+                            <div class="payment-form-group">
+                                <label for="reserveDate">Datum *</label>
+                                <input type="date" id="reserveDate" class="payment-input" required>
+                            </div>
+                            <div class="payment-form-group">
+                                <label for="reserveTime">Uhrzeit *</label>
+                                <input type="time" id="reserveTime" class="payment-input" required>
+                            </div>
+                        </div>
+                        <div class="payment-form-group">
+                            <label for="reserveGuests">Anzahl Personen *</label>
+                            <input type="number" id="reserveGuests" class="payment-input" placeholder="z.B. 2" min="1"
+                                max="20" required>
+                        </div>
+                        <div class="payment-form-group">
+                            <label for="reserveNote">Besondere Wünsche (optional)</label>
+                            <textarea id="reserveNote" class="payment-textarea"
+                                placeholder="z.B. Fensterplatz, Geburtstagsfeier, etc." rows="3"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="payment-section" id="tableSelectionSection">
+                        <div id="tableSelectionContainer">
+                            <p style="color: rgba(255,255,255,.7); text-align: center; padding: 20px;">
+                                Bitte wählen Sie zuerst Datum und Uhrzeit, um die verfügbaren Tische zu sehen.
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Menu Selection Section -->
+                    <div class="payment-section">
+                        <h4 class="payment-section-title">Ausgewählte Gerichte (optional)</h4>
+                        <div id="reservationCartItems"
+                            style="min-height: 50px; max-height: 200px; overflow-y: auto; padding: 10px; background: rgba(255,255,255,.03); border-radius: 8px; margin-bottom: 10px;">
+                            <p style="color: rgba(255,255,255,.5); text-align: center; padding: 10px;">Noch keine
+                                Gerichte ausgewählt</p>
+                        </div>
+                        <button type="button" class="btn"
+                            style="width: 100%; background: rgba(229,207,142,.1); border: 1px solid rgba(229,207,142,.3); color: var(--gold);"
+                            onclick="openMenuForReservation()">
+                            + Gerichte aus Menü wählen
+                        </button>
+                    </div>
+                </form>
+            </div>
+            <div class="payment-modal-footer">
+                <button class="btn ghost" onclick="closeReservationModal()">Abbrechen</button>
+                <button class="btn primary"
+                    onclick="document.getElementById('reservationForm').dispatchEvent(new Event('submit'));">Reservierung
+                    bestätigen</button>
+            </div>
+        </div>
+    </div>
+    <div class="cart-overlay" id="reservationOverlay"></div>
+
+    <!-- Menu Book Page (Old - for reference) -->
+    <div class="menu-book-overlay" id="menuBookOverlay">
+        <div class="menu-book-container" id="menuBookContainer">
+            <button class="menu-book-close" id="menuBookClose" aria-label="Schließen">×</button>
+            <div class="book-wrapper">
+                <div class="book" id="menuBook">
+                    <!-- Book pages will be dynamically generated -->
+                </div>
+                <div class="book-controls">
+                    <button class="book-nav-btn prev-btn" id="bookPrevBtn" aria-label="Vorherige Seite">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M15 18L9 12L15 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round" />
+                        </svg>
+                    </button>
+                    <div class="book-page-indicator">
+                        <span id="currentPage">1</span> / <span id="totalPages">1</span>
+                    </div>
+                    <button class="book-nav-btn next-btn" id="bookNextBtn" aria-label="Nächste Seite">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M9 18L15 12L9 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Fixed Order Button (Modern Elegant Design) -->
+    <button class="fixed-order-btn" id="fixedOrderBtn" aria-label="Warenkorb">
+        <span class="order-btn-badge" id="orderBadge">0</span>
+        <div class="order-btn-content">
+            <div class="order-icon-wrapper">
+                <svg class="order-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path
+                        d="M7 18C5.9 18 5.01 18.9 5.01 20C5.01 21.1 5.9 22 7 22C8.1 22 9 21.1 9 20C9 18.9 8.1 18 7 18ZM1 2V4H3L6.6 11.59L5.25 14.04C5.09 14.32 5 14.65 5 15C5 16.1 5.9 17 7 17H19V15H7.42C7.28 15 7.17 14.89 7.17 14.75L7.2 14.63L8.1 13H15.55C16.3 13 16.96 12.59 17.3 11.97L20.88 5.48C20.96 5.34 21 5.17 21 5C21 4.45 20.55 4 20 4H5.21L4.27 2H1ZM17 18C15.9 18 15.01 18.9 15.01 20C15.01 21.1 15.9 22 17 22C18.1 22 19 21.1 19 20C19 18.9 18.1 18 17 18Z"
+                        fill="currentColor" />
+                </svg>
+            </div>
+            <span class="order-text">WARENKORB</span>
+            <div class="order-total" id="fixedOrderTotal">€0,00</div>
+        </div>
+    </button>
+
+    <!-- Note Modal -->
+    <div class="note-modal" id="noteModal">
+        <div class="note-modal-content">
+            <div class="note-modal-header">
+                <h3>Bestellung hinzufügen</h3>
+                <button class="note-modal-close" onclick="closeNoteModal()" aria-label="Schließen">×</button>
+            </div>
+            <div class="note-modal-body">
+                <div class="note-item-name" id="noteItemName"></div>
+                <div class="quantity-selector">
+                    <label for="quantityInput">Menge:</label>
+                    <div class="quantity-controls">
+                        <button class="qty-btn" onclick="changeQuantity(-1)">−</button>
+                        <input type="number" id="quantityInput" class="quantity-input" value="1" min="1" max="20">
+                        <button class="qty-btn" onclick="changeQuantity(1)">+</button>
+                    </div>
+                </div>
+                <textarea id="noteInput" class="note-input"
+                    placeholder="z.B. bitte scharf, ohne Zwiebeln, extra Sauce..." rows="4" maxlength="200"></textarea>
+                <div class="note-hint">Drücken Sie Esc zum Schließen</div>
+            </div>
+            <div class="note-modal-footer">
+                <div class="modal-total" id="modalTotal">€0,00</div>
+                <div class="modal-actions">
+                    <button class="btn ghost" onclick="closeNoteModal()">Abbrechen</button>
+                    <button class="btn primary" onclick="saveNote()">In den Warenkorb</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Auth Modal - Single modal with sliding forms -->
+    <div class="auth-modal" id="authModal">
+        <div class="auth-modal-content">
+            <div class="auth-modal-header">
+                <h3 id="authModalTitle">Willkommen zurück</h3>
+                <button class="auth-modal-close" onclick="closeAuthModal()" aria-label="Schließen">×</button>
+            </div>
+            <div class="auth-forms-container">
+                <!-- Login Form -->
+                <div class="auth-form-wrapper active" id="loginFormWrapper">
+                    <div class="auth-modal-body">
+                        <div class="auth-error-message" id="loginErrorMessage"></div>
+                        <form id="loginModalForm">
+                            <div class="auth-form-group">
+                                <label>E-Mail oder Telefonnummer <span class="auth-required">*</span></label>
+                                <input type="text" id="loginIdentifier" placeholder="E-Mail oder Telefonnummer">
+                                <div class="auth-info-text">Geben Sie Ihre E-Mail-Adresse oder Telefonnummer ein</div>
+                            </div>
+                            <div class="auth-form-group">
+                                <label>Passwort <span class="auth-required">*</span></label>
+                                <input type="password" id="loginPassword" required placeholder="Passwort">
+                            </div>
+                            <button type="submit" class="auth-btn-primary" id="loginModalBtn">
+                                Anmelden
+                            </button>
+                        </form>
+                        <div class="auth-switch-link" style="margin-top: 12px;">
+                            <a href="#" onclick="event.preventDefault(); switchAuthForm('forgot');">Passwort
+                                vergessen?</a>
+                        </div>
+                        <div class="auth-switch-link">
+                            Noch kein Konto? <a href="#"
+                                onclick="event.preventDefault(); switchAuthForm('register');">Jetzt registrieren</a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Register Form -->
+                <div class="auth-form-wrapper" id="registerFormWrapper">
+                    <div class="auth-modal-body">
+                        <div class="auth-error-message" id="registerErrorMessage"></div>
+                        <div class="auth-success-message" id="registerSuccessMessage"></div>
+                        <form id="registerModalForm">
+                            <div class="auth-form-group">
+                                <label>Vorname <span class="auth-required">*</span></label>
+                                <input type="text" id="registerFirstName" required placeholder="Ihr Vorname">
+                            </div>
+                            <div class="auth-form-group">
+                                <label>Nachname <span class="auth-required">*</span></label>
+                                <input type="text" id="registerLastName" required placeholder="Ihr Nachname">
+                            </div>
+                            <div class="auth-form-group">
+                                <label>E-Mail <span class="auth-required">*</span></label>
+                                <input type="email" id="registerEmail" required placeholder="ihre.email@beispiel.de">
+                            </div>
+                            <div class="auth-form-group">
+                                <label>Telefonnummer <span class="auth-required">*</span></label>
+                                <input type="tel" id="registerPhone" required placeholder="+49 123 456789">
+                            </div>
+                            <div class="auth-form-group">
+                                <label>Passwort <span class="auth-required">*</span></label>
+                                <input type="password" id="registerPassword" required minlength="6"
+                                    placeholder="Mindestens 6 Zeichen">
+                            </div>
+                            <div class="auth-form-group">
+                                <label>Passwort bestätigen <span class="auth-required">*</span></label>
+                                <input type="password" id="registerConfirmPassword" required minlength="6"
+                                    placeholder="Passwort erneut eingeben">
+                            </div>
+                            <div class="auth-form-group">
+                                <label>🎂 Geburtstag</label>
+                                <input type="date" id="registerBirthday" placeholder="Geburtsdatum">
+                                <small
+                                    style="color: rgba(255,255,255,0.6); font-size: 12px; margin-top: 4px; display: block;">Wir
+                                    senden Ihnen an Ihrem Geburtstag einen besonderen Gutschein!</small>
+                            </div>
+                            <div class="auth-form-group">
+                                <label>Straße</label>
+                                <input type="text" id="registerStreet" placeholder="Straße und Hausnummer">
+                            </div>
+                            <div class="auth-form-row">
+                                <div class="auth-form-group">
+                                    <label>PLZ</label>
+                                    <input type="text" id="registerPostal" placeholder="13187">
+                                </div>
+                                <div class="auth-form-group">
+                                    <label>Stadt</label>
+                                    <input type="text" id="registerCity" placeholder="Berlin">
+                                </div>
+                            </div>
+                            <button type="submit" class="auth-btn-primary" id="registerModalBtn">
+                                Registrieren
+                            </button>
+                        </form>
+                        <div class="auth-discount-badge hidden" id="registerDiscountBadge">
+                            <div class="auth-discount-title">📧 E-Mail-Bestätigung gesendet!</div>
+                            <div class="auth-discount-text">Bitte überprüfen Sie Ihr E-Mail-Postfach.</div>
+                        </div>
+
+                        <div class="auth-verify-section hidden" id="registerVerifySection">
+                            <div class="auth-verify-header">
+                                <div class="auth-verify-title">E-Mail bestätigen</div>
+                                <div class="auth-verify-subtitle">Geben Sie den Code aus der E-Mail ein, um Ihre
+                                    Registrierung abzuschließen.</div>
+                            </div>
+                            <div class="auth-verify-email" id="registerVerifyEmail"></div>
+                            <div class="auth-form-group auth-verify-group">
+                                <label>Verifizierungscode</label>
+                                <input type="text" id="registerVerifyCode" placeholder="Code aus der E-Mail">
+                            </div>
+                            <div class="auth-verify-actions">
+                                <button type="button" class="auth-btn-secondary" id="registerVerifyBtn">
+                                    Code bestätigen
+                                </button>
+                                <button type="button" class="auth-link-button" id="registerVerifyLaterBtn">
+                                    Später bestätigen
+                                </button>
+                            </div>
+                            <div class="auth-error-message" id="verifyErrorMessage"></div>
+                            <div class="auth-success-message" id="verifySuccessMessage"></div>
+                        </div>
+
+                        <div class="auth-switch-link">
+                            Bereits registriert? <a href="#"
+                                onclick="event.preventDefault(); switchAuthForm('login');">Jetzt anmelden</a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Forgot Password Form -->
+                <div class="auth-form-wrapper" id="forgotFormWrapper">
+                    <div class="auth-modal-body">
+                        <div class="auth-error-message" id="forgotErrorMessage"></div>
+                        <div class="auth-success-message" id="forgotSuccessMessage"></div>
+                        <form id="forgotPasswordForm">
+                            <div class="auth-form-group">
+                                <label>E-Mail <span class="auth-required">*</span></label>
+                                <input type="text" id="forgotIdentifier" required
+                                    placeholder="E-Mail oder Telefonnummer">
+                            </div>
+                            <button type="submit" class="auth-btn-primary" id="forgotPasswordBtn">
+                                Reset-Link senden
+                            </button>
+                        </form>
+                        <div class="auth-switch-link">
+                            <a href="#" onclick="event.preventDefault(); switchAuthForm('login');">Zurück zur
+                                Anmeldung</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Holiday Schedule Notification Modal -->
+    <div class="holiday-modal" id="holidayModal">
+        <div class="holiday-modal-content">
+            <button class="holiday-modal-close" id="holidayModalClose" aria-label="Schließen">×</button>
+            <div class="holiday-modal-background">
+                <div class="holiday-moon"></div>
+                <div class="holiday-stars">
+                    <span class="star"></span>
+                    <span class="star"></span>
+                    <span class="star"></span>
+                    <span class="star"></span>
+                    <span class="star"></span>
+                    <span class="star"></span>
+                    <span class="star"></span>
+                    <span class="star"></span>
+                    <span class="star"></span>
+                    <span class="star"></span>
+                </div>
+            </div>
+            <div class="holiday-modal-body">
+                <h2 class="holiday-title">Feiertags-Öffnungszeiten</h2>
+                <div class="holiday-schedule">
+                    <div class="holiday-item">
+                        <span class="holiday-date">24.12</span>
+                        <span class="holiday-time">Geschlossen</span>
+                    </div>
+                    <div class="holiday-item">
+                        <span class="holiday-date">25.12</span>
+                        <span class="holiday-time">11:30 - 22:00</span>
+                    </div>
+                    <div class="holiday-item">
+                        <span class="holiday-date">26.12</span>
+                        <span class="holiday-time">11:30 - 22:00</span>
+                    </div>
+                    <div class="holiday-item">
+                        <span class="holiday-date">31.12</span>
+                        <span class="holiday-time">Geschlossen</span>
+                    </div>
+                    <div class="holiday-item">
+                        <span class="holiday-date">01.01.26</span>
+                        <span class="holiday-time">15:30 - 22:00</span>
+                    </div>
+                </div>
+            </div>
+            <div class="holiday-decorations">
+                <div class="holiday-santa">
+                    <svg viewBox="0 0 200 100" xmlns="http://www.w3.org/2000/svg">
+                        <!-- Sleigh base -->
+                        <path d="M15 85 Q25 65, 45 75 T75 80 T105 75 T135 80 T165 75 T185 85" stroke="#654321"
+                            stroke-width="2.5" fill="none" stroke-linecap="round" />
+                        <!-- Reindeer silhouettes -->
+                        <ellipse cx="30" cy="50" rx="10" ry="8" fill="#8B4513" opacity="0.8" />
+                        <ellipse cx="60" cy="55" rx="8" ry="6" fill="#8B4513" opacity="0.8" />
+                        <ellipse cx="90" cy="50" rx="9" ry="7" fill="#8B4513" opacity="0.8" />
+                        <ellipse cx="120" cy="55" rx="8" ry="6" fill="#8B4513" opacity="0.8" />
+                        <ellipse cx="150" cy="50" rx="9" ry="7" fill="#8B4513" opacity="0.8" />
+                        <ellipse cx="180" cy="55" rx="8" ry="6" fill="#8B4513" opacity="0.8" />
+                        <!-- Antlers (simple) -->
+                        <path d="M25 45 L22 40 M25 45 L28 40" stroke="#654321" stroke-width="1.5"
+                            stroke-linecap="round" />
+                        <path d="M55 50 L52 45 M55 50 L58 45" stroke="#654321" stroke-width="1.5"
+                            stroke-linecap="round" />
+                        <path d="M85 45 L82 40 M85 45 L88 40" stroke="#654321" stroke-width="1.5"
+                            stroke-linecap="round" />
+                    </svg>
+                </div>
+                <div class="holiday-logo">
+                    <img src="assets/logo.png" alt="LEO SUSHI" class="holiday-logo-img" loading="lazy" width="256"
+                        height="256">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lightbox for Gallery -->
+    <div class="lightbox" id="lightbox" aria-hidden="true">
+        <button class="lightbox-close" id="lightboxClose" aria-label="Schließen">×</button>
+        <button class="lightbox-nav prev" id="lightboxPrev" aria-label="Vorheriges">‹</button>
+        <img class="lightbox-img" id="lightImg" src="" alt="" loading="lazy">
+        <button class="lightbox-nav next" id="lightboxNext" aria-label="Nächstes">›</button>
+    </div>
+
+    <footer class="site-footer">
+        <div class="footer-top">
+            <div class="container footer-inner">
+                <div class="footer-brand">
+                    <div class="brand-mini">
+                        <img src="assets/logo.png" alt="LEO SUSHI" loading="lazy" decoding="async" width="256"
+                            height="256">
+                        <div class="brand-text">
+                            <span class="brand-name">LEO SUSHI</span>
+                            <span class="brand-tagline">Moderne vietnamesische Küche</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="footer-content">
+                    <nav class="footer-nav">
+                        <div class="footer-nav-section">
+                            <h4>Navigation</h4>
+                            <a href="#home">Home</a>
+                            <a href="menu.html">Menü</a>
+                            <a href="#gallery">Gallery</a>
+                            <a href="#about">Über uns</a>
+                            <a href="#reviews">Bewertungen</a>
+                            <a href="#contact">Kontakt</a>
+                        </div>
+                    </nav>
+                    <div class="footer-contact">
+                        <h4>Kontakt</h4>
+                        <div class="footer-contact-item" style="margin-bottom: 12px;">
+                            <span class="footer-icon">📍</span>
+                            <span style="font-size: 13px;">
+                                <strong>Filiale 1:</strong> Florastraße 10A, 13187 Berlin<br>
+                                📞 Tel: <a href="tel:03071055810" style="color: inherit; text-decoration: none;">030 71055810</a>
+                            </span>
+                        </div>
+                        <div class="footer-contact-item" style="margin-bottom: 12px;">
+                            <span class="footer-icon">📍</span>
+                            <span style="font-size: 13px;">
+                                <strong>Filiale 2:</strong> Hauptstraße 29a, 13158 Berlin<br>
+                                📞 Tel: <a href="tel:03063912199" style="color: inherit; text-decoration: none;">030 63912199</a>
+                            </span>
+                        </div>
+                        <div class="footer-contact-item">
+                            <span class="footer-icon">✉️</span>
+                            <a href="mailto:leosushi.service@gmail.com">leosushi.service@gmail.com</a>
+                        </div>
+                    </div>
+                    <div class="footer-hours">
+                        <h4>Öffnungszeiten</h4>
+                        <div class="hours-list">
+                            <div class="hours-item">
+                                <span>Mo. – So.</span>
+                                <span>12:00 – 22:00 Uhr</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Premium App Install Banner (Centered) -->
+                <div class="footer-app-banner" id="footerAppSection"
+                    style="margin-top: 40px; text-align: center; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 30px;">
+                    <h4 style="font-size: 18px; margin-bottom: 8px; color: var(--gold, #e5cf8e);">Die LEO SUSHI App</h4>
+                    <p
+                        style="color: #a0a0a0; font-size: 14px; margin-bottom: 20px; line-height: 1.5; max-width: 400px; margin-left: auto; margin-right: auto;">
+                        Bestellen Sie noch schneller und sammeln Sie Treuepunkte direkt auf Ihrem Smartphone.
+                    </p>
+                    <div style="display: flex; justify-content: center; gap: 15px; flex-wrap: wrap;">
+                        <a href="https://apps.apple.com/de/app/leo-sushi/id6758460309" target="_blank"
+                            style="display: inline-flex; align-items: center; justify-content: center; gap: 8px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #fff; padding: 10px 24px; border-radius: 12px; font-weight: 500; font-size: 15px; text-decoration: none; transition: all 0.3s ease;"
+                            onmouseover="this.style.background='rgba(255,255,255,0.15)';"
+                            onmouseout="this.style.background='rgba(255,255,255,0.1)';">
+                            <span style="font-size: 20px;">🍎</span> App Store
+                        </a>
+                        <a href="https://play.google.com/store/apps/details?id=com.leosushi.berlin"
+                            target="_blank"
+                            style="display: inline-flex; align-items: center; justify-content: center; gap: 8px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #fff; padding: 10px 24px; border-radius: 12px; font-weight: 500; font-size: 15px; text-decoration: none; transition: all 0.3s ease;"
+                            onmouseover="this.style.background='rgba(255,255,255,0.15)';"
+                            onmouseout="this.style.background='rgba(255,255,255,0.1)';">
+                            <span style="font-size: 20px;">▶️</span> Google Play
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <div class="container">
+                <div class="footer-bottom-inner">
+                    <div class="legal">© <span id="year"></span> LEO SUSHI · Alle Rechte vorbehalten · <a
+                            href="datenschutz.html" style="color: var(--gold); text-decoration: none;">Datenschutz</a>
+                    </div>
+                    <div class="footer-social">
+                        <a href="#" class="social-link" aria-label="Facebook">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                                <path
+                                    d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
+                            </svg>
+                        </a>
+                        <a href="#" class="social-link" aria-label="Instagram">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                                <path
+                                    d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" />
+                            </svg>
+                        </a>
+                        <a href="https://www.openstreetmap.org/?mlat=52.5505&mlon=13.4304&zoom=16" target="_blank"
+                            class="social-link" aria-label="OpenStreetMap">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                                <path
+                                    d="M12 0C8.74 0 5.97 1.47 4 3.74c2.26 2.26 4.26 4.26 8 8 3.74-3.74 5.74-5.74 8-8C18.03 1.47 15.26 0 12 0zm0 2c5.51 0 10 4.49 10 10s-4.49 10-10 10S2 17.51 2 12 6.49 2 12 2zm0 3c-3.87 0-7 3.13-7 7s3.13 7 7 7 7-3.13 7-7-3.13-7-7-7zm0 3c2.21 0 4 1.79 4 4s-1.79 4-4 4-4-1.79-4-4 1.79-4 4-4z" />
+                            </svg>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- GloriaFood Widget Code - Paste here from your dashboard -->
+    <!-- Example widget code will look like this:
+    <script>
+      (function() {
+        var gloriafood = document.createElement('script');
+        gloriafood.src = 'https://www.gloriafood.com/...';
+        gloriafood.async = true;
+        document.head.appendChild(gloriafood);
+      })();
+    </script>
+    <div id="gloriafood-widget"></div>
+    -->
+
+    <!-- Capacitor Core (sẽ được inject tự động trong app) -->
+    <script>
+        // Load Capacitor init script when running in native app
+        // Capacitor core is automatically injected by Capacitor
+        document.addEventListener('DOMContentLoaded', function () {
+            // Check if running in Capacitor app
+            if (window.Capacitor && window.Capacitor.isNativePlatform()) {
+                const script = document.createElement('script');
+                script.src = 'js/capacitor-init.js';
+                script.async = true;
+                document.head.appendChild(script);
             }
         });
     </script>
+
+    <!-- Load modules theo thứ tự dependency (QUAN TRỌNG - không thay đổi thứ tự!) -->
+    <!-- Backup: Nếu có lỗi, comment các dòng dưới và uncomment dòng: <script src="script.js?v=20260408"></script> -->
+    <script src="js/config.js?v=20260824_v50"></script>
+    <script src="js/menu-data.js?v=20260824_v50"></script>
+    <script src="js/capacitor-navigation.js?v=20260824_v50"></script>
+    <script src="js/mobile-app.js?v=20260824_v54"></script>
+    <script src="js/api.js?v=20260824_v50"></script>
+    <script src="js/auth-mysql.js?v=20260824_v50"></script>
+    <script src="js/auth-modal.js?v=20260824_v50"></script>
+    <script src="js/header-auth.js?v=20260824_v50"></script>
+    <script src="js/database-helpers.js?v=20260824_v50"></script>
+    <script src="js/utils.js?v=20260824_v50"></script>
+    <script src="js/payment.js?v=20260824_v50"></script>
+    <script src="js/cart.js?v=20260824_v50"></script>
+    <script src="js/cart-sync.js?v=20260824_v50"></script>
+    <script src="js/mobile-cart-fix.js?v=20260824_v50"></script>
+    <script src="js/menu.js?v=20260824_v54"></script>
+    <script src="js/reservation.js?v=20260824_v50"></script>
+    <script src="js/email.js?v=20260824_v50"></script>
+    <script src="js/customer.js?v=20260824_v50"></script>
+    <script src="js/notifications.js?v=20260824_v50"></script>
+    <script src="js/main.js?v=20260824_v50"></script>
+    <!-- Leaflet JS for OpenStreetMap -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="js/order-tracking.js"></script>
+    <!-- <script src="script.js?v=20260408"></script> --> <!-- Backup: Uncomment nếu cần rollback -->
+
+    <script>
+        document.getElementById('year').textContent = new Date().getFullYear();
+
+        // Initialize restaurant map with OpenStreetMap
+        document.addEventListener('DOMContentLoaded', function () {
+            const mapContainer = document.getElementById('restaurantMap');
+            if (mapContainer && typeof L !== 'undefined') {
+                // Restaurant coordinates
+                const restaurantLat = 52.5505;
+                const restaurantLng = 13.4304;
+
+                // Initialize map
+                const map = L.map('restaurantMap', {
+                    zoomControl: true,
+                    scrollWheelZoom: false,
+                    dragging: true,
+                    touchZoom: true,
+                    doubleClickZoom: true
+                }).setView([restaurantLat, restaurantLng], 16);
+
+                // Add OpenStreetMap tile layer
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+                    maxZoom: 19
+                }).addTo(map);
+
+                // Add restaurant marker
+                const restaurantIcon = L.divIcon({
+                    className: 'restaurant-marker',
+                    html: '<div style="background: #e5cf8e; width: 40px; height: 40px; border-radius: 50%; border: 4px solid white; box-shadow: 0 4px 12px rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; font-size: 22px;">🍣</div>',
+                    iconSize: [40, 40],
+                    iconAnchor: [20, 20]
+                });
+
+                L.marker([restaurantLat, restaurantLng], {
+                    icon: restaurantIcon
+                }).addTo(map).bindPopup('<strong>LEO SUSHI</strong><br>Florastraße 10A<br>13187 Berlin');
+            }
+        });
+
+        // Menu is now public - no authentication check needed
+        // Users can access menu freely and will provide info when placing order
+
+        // Register Service Worker for PWA (Only on Web, NOT on Capacitor)
+        const isNativeApp = window.LEO_IS_NATIVE_APP === true;
+        if ('serviceWorker' in navigator && !isNativeApp) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then((registration) => {
+                        console.log('Service Worker registered successfully:', registration.scope);
+                    })
+                    .catch((error) => {
+                        console.log('Service Worker registration failed:', error);
+                    });
+            });
+        }
+
+    </script>
+    <!-- Flyer popup (shows when visiting via QR code ?ref=flyer) -->
+    <script src="js/flyer-popup.js"></script>
 </body>
+
 </html>

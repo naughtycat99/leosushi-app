@@ -1205,7 +1205,10 @@ function setupCart() {
       }
       // Redirect to checkout page
       setTimeout(() => {
-        window.location.href = 'checkout.html';
+        const isApp = (document.body && document.body.classList.contains('is-capacitor-app')) ||
+          window.location.search.includes('app=true') ||
+          sessionStorage.getItem('leo_app_preview') === 'true';
+        window.location.href = isApp ? 'checkout.html?app=true' : 'checkout.html';
       }, 200);
     });
   }
@@ -2308,9 +2311,12 @@ function setupMenuBook() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-  renderMenuTabs();
-  // Default to first category
-  renderMenuList(MENU_DATA[0]?.id);
+  const hasMenuData = typeof MENU_DATA !== 'undefined' && Array.isArray(MENU_DATA) && MENU_DATA.length > 0;
+  if (hasMenuData) {
+    renderMenuTabs();
+    // Default to first category
+    renderMenuList(MENU_DATA[0]?.id);
+  }
   setupMenuSearch();
   setupGallery();
   setupCart();
@@ -6430,6 +6436,23 @@ function showOrderSuccessNotification(orderData, deliveryAddress, orderId) {
           <span>Die Bestätigungs-E-Mail wurde an <strong>${deliveryAddress.email || 'Ihre E-Mail-Adresse'}</strong> gesendet.</span>
         </div>
       </div>
+      <!-- App Download Incentive Section (Web users) -->
+      ${(!document.body.classList.contains('is-capacitor-app') && !window.location.search.includes('mock-app')) ? `
+      <div class="order-success-app-banner" style="background: linear-gradient(135deg, rgba(229,207,142,.12), rgba(194,163,85,.06)); border: 1px solid rgba(229,207,142,.3); border-radius: 14px; padding: 18px; margin: 20px 0; text-align: center;">
+        <div style="font-size: 15px; font-weight: 700; color: var(--gold); margin-bottom: 6px;">📱 LEO SUSHI App herunterladen</div>
+        <div style="font-size: 12px; color: rgba(255,255,255,.8); line-height: 1.5; margin-bottom: 14px;">
+          Bestellen Sie beim nächsten Mal über unsere App & sichern Sie sich <strong>10% Rabatt (Code: APP10)</strong> + Live-Tracking!
+        </div>
+        <div style="display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;">
+          <a href="https://apps.apple.com/de/app/leo-sushi/id6758460309" target="_blank" rel="noopener" style="display: inline-flex; align-items: center; gap: 6px; background: #1a1a1e; border: 1px solid rgba(255,255,255,.15); color: #fff; padding: 8px 16px; border-radius: 10px; font-size: 12px; font-weight: 600; text-decoration: none; transition: 0.2s;">
+            <span>🍎</span> App Store
+          </a>
+          <a href="https://play.google.com/store/apps/details?id=com.leosushi.berlin" target="_blank" rel="noopener" style="display: inline-flex; align-items: center; gap: 6px; background: #1a1a1e; border: 1px solid rgba(255,255,255,.15); color: #fff; padding: 8px 16px; border-radius: 10px; font-size: 12px; font-weight: 600; text-decoration: none; transition: 0.2s;">
+            <span>▶️</span> Google Play
+          </a>
+        </div>
+      </div>
+      ` : ''}
       <button class="order-success-btn" onclick="closeOrderSuccessNotification()">Verstanden</button>
     </div>
   `;

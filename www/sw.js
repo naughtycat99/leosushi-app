@@ -1,6 +1,6 @@
 // Service Worker cho LEO SUSHI PWA
 // v2 — Network-first for dynamic assets, cache-first for static assets
-const CACHE_NAME = 'leosushi-v3';
+const CACHE_NAME = 'leosushi-v4';
 
 // Only cache truly static assets (images, fonts)
 const STATIC_ASSETS = [
@@ -65,7 +65,8 @@ self.addEventListener('fetch', (event) => {
       fetch(event.request)
         .then((response) => {
           // Got fresh response — cache it for offline use
-          if (response && response.status === 200) {
+          const cacheControl = response && response.headers ? (response.headers.get('Cache-Control') || '') : '';
+          if (response && response.status === 200 && !/no-store/i.test(cacheControl)) {
             const responseToCache = response.clone();
             caches.open(CACHE_NAME).then((cache) => {
               cache.put(event.request, responseToCache);

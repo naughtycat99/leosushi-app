@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google Maps Bewertungs-QR-Code - Leo Sushi</title>
+    <!-- Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- QRCode.js library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <!-- jsPDF library for PDF generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .print-area {
+            width: 100%;
+            max-width: 400px;
+            margin: 0 auto;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            position: relative;
+        }
+        @media print {
+            body * { visibility: hidden; }
+            #printableArea, #printableArea * { visibility: visible; }
+            #printableArea {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 10cm;
+                box-shadow: none;
+                border: none;
+            }
+        }
+        #qrcode img {
+            margin: 0 auto;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen flex items-center justify-center p-4">
+
+    <div class="max-w-md w-full bg-white rounded-xl shadow-lg p-6 space-y-6">
+        <div class="flex items-center justify-center space-x-3">
+            <img src="assets/logo.png" alt="Leo Sushi" class="w-10 h-10 object-contain">
+            <h1 class="text-2xl font-bold text-center text-gray-800">Review QR Code Generator</h1>
+        </div>
+        
+        <div class="space-y-4">
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label for="typeSelect" class="block text-sm font-medium text-gray-700 mb-1">Loại mã (Type):</label>
+                    <select id="typeSelect" onchange="updateUrlFromType()" 
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none transition bg-white">
+                        <option value="review">Đánh giá Google</option>
+                        <option value="app">Tải App / Đặt hàng</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="branchSelect" class="block text-sm font-medium text-gray-700 mb-1">Chi nhánh (Branch):</label>
+                    <select id="branchSelect" onchange="updateUrlFromBranch()" 
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none transition bg-white">
+                        <option value="flora">Cơ sở 1: Florastraße</option>
+                        <option value="haupt">Cơ sở 2: Hauptstraße</option>
+                        <option value="custom">Tùy chỉnh</option>
+                    </select>
+                </div>
+            </div>
+
+            <div id="appPlatformContainer" class="hidden">
+                <label for="platformSelect" class="block text-sm font-medium text-gray-700 mb-1">Nền tảng (Platform):</label>
+                <select id="platformSelect" onchange="updateUrlFromPlatform()" 
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none transition bg-white">
+                    <option value="universal">Universal (Auto-detect máy)</option>
+                    <option value="website">Website (PWA)</option>
+                    <option value="ios">Apple App Store</option>
+                    <option value="android">Google Play Store</option>
+                </select>
+            </div>
+
+            <div id="urlInputContainer">
+                <label for="urlInput" class="block text-sm font-medium text-gray-700 mb-1">Google Maps Link:</label>
+                <input type="text" id="urlInput" 
+                    value="https://search.google.com/local/writereview?placeid=ChIJq7i33h9RqEcR-w5n_G_k6o4" 
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none transition"
+                    placeholder="Nhập link đánh giá Google Maps">
+                <p class="text-xs text-gray-500 mt-1"> * Link đánh giá trực tiếp cho chi nhánh đã chọn.</p>
+            </div>
+            
+            <button onclick="generateQR()" class="w-full bg-red-600 hover:bg-red-700 text-white font-semibold py-3 px-4 rounded-lg transition shadow-md flex items-center justify-center">
+                <span class="mr-2">🔄</span> Tạo mã QR ngay
+            </button>
+        </div>
+
+        <!-- Printable Area -->
+        <div id="printableArea" class="print-area bg-white mt-8 hidden">
+            <div class="bg-red-600 text-white text-center py-5 px-2">
+                <h2 class="text-2xl font-bold uppercase tracking-widest">LEO SUSHI</h2>
+                <p class="text-sm opacity-90 font-medium">Vietnamesische Küche & Sushi Bar</p>
+            </div>
+            
+            <div class="p-8 text-center space-y-6">
+                <div class="space-y-2">
+                    <h3 class="text-xl font-extrabold text-gray-900 leading-tight">Wie hat es Ihnen geschmeckt?</h3>
+                    <p class="text-gray-500 text-sm">Hinterlassen Sie uns gerne eine<br>Bewertung auf Google Maps!</p>
+                </div>
+                
+                <div class="bg-white p-5 inline-block rounded-3xl shadow-sm border border-gray-100">
+                    <div id="qrcode" class="p-1"></div>
+                </div>
+                
+                <div class="flex flex-col items-center pt-2">
+                    <div id="reviewStars" class="flex items-center justify-center space-x-1.5 text-yellow-400 mb-3">
+                        <svg class="w-5 h-5 fill-current" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+                        <svg class="w-5 h-5 fill-current" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+                        <svg class="w-5 h-5 fill-current" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+                        <svg class="w-5 h-5 fill-current" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+                        <svg class="w-5 h-5 fill-current" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+                    </div>
+                    <div id="appIcon" class="hidden text-3xl mb-3">📱</div>
+                    <p id="scanLabel" class="text-[9px] text-gray-400 font-bold uppercase tracking-widest">Scannen Sie den Code với Ihrer Kamera</p>
+                </div>
+
+                <div class="pt-6 border-t border-gray-100">
+                    <p id="cardAddress" class="text-xs font-bold text-gray-800 uppercase tracking-widest leading-relaxed"></p>
+                </div>
+            </div>
+        </div>
+
+        <div id="actions" class="hidden grid grid-cols-2 gap-4 mt-4">
+            <button onclick="window.print()" class="bg-gray-100 hover:bg-gray-200 text-gray-800 font-bold py-3 px-4 rounded-lg flex items-center justify-center transition">
+                <span class="mr-2">🖨️</span> Drucken
+            </button>
+            <button onclick="downloadPDF()" class="bg-black hover:bg-gray-900 text-white font-bold py-3 px-4 rounded-lg flex items-center justify-center transition">
+                <span class="mr-2">📄</span> PDF lưu
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const BRANCHES = {
+            flora: {
+                name: 'Florastraße',
+                address: 'Florastraße 10A, 13187 Berlin',
+                url: 'https://search.google.com/local/writereview?placeid=ChIJq7i33h9RqEcR-w5n_G_k6o4'
+            },
+            haupt: {
+                name: 'Hauptstraße',
+                address: 'Hauptstraße 29a, 13158 Berlin',
+                url: 'https://search.google.com/local/writereview?placeid=ChIJx0O6mJ1RqEcRk2714nO5w2Y'
+            },
+            custom: {
+                name: 'Custom',
+                address: '',
+                url: ''
+            }
+        };
+
+        let qrDataURL = null;
+
+        const WEBSITE_URL = 'https://www.leo-sushi-berlin.de/';
+        const APP_STORE_URL = 'https://apps.apple.com/de/app/leo-sushi/id6758460309';
+        const PLAY_STORE_URL = 'https://play.google.com/store/apps/details?id=com.leosushi.berlin';
+        const UNIVERSAL_APP_URL = 'https://www.leo-sushi-berlin.de/download-app';
+
+        function updateUrlFromType() {
+            const type = document.getElementById('typeSelect').value;
+            const appPlatformContainer = document.getElementById('appPlatformContainer');
+            const input = document.getElementById('urlInput');
+
+            if (type === 'app') {
+                appPlatformContainer.classList.remove('hidden');
+                updateUrlFromPlatform();
+            } else {
+                appPlatformContainer.classList.add('hidden');
+                updateUrlFromBranch();
+            }
+        }
+
+        function updateUrlFromPlatform() {
+            const platform = document.getElementById('platformSelect').value;
+            const input = document.getElementById('urlInput');
+            
+            if (platform === 'ios') input.value = APP_STORE_URL;
+            else if (platform === 'android') input.value = PLAY_STORE_URL;
+            else if (platform === 'universal') input.value = UNIVERSAL_APP_URL;
+            else input.value = WEBSITE_URL;
+            
+            generateQR();
+        }
+
+        function updateUrlFromBranch() {
+            const branchKey = document.getElementById('branchSelect').value;
+            const type = document.getElementById('typeSelect').value;
+            const branch = BRANCHES[branchKey];
+            const input = document.getElementById('urlInput');
+            
+            if (type === 'app') {
+                input.value = WEBSITE_URL;
+            } else {
+                if (branchKey === 'custom') {
+                    input.value = '';
+                    input.focus();
+                } else {
+                    input.value = branch.url;
+                }
+            }
+            generateQR();
+        }
+
+        function generateQR() {
+            const url = document.getElementById('urlInput').value.trim();
+            const branchKey = document.getElementById('branchSelect').value;
+            const type = document.getElementById('typeSelect').value;
+            const branch = BRANCHES[branchKey];
+            
+            // UI elements for card
+            const titleEl = document.querySelector('#printableArea h3');
+            const descEl = document.querySelector('#printableArea p.text-gray-500');
+            const starEl = document.getElementById('reviewStars');
+            const appIconEl = document.getElementById('appIcon');
+
+            if (type === 'app') {
+                const platform = document.getElementById('platformSelect').value;
+                let platformText = 'App laden & bestellen';
+                if (platform === 'ios') platformText = 'Leo Sushi im App Store';
+                else if (platform === 'android') platformText = 'Leo Sushi im Play Store';
+                else if (platform === 'universal') platformText = 'Leo Sushi App';
+                
+                titleEl.textContent = platformText;
+                descEl.innerHTML = 'Scannen, um die App zu laden &<br>Vorteile bei der Bestellung erhalten!';
+                starEl.classList.add('hidden');
+                appIconEl.classList.remove('hidden');
+                appIconEl.textContent = platform === 'ios' ? '🍎' : (platform === 'android' ? '▶️' : '📱');
+            } else {
+                titleEl.textContent = 'Wie hat es Ihnen geschmeckt?';
+                descEl.innerHTML = 'Hinterlassen Sie uns gerne eine<br>Bewertung auf Google Maps!';
+                starEl.classList.remove('hidden');
+                appIconEl.classList.add('hidden');
+            }
+
+            // Update card address
+            const addrEl = document.getElementById('cardAddress');
+            addrEl.textContent = branchKey === 'custom' ? 'LEO SUSHI' : branch.address;
+
+            const qrContainer = document.getElementById('qrcode');
+            qrContainer.innerHTML = '';
+            qrDataURL = null;
+
+            const tempDiv = document.createElement('div');
+            tempDiv.style.position = 'fixed';
+            tempDiv.style.left = '-9999px';
+            document.body.appendChild(tempDiv);
+
+            new QRCode(tempDiv, {
+                text: url,
+                width: 256,
+                height: 256,
+                colorDark: "#000000",
+                colorLight: "#ffffff",
+                correctLevel: QRCode.CorrectLevel.H
+            });
+
+            setTimeout(() => {
+                const hiddenCanvas = tempDiv.querySelector('canvas');
+                const hiddenImg = tempDiv.querySelector('img');
+
+                if (hiddenCanvas) {
+                    qrDataURL = hiddenCanvas.toDataURL('image/png');
+                } else if (hiddenImg && hiddenImg.src.startsWith('data:')) {
+                    qrDataURL = hiddenImg.src;
+                }
+
+                document.body.removeChild(tempDiv);
+
+                if (qrDataURL) {
+                    qrContainer.innerHTML = `<img src="${qrDataURL}" style="width:200px;height:200px;margin:0 auto;display:block;" alt="QR Code" loading="lazy">`;
+                }
+
+                document.getElementById('printableArea').classList.remove('hidden');
+                document.getElementById('actions').classList.remove('hidden');
+            }, 300);
+        }
+
+        function downloadPDF() {
+            if (!qrDataURL) return;
+
+            const type = document.getElementById('typeSelect').value;
+            const branchKey = document.getElementById('branchSelect').value;
+            const branch = BRANCHES[branchKey];
+            
+            const scale = 3;
+            const W = 400 * scale;
+            const headerH = 120 * scale; 
+            const bodyH = 580 * scale;
+            const H = headerH + bodyH;
+
+            const canvas = document.createElement('canvas');
+            canvas.width = W;
+            canvas.height = H;
+            const ctx = canvas.getContext('2d');
+
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, W, H);
+
+            // Red header
+            ctx.fillStyle = '#dc2626';
+            ctx.fillRect(0, 0, W, headerH);
+
+            ctx.fillStyle = '#ffffff';
+            ctx.textAlign = 'center';
+            ctx.font = `bold ${42 * scale}px Arial, sans-serif`;
+            ctx.fillText('LEO SUSHI', W / 2, 65 * scale);
+
+            ctx.font = `500 ${18 * scale}px Arial, sans-serif`;
+            ctx.globalAlpha = 0.9;
+            ctx.fillText('Vietnamesische Küche & Sushi Bar', W / 2, 95 * scale);
+            ctx.globalAlpha = 1;
+
+            // Body text based on TYPE
+            ctx.fillStyle = '#111827';
+            ctx.font = `bold ${26 * scale}px Arial, sans-serif`;
+            
+            if (type === 'app') {
+                const platform = document.getElementById('platformSelect').value;
+                let platformTitle = 'App laden & bestellen';
+                if (platform === 'ios') platformTitle = 'Leo Sushi im App Store';
+                else if (platform === 'android') platformTitle = 'Leo Sushi im Play Store';
+                else if (platform === 'universal') platformTitle = 'Leo Sushi App';
+
+                ctx.fillText(platformTitle, W / 2, headerH + 60 * scale);
+                ctx.fillStyle = '#6b7280';
+                ctx.font = `${16 * scale}px Arial, sans-serif`;
+                ctx.fillText('Scannen, um die App zu laden &', W / 2, headerH + 95 * scale);
+                ctx.fillText('Vorteile bei der Bestellung erhalten!', W / 2, headerH + 120 * scale);
+            } else {
+                ctx.fillText('Wie hat es Ihnen geschmeckt?', W / 2, headerH + 60 * scale);
+                ctx.fillStyle = '#6b7280';
+                ctx.font = `${16 * scale}px Arial, sans-serif`;
+                ctx.fillText('Hinterlassen Sie uns gerne eine', W / 2, headerH + 95 * scale);
+                ctx.fillText('Bewertung auf Google Maps!', W / 2, headerH + 120 * scale);
+            }
+
+            const qrImg = new Image();
+            qrImg.onload = () => {
+                const qrSize = 230 * scale;
+                const qrX = (W - qrSize) / 2;
+                const qrY = headerH + 150 * scale;
+
+                // QR shadow/border
+                ctx.fillStyle = '#ffffff';
+                ctx.strokeStyle = '#f9fafb';
+                ctx.lineWidth = 1 * scale;
+                roundRect(ctx, qrX - 20 * scale, qrY - 20 * scale, qrSize + 40 * scale, qrSize + 40 * scale, 25 * scale);
+                ctx.fill();
+                ctx.stroke();
+
+                ctx.drawImage(qrImg, qrX, qrY, qrSize, qrSize);
+
+                const areaBelowQR = qrY + qrSize + 40 * scale;
+                const starY = areaBelowQR + 35 * scale;
+
+                if (type === 'app') {
+                    const platform = document.getElementById('platformSelect').value;
+                    let platformIcon = '📱';
+                    if (platform === 'ios') platformIcon = '🍎';
+                    else if (platform === 'android') platformIcon = '▶️';
+                    
+                    ctx.font = `${30 * scale}px Arial, sans-serif`;
+                    ctx.fillText(platformIcon, W / 2, starY);
+                } else {
+                    drawStars(ctx, W / 2, starY, 5, 9 * scale, '#facc15');
+                }
+
+                ctx.fillStyle = '#9ca3af';
+                ctx.font = `bold ${8.5 * scale}px Arial, sans-serif`;
+                ctx.fillText('SCANNEN SIE DEN CODE MIT IHRER KAMERA', W / 2, starY + 28 * scale);
+
+                // Footer Address - Fixed at the BOTTOM area with safe gap
+                ctx.fillStyle = '#111827';
+                ctx.font = `bold ${12 * scale}px Arial, sans-serif`;
+                const addr = branchKey === 'custom' ? 'LEO SUSHI BERLIN' : branch.address.toUpperCase();
+                ctx.fillText(addr, W / 2, H - 45 * scale);
+                
+                // Border top for address
+                ctx.strokeStyle = '#f3f4f6';
+                ctx.lineWidth = 1 * scale;
+                ctx.beginPath();
+                ctx.moveTo(80 * scale, H - 85 * scale);
+                ctx.lineTo(W - 80 * scale, H - 85 * scale);
+                ctx.stroke();
+
+                // Generate PDF
+                const { jsPDF } = window.jspdf;
+                const pdfW = 105;
+                const pdfH = (H / W) * pdfW;
+                
+                const pdf = new jsPDF({
+                    orientation: 'portrait',
+                    unit: 'mm',
+                    format: [pdfW, pdfH]
+                });
+
+                const imgData = canvas.toDataURL('image/jpeg', 0.95);
+                pdf.addImage(imgData, 'JPEG', 0, 0, pdfW, pdfH);
+                pdf.save(`Leo-Sushi-Review-QR-${branchKey}.pdf`);
+            };
+            qrImg.src = qrDataURL;
+        }
+
+        function drawStars(ctx, cx, cy, count, size, color) {
+            const gap = size * 2.5;
+            const startX = cx - (count - 1) * gap / 2;
+            ctx.fillStyle = color;
+            for (let i = 0; i < count; i++) {
+                drawStar(ctx, startX + i * gap, cy, size);
+            }
+        }
+
+        function drawStar(ctx, cx, cy, r) {
+            ctx.beginPath();
+            for (let i = 0; i < 5; i++) {
+                ctx.lineTo(cx + r * Math.cos((18 + i * 72) / 180 * Math.PI), cy - r * Math.sin((18 + i * 72) / 180 * Math.PI));
+                ctx.lineTo(cx + r * 0.45 * Math.cos((54 + i * 72) / 180 * Math.PI), cy - r * 0.45 * Math.sin((54 + i * 72) / 180 * Math.PI));
+            }
+            ctx.closePath();
+            ctx.fill();
+        }
+
+        function roundRect(ctx, x, y, w, h, r) {
+            ctx.beginPath();
+            ctx.moveTo(x + r, y);
+            ctx.arcTo(x + w, y, x + w, y + h, r);
+            ctx.arcTo(x + w, y + h, x, y + h, r);
+            ctx.arcTo(x, y + h, x, y, r);
+            ctx.arcTo(x, y, x + w, y, r);
+            ctx.closePath();
+        }
+
+        window.onload = () => generateQR();
+    </script>
+</body>
+</html>

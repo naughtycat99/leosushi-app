@@ -1,36 +1,41 @@
 // Capacitor Navigation Helper
-// Handles navigation in Capacitor Android/iOS apps
+// Handles navigation in Capacitor Android/iOS apps and App Preview mode
+
+function getAppQuerySuffix() {
+    try {
+        const isApp = !!(
+            window.LEO_IS_NATIVE_APP ||
+            (window.location.search && (window.location.search.includes('app=true') || window.location.search.includes('mock-app'))) ||
+            sessionStorage.getItem('leo_app_preview') === 'true' ||
+            localStorage.getItem('leo_app_mode') === 'true'
+        );
+        return isApp ? '?app=true' : '';
+    } catch (e) {
+        return '';
+    }
+}
 
 /**
  * Navigate to a page - works in both web and Capacitor apps
- * @param {string} page - Page name (e.g., 'menu.html', 'index.html')
+ * @param {string} page - Page name (e.g., 'menu.html', 'index.html', 'checkout.html')
  * @param {Event} event - Optional event to prevent default
  */
 function navigateTo(page, event) {
-    if (event) {
+    if (event && typeof event.preventDefault === 'function') {
         event.preventDefault();
     }
 
-    // Check if running in Capacitor app
-    const isCapacitor = window.Capacitor && window.Capacitor.isNativePlatform();
+    if (!page) return;
+    let cleanTarget = String(page).trim();
+    // Strip leading domain or protocol if present
+    cleanTarget = cleanTarget.replace(/^https?:\/\/[^\/]+\//, '');
+    cleanTarget = cleanTarget.replace(/^\//, '');
+    
+    // Strip existing query string
+    const basePage = cleanTarget.split('?')[0].split('#')[0];
+    const query = getAppQuerySuffix();
 
-    // Attempt to get server URL from config, but only if it exists
-    let serverUrl = null;
-    try {
-        serverUrl = window.Capacitor?.getConfig?.()?.server?.url;
-    } catch (e) {
-        console.warn('Could not get Capacitor config', e);
-    }
-
-    if (isCapacitor && serverUrl) {
-        // In Capacitor with remote server, use absolute path
-        const fullUrl = `${serverUrl.endsWith('/') ? serverUrl.slice(0, -1) : serverUrl}/${page}`;
-        window.location.href = fullUrl;
-    } else {
-        // In web browser OR offline Capacitor mode, use relative path
-        // This works with Capacitor's local server (http://localhost)
-        window.location.href = page;
-    }
+    window.location.href = basePage + query;
 }
 
 /**
@@ -39,18 +44,10 @@ function navigateTo(page, event) {
  * @returns {string} - Proper URL for the page
  */
 function getPageUrl(page) {
-    const isCapacitor = window.Capacitor && window.Capacitor.isNativePlatform();
-
-    let serverUrl = null;
-    try {
-        serverUrl = window.Capacitor?.getConfig?.()?.server?.url;
-    } catch (e) { }
-
-    if (isCapacitor && serverUrl) {
-        return `${serverUrl.endsWith('/') ? serverUrl.slice(0, -1) : serverUrl}/${page}`;
-    }
-
-    return page;
+    if (!page) return 'index.html';
+    let clean = String(page).trim().replace(/^https?:\/\/[^\/]+\//, '').replace(/^\//, '');
+    const base = clean.split('?')[0].split('#')[0];
+    return base + getAppQuerySuffix();
 }
 
 /**
@@ -58,41 +55,30 @@ function getPageUrl(page) {
  * Converts relative links to work in Capacitor
  */
 function initCapacitorNavigation() {
-    const isCapacitor = window.Capacitor && window.Capacitor.isNativePlatform();
+    const isApp = window.LEO_IS_NATIVE_APP ||
+        (window.Capacitor && typeof window.Capacitor.isNativePlatform === 'function' && window.Capacitor.isNativePlatform()) ||
+        (window.location.search && window.location.search.includes('app=true'));
 
-    if (!isCapacitor) {
-        return; // No need to modify links in web browser
-    }
+    if (!isApp) return;
 
-    // Get all links that need to be updated
     const pages = ['menu.html', 'index.html', 'reservation.html', 'checkout.html', 'profile.html', 'my-orders.html', 'points.html'];
 
-    // Update all links
     document.querySelectorAll('a').forEach(link => {
         const href = link.getAttribute('href');
-
-        // Skip if no href, external link, or anchor link
-        if (!href || href.startsWith('http') || href.startsWith('#') || href.startsWith('tel:') || href.startsWith('mailto:')) {
+        if (!href || href.startsWith('http') || href.startsWith('#') || href.startsWith('tel:') || href.startsWith('mailto:') || href.startsWith('javascript:')) {
             return;
         }
 
-        // Check if it's one of our pages
         const isOurPage = pages.some(page => href.includes(page));
-
         if (isOurPage) {
-            // Extract just the page name
             const pageName = pages.find(page => href.includes(page));
-
-            // Update href to use navigateTo function
             link.onclick = function (e) {
                 e.preventDefault();
-                navigateTo(pageName);
+                navigateTo(pageName, e);
                 return false;
             };
         }
     });
-
-    console.log('Capacitor navigation initialized');
 }
 
 // Initialize when DOM is ready
@@ -105,3 +91,4 @@ if (document.readyState === 'loading') {
 // Expose functions globally
 window.navigateTo = navigateTo;
 window.getPageUrl = getPageUrl;
+

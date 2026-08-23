@@ -2,6 +2,16 @@
 <html lang="de">
 
 <head>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-868WTJTFBM"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-868WTJTFBM');
+    </script>
+
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Meine Bestellungen - LEO SUSHI</title>
@@ -9,6 +19,8 @@
     <link rel="icon" href="assets/logo.png">
     <link rel="apple-touch-icon" href="assets/logo.png">
     <link rel="stylesheet" href="styles.css?v=20260408">
+    <link rel="stylesheet" href="css/mobile-app.css?v=20260824_v54">
+    <script src="js/app-mode-gate.js?v=20260824_v51"></script>
     <!-- Leaflet CSS for OpenStreetMap -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
@@ -229,6 +241,12 @@
             background: rgba(16, 185, 129, 0.2);
             color: #10b981;
             border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        .order-status.in_delivery {
+            background: rgba(168, 85, 247, 0.18);
+            color: #c4b5fd;
+            border: 1px solid rgba(168, 85, 247, 0.35);
         }
 
         .order-status.completed {
@@ -747,16 +765,16 @@
     <!-- Header -->
     <header class="site-header">
         <div class="container nav">
-            <a class="brand" href="/">
+            <a class="brand" href="index.html">
                 <img src="assets/logo.png" alt="LEO SUSHI" class="brand-logo" loading="lazy" width="256" height="256">
                 <span class="brand-name">LEO SUSHI</span>
             </a>
             <nav id="primaryNav" class="menu" role="navigation" aria-label="Hauptnavigation">
                 <a href="menu.html" id="menuLink">Menü</a>
-                <a href="/#about">Über uns</a>
-                <a href="/#reviews">Bewertungen</a>
-                <a href="/#contact">Kontakt</a>
-                <a href="book-table" style="color: var(--gold); font-weight: 600;">Reservieren</a>
+                <a href="index.html#about">Über uns</a>
+                <a href="index.html#reviews">Bewertungen</a>
+                <a href="index.html#contact">Kontakt</a>
+                <a href="reservation.html" style="color: var(--gold); font-weight: 600;">Reservieren</a>
                 <!-- User Menu (shown when logged in) -->
                 <div class="user-menu-wrapper" id="userMenuWrapper" style="display: none;">
                     <button class="notification-toggle" id="notificationToggle" aria-label="Benachrichtigungen">
@@ -774,13 +792,13 @@
                                 <div class="user-email" id="userEmail"></div>
                                 <div class="user-status" id="userStatus"></div>
                             </div>
-                            <a href="account" class="user-menu-item">
+                            <a href="profile.html" class="user-menu-item">
                                 <span>👤</span> Mein Profil
                             </a>
-                            <a href="orders" class="user-menu-item">
+                            <a href="my-orders.html" class="user-menu-item">
                                 <span>📦</span> Meine Bestellungen
                             </a>
-                            <a href="rewards" class="user-menu-item">
+                            <a href="points.html" class="user-menu-item">
                                 <span>⭐</span> Meine Punkte
                             </a>
                             <a href="#" class="user-menu-item" id="logoutBtn">
@@ -797,15 +815,15 @@
         <!-- Sidebar Navigation -->
         <aside class="orders-sidebar">
             <nav class="orders-nav">
-                <a href="account" class="orders-nav-item">
+                <a href="profile.html" class="orders-nav-item">
                     <span>👤</span>
                     <span>Profil</span>
                 </a>
-                <a href="orders" class="orders-nav-item active">
+                <a href="my-orders.html" class="orders-nav-item active" aria-current="page">
                     <span>📦</span>
                     <span>Bestellungen</span>
                 </a>
-                <a href="rewards" class="orders-nav-item">
+                <a href="points.html" class="orders-nav-item">
                     <span>⭐</span>
                     <span>Punkte</span>
                 </a>
@@ -820,13 +838,14 @@
             </div>
 
             <div class="orders-filter">
-                <button class="filter-btn active" data-status="all" onclick="filterOrders('all')">Alle</button>
-                <button class="filter-btn" data-status="pending" onclick="filterOrders('pending')">Ausstehend</button>
-                <button class="filter-btn" data-status="confirmed"
+                <button type="button" class="filter-btn active" data-status="all" aria-pressed="true" onclick="filterOrders('all')">Alle</button>
+                <button type="button" class="filter-btn" data-status="pending" aria-pressed="false" onclick="filterOrders('pending')">Ausstehend</button>
+                <button type="button" class="filter-btn" data-status="confirmed" aria-pressed="false"
                     onclick="filterOrders('confirmed')">Bestätigt</button>
-                <button class="filter-btn" data-status="completed"
+                <button type="button" class="filter-btn" data-status="in_delivery" aria-pressed="false" onclick="filterOrders('in_delivery')">Unterwegs</button>
+                <button type="button" class="filter-btn" data-status="completed" aria-pressed="false"
                     onclick="filterOrders('completed')">Abgeschlossen</button>
-                <button class="filter-btn" data-status="cancelled"
+                <button type="button" class="filter-btn" data-status="cancelled" aria-pressed="false"
                     onclick="filterOrders('cancelled')">Storniert</button>
             </div>
 
@@ -894,72 +913,209 @@
             return statusMap[status] || status;
         }
 
+        function getDeviceOrderHistory() {
+            if (typeof window.getRememberedLeoOrders === 'function') {
+                return window.getRememberedLeoOrders();
+            }
+            try {
+                const history = JSON.parse(localStorage.getItem('leoOrderHistory') || '[]');
+                return Array.isArray(history) ? history : [];
+            } catch (e) {
+                return [];
+            }
+        }
+
+        function mergeOrdersById(primaryOrders, fallbackOrders) {
+            const merged = new Map();
+            [...(fallbackOrders || []), ...(primaryOrders || [])].forEach(order => {
+                const id = String(order?.order_id || order?._id || order?.id || '');
+                if (id) merged.set(id, order);
+            });
+            return [...merged.values()];
+        }
+
         // Load orders
         async function loadOrders() {
             const loadingMessage = document.getElementById('loadingMessage');
             const ordersList = document.getElementById('ordersList');
 
+            const hideLoader = () => {
+                if (loadingMessage) loadingMessage.style.display = 'none';
+            };
+
             try {
-                // Check if user is logged in
-                if (!window.getCurrentUser || typeof window.getCurrentUser !== 'function') {
-                    showGuestTrackingForm();
-                    return;
-                }
-
-                currentUser = await window.getCurrentUser();
-                if (!currentUser || !currentUser.email) {
-                    showGuestTrackingForm();
-                    return;
-                }
-
-                // Load orders from API
-                // Auto-detect API URL if not set
+                // Helper to get API base
                 const apiBase = window.API_PHP_BASE_URL || (() => {
                     const protocol = window.location.protocol;
                     const host = window.location.host;
                     const path = window.location.pathname.includes('/leosushi') ? '/leosushi/api' : '/api';
                     return `${protocol}//${host}${path}`;
                 })();
-                const apiUrl = `${apiBase}/orders.php?action=list`;
-                const response = await fetch(apiUrl, {
-                    method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json'
+
+                // Check if user is logged in
+                let loggedInUser = null;
+                if (window.getCurrentUser && typeof window.getCurrentUser === 'function') {
+                    try {
+                        loggedInUser = window.getCurrentUser();
+                    } catch (e) {}
+                }
+
+                if (!loggedInUser) {
+                    try {
+                        const stored = localStorage.getItem('leo_user');
+                        if (stored) loggedInUser = JSON.parse(stored);
+                    } catch (e) {}
+                }
+
+                if (loggedInUser && (loggedInUser.email || loggedInUser.phone || loggedInUser.id)) {
+                    currentUser = loggedInUser;
+                    // Load orders from API for logged-in user
+                    const qEmail = encodeURIComponent(currentUser.email || '');
+                    const qPhone = encodeURIComponent(currentUser.phone || '');
+                    const qId = encodeURIComponent(currentUser.id || '');
+                    const apiUrl = `${apiBase}/orders.php?action=list&email=${qEmail}&phone=${qPhone}&customer_id=${qId}`;
+
+                    try {
+                        const response = await fetch(apiUrl, {
+                            method: 'GET',
+                            headers: { 'Content-Type': 'application/json' }
+                        });
+                        const result = await response.json();
+
+                        if (result && result.success && Array.isArray(result.orders)) {
+                            allOrders = result.orders;
+                            if (typeof window.rememberLeoOrder === 'function') {
+                                allOrders.forEach(order => window.rememberLeoOrder(order));
+                            }
+                            // Sort by date (newest first)
+                            allOrders.sort((a, b) => {
+                                const dateA = new Date(a.date || a.created_at || a.createdAt || 0);
+                                const dateB = new Date(b.date || b.created_at || b.createdAt || 0);
+                                return dateB - dateA;
+                            });
+
+                            hideLoader();
+                            renderOrders();
+                            startLiveStatusPolling();
+                            return;
+                        }
+                    } catch (err) {
+                        console.warn('API customer orders list failed:', err);
                     }
-                });
+                }
 
-                const result = await response.json();
+                // If not logged in or no account orders returned, check recent orders on this device
+                const urlParams = new URLSearchParams(window.location.search);
+                const urlOrderId = urlParams.get('orderId') || urlParams.get('id');
+                let recentOrderIds = [];
+                try {
+                    recentOrderIds = JSON.parse(localStorage.getItem('leoRecentOrders') || '[]');
+                } catch (e) {
+                    recentOrderIds = [];
+                }
 
-                if (result && result.success && result.orders) {
-                    // Filter orders by user email
-                    allOrders = result.orders.filter(order => {
-                        const orderEmail = order.delivery_address?.email ||
-                            (typeof order.delivery_address === 'string' ? JSON.parse(order.delivery_address).email : null) ||
-                            order.delivery?.address?.email ||
-                            order.customer?.email || '';
-                        return orderEmail && orderEmail.toLowerCase() === currentUser.email.toLowerCase();
-                    });
+                if (urlOrderId && !recentOrderIds.includes(urlOrderId)) {
+                    recentOrderIds.unshift(urlOrderId);
+                }
 
-                    // Sort by date (newest first)
-                    allOrders.sort((a, b) => {
-                        const dateA = new Date(a.date || a.created_at || a.createdAt || 0);
-                        const dateB = new Date(b.date || b.created_at || b.createdAt || 0);
-                        return dateB - dateA;
-                    });
+                const rememberedOrders = getDeviceOrderHistory();
 
-                    renderOrders();
-                } else {
+                if ((recentOrderIds && recentOrderIds.length > 0) || rememberedOrders.length > 0) {
+                    console.log('📱 Loading recent orders on this device:', recentOrderIds);
+                    const fetchRecentOrder = async (oId) => {
+                        try {
+                            const res = await fetch(`${apiBase}/orders.php?action=get&order_id=${encodeURIComponent(oId)}`);
+                            const data = await res.json();
+                            return data && data.success && data.order ? data.order : null;
+                        } catch (err) {
+                            console.warn('Failed to fetch order:', oId, err);
+                            return null;
+                        }
+                    };
+                    const fetchedOrders = (await Promise.all(recentOrderIds.slice(0, 10).map(fetchRecentOrder))).filter(Boolean);
+
+                    const availableOrders = mergeOrdersById(fetchedOrders, rememberedOrders);
+                    if (availableOrders.length > 0) {
+                        allOrders = availableOrders;
+                        allOrders.sort((a, b) => {
+                            const dateA = new Date(a.date || a.created_at || a.createdAt || 0);
+                            const dateB = new Date(b.date || b.created_at || b.createdAt || 0);
+                            return dateB - dateA;
+                        });
+                        hideLoader();
+                        renderOrders();
+                        startLiveStatusPolling();
+
+                        // Add lookup other order button at bottom
+                        const lookOtherBtn = document.createElement('div');
+                        lookOtherBtn.style.cssText = 'text-align: center; margin-top: 24px;';
+                        lookOtherBtn.innerHTML = `
+                            <button type="button" onclick="showGuestTrackingForm()" class="btn-secondary" style="padding: 10px 20px; border-radius: 12px; font-size: 13px; cursor: pointer;">
+                                🔍 Ältere Bestellung mit Telefonnummer suchen
+                            </button>
+                        `;
+                        if (ordersList) ordersList.appendChild(lookOtherBtn);
+                        return;
+                    }
+                }
+
+                // Fallback: If logged in with no orders yet, render empty state; else show guest tracking form
+                hideLoader();
+                if (loggedInUser) {
                     allOrders = [];
                     renderOrders();
+                } else {
+                    showGuestTrackingForm();
                 }
             } catch (error) {
                 console.error('Error loading orders:', error);
-                loadingMessage.innerHTML = `
-                    <p style="color: #ff6666;">Fehler beim Laden der Bestellungen. Bitte versuchen Sie es erneut.</p>
-                `;
-            } finally {
-                loadingMessage.style.display = 'none';
+                hideLoader();
+                if (loadingMessage) {
+                    loadingMessage.innerHTML = `
+                        <p style="color: #ff6666;">Fehler beim Laden der Bestellungen. Bitte versuchen Sie es erneut.</p>
+                    `;
+                }
             }
+        }
+
+        // Live Polling for active orders (Updates status in real-time every 12 seconds)
+        let livePollTimer = null;
+        function startLiveStatusPolling() {
+            if (livePollTimer) clearInterval(livePollTimer);
+
+            const hasActiveOrders = allOrders.some(o => ['pending', 'confirmed', 'in_delivery'].includes(o.status));
+            if (!hasActiveOrders) return;
+
+            livePollTimer = setInterval(async () => {
+                const apiBase = window.API_PHP_BASE_URL || (() => {
+                    const protocol = window.location.protocol;
+                    const host = window.location.host;
+                    const path = window.location.pathname.includes('/leosushi') ? '/leosushi/api' : '/api';
+                    return `${protocol}//${host}${path}`;
+                })();
+
+                let hasChanges = false;
+                for (let i = 0; i < allOrders.length; i++) {
+                    const ord = allOrders[i];
+                    if (['pending', 'confirmed', 'in_delivery'].includes(ord.status)) {
+                        const oId = ord.order_id || ord._id;
+                        try {
+                            const res = await fetch(`${apiBase}/orders.php?action=get&order_id=${encodeURIComponent(oId)}`);
+                            const data = await res.json();
+                            if (data && data.success && data.order && data.order.status !== ord.status) {
+                                allOrders[i] = data.order;
+                                if (typeof window.rememberLeoOrder === 'function') window.rememberLeoOrder(data.order);
+                                hasChanges = true;
+                            }
+                        } catch (e) {}
+                    }
+                }
+
+                if (hasChanges) {
+                    console.log('🔄 [Order Polling] Order status updated in real-time');
+                    renderOrders();
+                }
+            }, 12000);
         }
 
         // Filter orders
@@ -969,38 +1125,51 @@
             // Update active button
             document.querySelectorAll('.filter-btn').forEach(btn => {
                 btn.classList.remove('active');
+                btn.setAttribute('aria-pressed', 'false');
             });
-            document.querySelector(`[data-status="${status}"]`).classList.add('active');
+            const activeBtn = document.querySelector(`[data-status="${status}"]`);
+            if (activeBtn) {
+                activeBtn.classList.add('active');
+                activeBtn.setAttribute('aria-pressed', 'true');
+            }
 
             renderOrders();
         }
 
         // Show Guest Tracking Form
         function showGuestTrackingForm() {
-            document.querySelector('.orders-filter').style.display = 'none';
-            document.querySelector('.orders-sidebar').style.display = 'none';
-            document.querySelector('.orders-wrapper').style.gridTemplateColumns = '1fr';
-            
+            const filterEl = document.querySelector('.orders-filter');
+            if (filterEl) filterEl.style.display = 'none';
+            const sidebarEl = document.querySelector('.orders-sidebar');
+            if (sidebarEl) sidebarEl.style.display = 'none';
+            const wrapperEl = document.querySelector('.orders-wrapper');
+            if (wrapperEl) wrapperEl.style.gridTemplateColumns = '1fr';
+
             const ordersList = document.getElementById('ordersList');
-            document.getElementById('loadingMessage').style.display = 'none';
-            
+            const loadingMsg = document.getElementById('loadingMessage');
+            if (loadingMsg) loadingMsg.style.display = 'none';
+
+            if (!ordersList) return;
             ordersList.innerHTML = `
                 <div style="max-width: 500px; margin: 0 auto; background: rgba(18, 18, 20, 0.95); padding: 40px; border-radius: 16px; border: 1px solid rgba(229, 207, 142, 0.15); box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);">
                     <h2 style="color: var(--gold); margin-bottom: 24px; font-size: 24px; text-align: center;">Schnell-Tracking ohne Account</h2>
                     <p style="color: rgba(255,255,255,0.7); margin-bottom: 24px; text-align: center;">Bitte geben Sie Ihre Bestellnummer und Telefonnummer ein, um Ihre Bestellung zu verfolgen.</p>
                     
                     <div style="margin-bottom: 20px;">
-                        <label style="display: block; color: #fff; margin-bottom: 8px;">Bestellnummer (Order ID)</label>
-                        <input type="text" id="guestOrderId" placeholder="z.B. LEO-260724-001" style="width: 100%; padding: 12px; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: #fff; font-size: 16px;">
+                        <label for="guestOrderId" style="display: block; color: #fff; margin-bottom: 8px;">Bestellnummer (Order ID)</label>
+                        <input type="text" id="guestOrderId" placeholder="z.B. LEO-260724-001" autocomplete="off" style="width: 100%; padding: 12px; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: #fff; font-size: 16px;">
                     </div>
                     
                     <div style="margin-bottom: 30px;">
-                        <label style="display: block; color: #fff; margin-bottom: 8px;">Telefonnummer (wie bei Bestellung)</label>
-                        <input type="tel" id="guestPhone" placeholder="Ihre Telefonnummer" style="width: 100%; padding: 12px; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: #fff; font-size: 16px;">
+                        <label for="guestPhone" style="display: block; color: #fff; margin-bottom: 8px;">Telefonnummer (wie bei Bestellung)</label>
+                        <input type="tel" id="guestPhone" placeholder="Ihre Telefonnummer" autocomplete="tel" style="width: 100%; padding: 12px; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: #fff; font-size: 16px;">
                     </div>
                     
-                    <button onclick="trackGuestOrder()" id="guestTrackBtn" style="width: 100%; padding: 14px; background: var(--gold); color: #1a1a1a; font-weight: bold; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; transition: all 0.3s;">Bestellung suchen</button>
+                    <button type="button" onclick="trackGuestOrder()" id="guestTrackBtn" style="width: 100%; padding: 14px; background: var(--gold); color: #1a1a1a; font-weight: bold; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; transition: all 0.3s;">Bestellung suchen</button>
                     <div id="guestTrackError" style="color: #ef4444; margin-top: 16px; text-align: center; display: none;"></div>
+                    <div style="margin-top: 24px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.1); text-align: center; font-size: 13px; color: rgba(255,255,255,0.7);">
+                        Haben Sie ein Kundenkonto? <a href="profile.html" style="color: var(--gold); font-weight: 600; text-decoration: underline;">Jetzt anmelden</a> für volle Bestellhistorie & 1-Klick Nachbestellung.
+                    </div>
                 </div>
             `;
         }
@@ -1036,10 +1205,12 @@
                 
                 if (result.success && result.order) {
                     allOrders = [result.order];
+                    if (typeof window.rememberLeoOrder === 'function') window.rememberLeoOrder(result.order);
                     document.getElementById('ordersList').innerHTML = '';
                     renderOrders();
                     // Add a "Search again" button
                     const backBtn = document.createElement('button');
+                    backBtn.type = 'button';
                     backBtn.className = 'track-order-btn';
                     backBtn.style.cssText = 'margin-top: 16px; display: block; width: 100%;';
                     backBtn.textContent = '🔍 Weitere Bestellung suchen';
@@ -1115,8 +1286,9 @@
                 }
 
                 const total = summary.total || order.order_total || '0,00 €';
-                const serviceType = order.service_type === 'delivery' ? 'Lieferung' :
-                    order.service_type === 'pickup' ? 'Abholung' : 'Reservierung';
+                const rawServiceType = order.service_type || order.serviceType || 'delivery';
+                const serviceType = rawServiceType === 'delivery' ? 'Lieferung' :
+                    rawServiceType === 'pickup' ? 'Abholung' : 'Im Restaurant';
 
                 // Parse delivery_address (could be JSON string or object)
                 let address = {};
@@ -1134,7 +1306,12 @@
                     address = order.delivery.address;
                 }
 
-                const estimatedTime = order.estimated_time || order.estimatedTime || null;
+                const estimatedTime = order.estimated_time || order.estimatedTime || summary.scheduled_delivery_time || null;
+                const addressLine = [address.street, address.house_number || address.houseNumber].filter(Boolean).join(' ');
+                const addressCity = [address.postal, address.city].filter(Boolean).join(' ');
+                const driverName = summary.shipper_name || summary.delivered_by || null;
+                const deliveryDistance = Number(summary.delivery_distance_km || 0);
+                const statusLabel = rawServiceType === 'delivery' && status === 'completed' ? 'Zugestellt ✅' : getStatusText(status);
 
                 return `
                     <div class="order-card">
@@ -1143,10 +1320,10 @@
                                 <div class="order-id">Bestellung #${orderIdShort}</div>
                                 <div class="order-date">${formatDate(date)}</div>
                             </div>
-                            <span class="order-status ${status}">${getStatusText(status)}</span>
+                            <span class="order-status ${status}">${statusLabel}</span>
                         </div>
 
-                        ${order.service_type === 'delivery' ? `
+                        ${rawServiceType === 'delivery' && status !== 'cancelled' ? `
                         <div class="delivery-progress">
                           <div class="progress-step completed">
                             <div class="step-dot"></div>
@@ -1170,9 +1347,15 @@
                         </div>
                         ` : ''}
 
-                        ${status === 'in_delivery' && summary.shipper_name ? `
+                        ${status === 'cancelled' ? `
+                        <div class="shipper-info" style="border-color: rgba(239,68,68,.35); color: #fca5a5; background: rgba(239,68,68,.08);">
+                          <span>✕</span> Diese Bestellung wurde storniert.
+                        </div>
+                        ` : ''}
+
+                        ${(status === 'in_delivery' || status === 'completed') && driverName ? `
                         <div class="shipper-info">
-                          <span>🚚</span> Fahrer: <strong>${summary.shipper_name}</strong>
+                          <span>🚚</span> ${status === 'completed' ? 'Geliefert von' : 'Fahrer'}: <strong>${driverName}</strong>
                         </div>
                         ` : ''}
                         
@@ -1181,16 +1364,22 @@
                                 <span class="order-info-label">🚚 Service</span>
                                 <span class="order-info-value">${serviceType}</span>
                             </div>
-                            ${address.street ? `
+                            ${addressLine ? `
                             <div class="order-info-item">
                                 <span class="order-info-label">📍 Adresse</span>
-                                <span class="order-info-value">${address.street}, ${address.postal} ${address.city}</span>
+                                <span class="order-info-value">${addressLine}${addressCity ? `, ${addressCity}` : ''}</span>
                             </div>
                             ` : ''}
                             ${estimatedTime ? `
                             <div class="order-info-item">
                                 <span class="order-info-label">🕒 Geplante Zeit</span>
                                 <span class="order-info-value">${estimatedTime}</span>
+                            </div>
+                            ` : ''}
+                            ${rawServiceType === 'delivery' && deliveryDistance > 0 ? `
+                            <div class="order-info-item">
+                                <span class="order-info-label">📏 Entfernung</span>
+                                <span class="order-info-value">${deliveryDistance.toFixed(1).replace('.', ',')} km</span>
                             </div>
                             ` : ''}
                         </div>
@@ -1215,23 +1404,28 @@
                             <span class="order-total-value">${formatPrice(total)}</span>
                         </div>
                         
-                        ${(status === 'confirmed' || status === 'in_delivery') && address.street ? `
-                        <div class="order-actions" style="margin-top: 20px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.1);">
-                            <button class="track-order-btn" onclick="toggleOrderTracking(event, '${orderId}', ${JSON.stringify(order).replace(/'/g, '&#39;').replace(/"/g, '&quot;')})">
-                                🗺️ Bestellung verfolgen
+                        <div class="order-actions" style="margin-top: 16px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,0.08); display: flex; gap: 10px; flex-wrap: wrap;">
+                            ${items.length > 0 ? `
+                            <button type="button" class="btn-reorder-luxe" onclick='reorderPreviousItems(${JSON.stringify(items).replace(/'/g, "&#39;")})'>
+                                🔄 Erneut bestellen
                             </button>
-                            <div id="trackingMap_${orderId}" class="order-tracking-map-container" style="display: none;">
-                                <div id="map_${orderId}" class="order-tracking-map"></div>
-                            </div>
-                            <div id="trackingInfo_${orderId}" class="tracking-info" style="display: none;"></div>
-                        </div>
-                        ` : ''}
-                        ${status === 'completed' ? `
-                        <div class="order-actions" style="margin-top: 20px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.1);">
-                            <button class="btn-review" onclick="openReviewModal('${orderId}', '${orderIdShort}')" data-order-id="${orderId}">
+                            ` : ''}
+                            ${(status === 'confirmed' || status === 'in_delivery') && addressLine ? `
+                            <button type="button" class="track-order-btn" aria-expanded="false" onclick="toggleOrderTracking(event, '${orderId}', ${JSON.stringify(order).replace(/'/g, '&#39;').replace(/"/g, '&quot;')})">
+                                🗺️ Live-Tracking
+                            </button>
+                            ` : ''}
+                            ${status === 'completed' ? `
+                            <button type="button" class="btn-review" onclick="openReviewModal('${orderId}', '${orderIdShort}')" data-order-id="${orderId}">
                                 ⭐ Bewertung abgeben
                             </button>
+                            ` : ''}
                         </div>
+                        ${(status === 'confirmed' || status === 'in_delivery') && addressLine ? `
+                        <div id="trackingMap_${orderId}" class="order-tracking-map-container" style="display: none; margin-top: 15px;">
+                            <div id="map_${orderId}" class="order-tracking-map"></div>
+                        </div>
+                        <div id="trackingInfo_${orderId}" class="tracking-info" style="display: none;"></div>
                         ` : ''}
                     </div>
                 `;
@@ -1274,11 +1468,14 @@
             document.getElementById('reviewRating').value = '5';
             document.getElementById('reviewComment').value = '';
             updateStarDisplay(5);
+            document.body.style.overflow = 'hidden';
+            document.querySelector('#reviewModal .review-modal-close')?.focus({ preventScroll: true });
         }
 
         // Close review modal
         function closeReviewModal() {
             document.getElementById('reviewModal').style.display = 'none';
+            document.body.style.overflow = '';
             currentReviewOrderId = null;
             currentReviewOrderIdShort = null;
         }
@@ -1294,6 +1491,7 @@
                     star.textContent = '☆';
                     star.style.opacity = '0.4';
                 }
+                star.setAttribute('aria-pressed', index < rating ? 'true' : 'false');
             });
         }
 
@@ -1355,19 +1553,45 @@
         function toggleOrderTracking(evt, orderId, orderData) {
             const mapContainer = document.getElementById(`trackingMap_${orderId}`);
             const trackingInfo = document.getElementById(`trackingInfo_${orderId}`);
-            const btn = evt.target;
+            const btn = evt.currentTarget;
 
             if (mapContainer.style.display === 'none') {
+                // Only one live map/polling stream should run at once.
+                activeTrackingOrders.forEach((mapInstance, activeOrderId) => {
+                    if (activeOrderId === orderId) return;
+                    if (mapInstance && typeof mapInstance.remove === 'function') mapInstance.remove();
+                    const otherContainer = document.getElementById(`trackingMap_${activeOrderId}`);
+                    const otherInfo = document.getElementById(`trackingInfo_${activeOrderId}`);
+                    if (otherContainer) {
+                        otherContainer.style.display = 'none';
+                        const mapEl = otherContainer.querySelector('.order-tracking-map');
+                        if (mapEl) mapEl.innerHTML = '';
+                    }
+                    if (otherInfo) otherInfo.style.display = 'none';
+                    document.querySelectorAll('.track-order-btn').forEach(otherButton => {
+                        if (otherButton !== btn && otherButton.getAttribute('aria-expanded') === 'true') {
+                            otherButton.setAttribute('aria-expanded', 'false');
+                            otherButton.textContent = '🗺️ Live-Tracking';
+                        }
+                    });
+                    activeTrackingOrders.delete(activeOrderId);
+                });
+
                 // Show map
                 mapContainer.style.display = 'block';
+                if (trackingInfo) {
+                    trackingInfo.style.display = 'block';
+                    trackingInfo.innerHTML = '<strong>Status:</strong> Verbindung wird hergestellt…';
+                }
                 btn.textContent = '🗺️ Tracking ausblenden';
+                btn.setAttribute('aria-expanded', 'true');
 
                 // Initialize map if not already initialized
                 if (!activeTrackingOrders.has(orderId)) {
                     setTimeout(() => {
                         if (typeof window.initOrderTrackingMap === 'function') {
-                            window.initOrderTrackingMap(`map_${orderId}`, orderData);
-                            activeTrackingOrders.set(orderId, true);
+                            const mapInstance = window.initOrderTrackingMap(`map_${orderId}`, orderData);
+                            activeTrackingOrders.set(orderId, mapInstance);
 
                             // Start real-time tracking
                             if (typeof window.startOrderTracking === 'function') {
@@ -1388,6 +1612,11 @@
                                             ${updatedOrder.estimated_time ? `<strong>Geschätzte Zeit:</strong> ${updatedOrder.estimated_time}` : ''}
                                         `;
                                     }
+                                    if (typeof window.rememberLeoOrder === 'function') window.rememberLeoOrder(updatedOrder);
+                                    if (updatedOrder.status === 'completed' || updatedOrder.status === 'cancelled') {
+                                        if (typeof window.stopOrderTracking === 'function') window.stopOrderTracking();
+                                        setTimeout(loadOrders, 600);
+                                    }
                                 });
                             }
                         }
@@ -1396,7 +1625,9 @@
             } else {
                 // Hide map
                 mapContainer.style.display = 'none';
+                if (trackingInfo) trackingInfo.style.display = 'none';
                 btn.textContent = '🗺️ Bestellung verfolgen';
+                btn.setAttribute('aria-expanded', 'false');
 
                 // Stop tracking
                 if (typeof window.stopOrderTracking === 'function') {
@@ -1413,24 +1644,24 @@
 
     <!-- Review Modal -->
     <div class="review-modal" id="reviewModal" onclick="if(event.target.id === 'reviewModal') closeReviewModal()">
-        <div class="review-modal-content" onclick="event.stopPropagation()">
+        <div class="review-modal-content" role="dialog" aria-modal="true" aria-labelledby="reviewModalTitle" onclick="event.stopPropagation()">
             <div class="review-modal-header">
-                <h3>⭐ Bewertung abgeben</h3>
-                <button class="review-modal-close" onclick="closeReviewModal()" aria-label="Schließen">×</button>
+                <h3 id="reviewModalTitle">⭐ Bewertung abgeben</h3>
+                <button type="button" class="review-modal-close" onclick="closeReviewModal()" aria-label="Schließen">×</button>
             </div>
 
             <div class="review-form-group">
                 <label>Ihre Bewertung</label>
                 <div class="star-rating-container">
-                    <button class="star-rating-btn"
+                    <button type="button" class="star-rating-btn" aria-label="1 Stern"
                         onclick="document.getElementById('reviewRating').value = '1'; updateStarDisplay(1);">☆</button>
-                    <button class="star-rating-btn"
+                    <button type="button" class="star-rating-btn" aria-label="2 Sterne"
                         onclick="document.getElementById('reviewRating').value = '2'; updateStarDisplay(2);">☆</button>
-                    <button class="star-rating-btn"
+                    <button type="button" class="star-rating-btn" aria-label="3 Sterne"
                         onclick="document.getElementById('reviewRating').value = '3'; updateStarDisplay(3);">☆</button>
-                    <button class="star-rating-btn"
+                    <button type="button" class="star-rating-btn" aria-label="4 Sterne"
                         onclick="document.getElementById('reviewRating').value = '4'; updateStarDisplay(4);">☆</button>
-                    <button class="star-rating-btn"
+                    <button type="button" class="star-rating-btn" aria-label="5 Sterne"
                         onclick="document.getElementById('reviewRating').value = '5'; updateStarDisplay(5);">☆</button>
                 </div>
                 <input type="hidden" id="reviewRating" value="5">
@@ -1448,8 +1679,8 @@
             </div>
 
             <div class="review-modal-actions">
-                <button class="btn-review-cancel" onclick="closeReviewModal()">Abbrechen</button>
-                <button class="btn-review-submit" id="submitReviewBtn" onclick="submitReview()">Bewertung
+                <button type="button" class="btn-review-cancel" onclick="closeReviewModal()">Abbrechen</button>
+                <button type="button" class="btn-review-submit" id="submitReviewBtn" onclick="submitReview()">Bewertung
                     absenden</button>
             </div>
         </div>
@@ -1460,12 +1691,90 @@
         document.getElementById('reviewComment')?.addEventListener('input', function () {
             document.getElementById('reviewCommentCount').textContent = this.value.length;
         });
+        document.addEventListener('keydown', event => {
+            if (event.key === 'Escape' && document.getElementById('reviewModal')?.style.display === 'flex') {
+                closeReviewModal();
+            }
+        });
 
-        // Initialize star display
-        if (document.getElementById('reviewRating')) {
-            updateStarDisplay(5);
+        // 1-Click Re-order Implementation
+        function reorderPreviousItems(items) {
+            try {
+                if (!items || !items.length) {
+                    if (typeof showNotification === 'function') {
+                        showNotification('error', 'Fehler', 'Keine Artikel in dieser Bestellung gefunden.');
+                    }
+                    return;
+                }
+
+                let currentCart = [];
+                try {
+                    currentCart = JSON.parse(localStorage.getItem('leoCart') || localStorage.getItem('cart') || '[]');
+                } catch (e) {
+                    currentCart = [];
+                }
+
+                let addedCount = 0;
+                items.forEach(item => {
+                    const qty = parseInt(item.qty || item.quantity || 1, 10) || 1;
+                    let rawPrice = item.price;
+                    if (rawPrice === undefined || rawPrice === null) {
+                        if (typeof item.total === 'string') {
+                            rawPrice = parseFloat(item.total.replace('€', '').replace(',', '.').trim()) / qty;
+                        } else if (typeof item.total === 'number') {
+                            rawPrice = item.total / qty;
+                        } else {
+                            rawPrice = 0;
+                        }
+                    }
+
+                    const existing = currentCart.find(c => c.name === item.name || (item.id && c.id === item.id));
+                    if (existing) {
+                        existing.qty = (parseInt(existing.qty || existing.quantity, 10) || 1) + qty;
+                        delete existing.quantity;
+                    } else {
+                        currentCart.push({
+                            id: item.id || 'item_' + Date.now() + Math.random().toString(36).substr(2, 4),
+                            name: item.name || 'Sushi Item',
+                            price: parseFloat(rawPrice) || 0,
+                            qty: qty,
+                            image: item.image || 'assets/close-up-sushi-served-table 1.webp',
+                            note: item.note || '',
+                            options: item.options || []
+                        });
+                    }
+                    addedCount += qty;
+                });
+
+                localStorage.setItem('leoCart', JSON.stringify(currentCart));
+                localStorage.setItem('cart', JSON.stringify(currentCart));
+                if (window.cart) window.cart = currentCart;
+
+                window.dispatchEvent(new Event('storage'));
+                window.dispatchEvent(new CustomEvent('cartUpdated', { detail: { cart: currentCart } }));
+
+                if (window.LeoMobileApp && typeof window.LeoMobileApp.updateCartBadge === 'function') {
+                    window.LeoMobileApp.updateCartBadge();
+                }
+
+                if (typeof showNotification === 'function') {
+                    showNotification('success', 'Warenkorb aktualisiert', `${addedCount} Artikel wurden in den Warenkorb gelegt!`);
+                }
+
+                setTimeout(() => {
+                    if (typeof window.navigateTo === 'function') {
+                        window.navigateTo('menu.html?openCart=true');
+                    } else {
+                        window.location.href = 'menu.html?openCart=true';
+                    }
+                }, 400);
+            } catch (err) {
+                console.error('Error in reorderPreviousItems:', err);
+            }
         }
+        window.reorderPreviousItems = reorderPreviousItems;
     </script>
+    <script src="js/mobile-app.js?v=20260824_v54"></script>
 </body>
 
 </html>

@@ -1,6 +1,13 @@
 // Reservation Module
 // Note: TOTAL_TABLES and RESERVATION_DURATION_MINUTES are defined in config.js
 
+function formatLocalISODate(date = new Date()) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
 // Get available tables for a specific date and time (from MySQL API)
 async function getAvailableTables(date, time) {
   if (!date || !time) return [];
@@ -134,7 +141,7 @@ function setupReservationTimeOptions() {
   
   const selectedDate = dateInput.value;
   const now = new Date();
-  const today = now.toISOString().split('T')[0];
+  const today = formatLocalISODate(now);
   
   const timeOptions = [];
 
@@ -194,7 +201,7 @@ function initReservationDateTime() {
   if (!dateInput) return;
 
   const now = new Date();
-  const today = now.toISOString().split('T')[0];
+  const today = formatLocalISODate(now);
   
   // Set default to today
   dateInput.value = today;
@@ -207,7 +214,7 @@ function initReservationDateTime() {
     console.log('⚠️ No slots left today, rolling over to tomorrow...');
     const tomorrow = new Date(now);
     tomorrow.setDate(tomorrow.getDate() + 1);
-    const tomorrowStr = tomorrow.toISOString().split('T')[0];
+    const tomorrowStr = formatLocalISODate(tomorrow);
     dateInput.value = tomorrowStr;
     setupReservationTimeOptions(); // Refresh slots for tomorrow
   }
@@ -316,7 +323,7 @@ function openReservationModalInternal() {
 
   const dateInput = document.getElementById('reserveDate');
   if (dateInput) {
-    const today = new Date().toISOString().split('T')[0];
+    const today = formatLocalISODate();
     dateInput.setAttribute('min', today);
   }
 
@@ -772,24 +779,34 @@ async function handleReservation(event) {
     return;
   }
 
+  const reservationSubmitBtn = document.getElementById('submitBtn');
+  if (reservationSubmitBtn) {
+    reservationSubmitBtn.disabled = true;
+    reservationSubmitBtn.textContent = 'Reservierung wird gesendet…';
+  }
+
   const reservationId = `RES-${Date.now()}`;
   const reservationTimestamp = new Date().toISOString();
 
   // Save customer information and get customer code
   let savedCustomerInfo = null;
   if (typeof window.saveCustomerInfo === 'function') {
-    savedCustomerInfo = await window.saveCustomerInfo({
-      firstName: firstName,
-      lastName: lastName,
-      email: email,
-      phone: phone,
-      street: '',
-      postal: '',
-      city: '',
-      note: note || '',
-      customerCode: customerCode // Include customer code if entered
-    });
-    console.log('✅ Customer info saved, customer code:', savedCustomerInfo?.customerCode);
+    try {
+      savedCustomerInfo = await window.saveCustomerInfo({
+        firstName: firstName,
+        lastName: lastName,
+        email: email,
+        phone: phone,
+        street: '',
+        postal: '',
+        city: '',
+        note: note || '',
+        customerCode: customerCode
+      });
+      console.log('✅ Customer info saved, customer code:', savedCustomerInfo?.customerCode);
+    } catch (error) {
+      console.warn('Customer profile could not be saved before reservation:', error);
+    }
   }
 
   // Get final customer code (from savedCustomerInfo or form input)
@@ -851,10 +868,13 @@ async function handleReservation(event) {
     createdAt: reservationTimestamp
   };
 
-  // If there are items, create an order linked to this reservation
+  let orderData = null;
+
+  // If there are items, prepare an order linked to this reservation.
+  // It is persisted only after the reservation API confirms success.
   if (normalizedItems.length > 0) {
     const orderId = `ORD-${Date.now()}`;
-    const orderData = {
+    orderData = {
       order_id: orderId,
       branch_id: branchId,
       status: 'pending',
@@ -895,43 +915,10 @@ async function handleReservation(event) {
       createdAt: reservationTimestamp
     };
 
-    // Save order (functions should be in payment.js or firebase.js)
-    if (typeof saveOrderToDailyReport === 'function') {
-      saveOrderToDailyReport(orderData);
-    }
-
-    // Clear reservation cart and flag
-    localStorage.removeItem('leoReservationCart');
-    localStorage.removeItem('leoSelectingForReservation');
-
-    // Also clear regular cart since items have been used for reservation
-    if (typeof window.clearCart === 'function') {
-      window.clearCart();
-    } else {
-      localStorage.removeItem('leoCart');
-    }
-
-    // Update cart UI if function exists
-    if (typeof window.updateCartUI === 'function') {
-      window.updateCartUI();
-    }
-  } else {
-    localStorage.removeItem('leoSelectingForReservation');
-
-    // Clear regular cart even if no items (user might have cleared items before submitting)
-    if (typeof window.clearCart === 'function') {
-      window.clearCart();
-    } else {
-      localStorage.removeItem('leoCart');
-    }
-
-    // Update cart UI if function exists
-    if (typeof window.updateCartUI === 'function') {
-      window.updateCartUI();
-    }
   }
 
   // Save reservation to MySQL database via API
+  let reservationSaved = false;
   try {
     if (window.api && window.api.reservations && window.api.reservations.saveReservation) {
       const apiData = {
@@ -954,6 +941,7 @@ async function handleReservation(event) {
       const result = await window.api.reservations.saveReservation(apiData);
 
       if (result && result.success) {
+        reservationSaved = true;
         console.log('✅ Reservation saved to database successfully:', result.reservation_id);
       } else {
         console.error('❌ Failed to save reservation to database:', result?.message);
@@ -963,7 +951,32 @@ async function handleReservation(event) {
     }
   } catch (error) {
     console.error('❌ Error saving reservation to database:', error);
-    // Continue even if API fails - don't block user
+  }
+
+  if (!reservationSaved) {
+    const submitBtn = document.getElementById('submitBtn');
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Reservierung erneut versuchen';
+    }
+    alert('Die Reservierung konnte nicht gespeichert werden. Ihre Eingaben und ausgewählten Gerichte bleiben erhalten. Bitte versuchen Sie es erneut.');
+    return;
+  }
+
+  if (orderData && typeof saveOrderToDailyReport === 'function') {
+    saveOrderToDailyReport(orderData);
+  }
+
+  // Clear cart state only after the server accepted the reservation.
+  localStorage.removeItem('leoReservationCart');
+  localStorage.removeItem('leoSelectingForReservation');
+  if (typeof window.clearCart === 'function') {
+    window.clearCart();
+  } else {
+    localStorage.removeItem('leoCart');
+  }
+  if (typeof window.updateCartUI === 'function') {
+    window.updateCartUI();
   }
 
   // Also save to daily report (for backward compatibility)
@@ -1106,4 +1119,3 @@ window.openReservationModal = function (...args) {
 window.closeReservationModal = closeReservationModal;
 window.openMenuForReservation = openMenuForReservation;
 window.removeFromReservationCart = removeFromReservationCart;
-

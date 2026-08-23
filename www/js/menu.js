@@ -2,6 +2,46 @@
 let MENU_DATA_FROM_API = null;
 let MENU_CATEGORIES_FROM_API = null;
 
+// Dine-in Table Detection (Khi khách quét mã QR tại bàn)
+(function checkTableParam() {
+  if (typeof window === 'undefined') return;
+  const urlParams = new URLSearchParams(window.location.search);
+  const tableNum = urlParams.get('table') || urlParams.get('table_id') || urlParams.get('t');
+  const branch = urlParams.get('branch');
+  
+  if (tableNum) {
+    localStorage.setItem('leo_table_number', tableNum);
+    localStorage.setItem('leo_service_type', 'dine-in');
+    if (branch) {
+      localStorage.setItem('selectedBranch', branch);
+    }
+    
+    const showTableBadge = () => {
+      if (document.getElementById('tableDineInBadge')) return;
+      const tableBadge = document.createElement('div');
+      tableBadge.id = 'tableDineInBadge';
+      tableBadge.style.cssText = `
+        position: fixed; top: 12px; left: 50%; transform: translateX(-50%);
+        background: linear-gradient(135deg, #e5cf8e, #b3914a); color: #0b0b0d;
+        padding: 6px 18px; border-radius: 20px; font-size: 13px; font-weight: 800;
+        box-shadow: 0 4px 15px rgba(229,207,142,0.5); z-index: 99999;
+        display: flex; align-items: center; gap: 8px; border: 2px solid #0b0b0d;
+      `;
+      tableBadge.innerHTML = `
+        <span>🍽️ Tisch ${tableNum}</span>
+        <span style="font-size: 11px; opacity: 0.85;">(Im Restaurant)</span>
+      `;
+      document.body.appendChild(tableBadge);
+    };
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', showTableBadge);
+    } else {
+      showTableBadge();
+    }
+  }
+})();
+
 // Expose to window for other scripts
 if (typeof window !== 'undefined') {
   window.MENU_DATA_FROM_API = MENU_DATA_FROM_API;
@@ -11,6 +51,7 @@ if (typeof window !== 'undefined') {
 // Load menu from database API
 async function loadMenuFromAPI() {
   try {
+    const isNativeAppView = window.LEO_IS_NATIVE_APP === true;
     // Get current branch
     let branchId = null;
     try {
@@ -19,6 +60,26 @@ async function loadMenuFromAPI() {
         branchId = JSON.parse(savedBranch).id;
       }
     } catch(e) {}
+    if (isNativeAppView && localStorage.getItem('leoBranchSelectionConfirmed') !== 'v53') {
+      branchId = null;
+    }
+
+    // Native ordering is locked until the customer explicitly chooses a
+    // branch. Never request the combined catalog in the app.
+    if (isNativeAppView && !branchId) {
+      MENU_DATA_FROM_API = null;
+      window.MENU_DATA_FROM_API = null;
+      window.LEO_MENU_BRANCH_ID = null;
+      return null;
+    }
+
+    if (isNativeAppView && branchId !== 'branch_flora' && branchId !== 'branch_haupt') return null;
+
+    if (window.LEO_MENU_BRANCH_ID && window.LEO_MENU_BRANCH_ID !== branchId) {
+      MENU_DATA_FROM_API = null;
+      window.MENU_DATA_FROM_API = null;
+    }
+    window.LEO_MENU_BRANCH_ID = branchId;
     
     // If no branch is selected yet, we might want to wait or use a default, 
     // but the user wants NO DEFAULT. So we just pass null/undefined or wait.
@@ -31,7 +92,11 @@ async function loadMenuFromAPI() {
       try {
         const parsed = JSON.parse(cachedData);
         MENU_DATA_FROM_API = parsed;
-        if (typeof window !== 'undefined') window.MENU_DATA_FROM_API = parsed;
+        if (typeof window !== 'undefined') {
+          window.MENU_DATA_FROM_API = parsed;
+          window.LEO_MENU_BRANCH_ID = branchId;
+          window.dispatchEvent(new CustomEvent('menuDataReady', { detail: { branchId, source: 'cache' } }));
+        }
         console.log('⚡ Instant load from cache for branch: ' + branchId);
       } catch (e) {
         console.warn('Cache error:', e);
@@ -66,6 +131,8 @@ async function loadMenuFromAPI() {
 
       if (typeof window !== 'undefined') {
         window.MENU_DATA_FROM_API = transformed;
+        window.LEO_MENU_BRANCH_ID = branchId;
+        window.dispatchEvent(new CustomEvent('menuDataReady', { detail: { branchId, source: 'api' } }));
       }
 
       return transformed;
@@ -81,6 +148,7 @@ async function loadMenuFromAPI() {
 function transformMenuDataFromDB(items, categories) {
   // Group items by category
   const categoryMap = {};
+  const seenDisplayItems = new Set();
 
   // Initialize categories
   categories.forEach(cat => {
@@ -96,6 +164,19 @@ function transformMenuDataFromDB(items, categories) {
     // Only include available items (available = 1 or NULL means available)
     const isAvailable = item.available === 1 || item.available === null || item.available === undefined;
     if (item.category_id && categoryMap[item.category_id]) {
+      // Historical imports can contain multiple database rows for the exact
+      // same dish. They must remain manageable in Admin, but customers should
+      // only see one card for an identical branch/category/name/price record.
+      const displayKey = [
+        item.branch_id || '',
+        item.category_id,
+        String(item.name || '').trim().toLocaleLowerCase('de-DE'),
+        String(item.price || ''),
+        String(item.description || '').trim()
+      ].join('|');
+      if (seenDisplayItems.has(displayKey)) return;
+      seenDisplayItems.add(displayKey);
+
       const transformedItem = {
         name: item.name,
         desc: item.description || '',
@@ -107,7 +188,8 @@ function transformMenuDataFromDB(items, categories) {
         quantity: item.quantity || '',
         allergens: item.allergens || '',
         hasOptions: item.has_options === 1 || item.has_options === true,
-        options: item.options || []
+        options: item.options || [],
+        image: item.image || item.image_url || item.photo || ''
       };
 
       categoryMap[item.category_id].items.push(transformedItem);
@@ -1125,6 +1207,31 @@ async function initMenuOrderPage() {
 
   renderMenuTabsNavigation();
   setupWelcomeTabs();
+
+  // Handle URL params for direct category / search navigation
+  setTimeout(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const catParam = urlParams.get('cat');
+    const searchParam = urlParams.get('search');
+    
+    if (catParam) {
+      const menuData = MENU_DATA_FROM_API || (typeof MENU_DATA !== 'undefined' ? MENU_DATA : []);
+      const matched = menuData.find(c => c.id === catParam || c.id.replace(/[^a-z]/gi, '').toLowerCase() === catParam.replace(/[^a-z]/gi, '').toLowerCase());
+      if (matched && typeof switchTab === 'function') {
+        switchTab('category', matched.title);
+      }
+    }
+    
+    if (searchParam) {
+      const searchInputs = document.querySelectorAll('#menuSearch, #menuSearchInput, .menu-search-input');
+      searchInputs.forEach(input => {
+        if (input) {
+          input.focus();
+          input.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      });
+    }
+  }, 350);
 }
 
 function renderMenuTabsNavigation() {
@@ -1709,4 +1816,3 @@ window.toggleMenuOptions = function (optionsId, cardId) {
     cardEl.classList.add('options-expanded');
   }
 };
-

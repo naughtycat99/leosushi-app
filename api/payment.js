@@ -22,17 +22,21 @@ window.selectedTip = selectedTip;
 function getDeliveryAddress() {
   const customerFirstName = document.getElementById('customerFirstName')?.value.trim() || '';
   const customerLastName = document.getElementById('customerLastName')?.value.trim() || '';
-  const street = document.getElementById('deliveryStreet')?.value.trim() || '';
+  const streetOnly = document.getElementById('deliveryStreet')?.value.trim() || '';
+  const houseNumber = document.getElementById('deliveryHouseNumber')?.value.trim() || '';
+  const street = streetOnly && houseNumber ? `${streetOnly} ${houseNumber}` : streetOnly;
+
   const postal = document.getElementById('deliveryPostal')?.value.trim() || '';
   const city = document.getElementById('deliveryCity')?.value.trim() || '';
   const note = document.getElementById('deliveryNote')?.value.trim() || '';
   const customerPhone = document.getElementById('customerPhone')?.value.trim() || '';
   const customerEmail = document.getElementById('customerEmail')?.value.trim() || '';
-  
+
   return {
     firstName: customerFirstName,
     lastName: customerLastName,
-    street: street,
+    street: streetOnly,
+    houseNumber: houseNumber,
     postal: postal,
     city: city,
     note: note,
@@ -47,13 +51,13 @@ async function autoFillUserInfo() {
   if (typeof getCurrentUser !== 'function') {
     return false;
   }
-  
+
   const localUser = getCurrentUser();
   if (!localUser || !localUser.token) {
     // User not logged in - don't auto-fill
     return false;
   }
-  
+
   // Get input fields
   const firstNameInput = document.getElementById('customerFirstName');
   const lastNameInput = document.getElementById('customerLastName');
@@ -63,12 +67,12 @@ async function autoFillUserInfo() {
   const postalInput = document.getElementById('deliveryPostal');
   const cityInput = document.getElementById('deliveryCity');
   const noteInput = document.getElementById('deliveryNote');
-  
+
   // Check if inputs exist
   if (!firstNameInput || !lastNameInput || !emailInput || !phoneInput) {
     return false;
   }
-  
+
   // Fetch fresh data from API
   let user = localUser;
   try {
@@ -102,7 +106,7 @@ async function autoFillUserInfo() {
       note: localUser.note || ''
     };
   }
-  
+
   // Fill fields with user info (auto-fill when user is logged in)
   // Always fill if user is logged in, but allow manual editing after
   if (firstNameInput) firstNameInput.value = user.firstName || firstNameInput.value || '';
@@ -113,7 +117,7 @@ async function autoFillUserInfo() {
   if (postalInput) postalInput.value = user.postal || postalInput.value || '';
   if (cityInput) cityInput.value = user.city || cityInput.value || '';
   if (noteInput) noteInput.value = user.note || noteInput.value || '';
-  
+
   // Trigger events to notify any listeners
   [firstNameInput, lastNameInput, emailInput, phoneInput, streetInput, postalInput, cityInput, noteInput].forEach(input => {
     if (input && input.value) {
@@ -121,58 +125,85 @@ async function autoFillUserInfo() {
       input.dispatchEvent(new Event('change', { bubbles: true }));
     }
   });
-  
+
   return true;
 }
 
 // Don't expose autoFillUserInfo here - let checkout.js handle it to avoid conflicts
 // This function is only used internally in payment modal
 
-// Check if delivery address is within delivery range using OpenStreetMap
+// Check if delivery address is within 5km radius using GPS
 async function checkDeliveryRange(street, postal, city) {
+  const RESTAURANT_GPS = { lat: 52.5505, lng: 13.4304 }; // Florastraße 10A, 13187 Berlin
+  const MAX_KM = 5;
+
   if (!street || !postal || !city) {
     return { withinRange: false, distance: null, message: 'Bitte geben Sie eine vollständige Adresse ein.' };
   }
-  
+
   // Validate postal code format
   if (!/^\d{5}$/.test(postal)) {
     return { withinRange: false, distance: null, message: 'Bitte geben Sie eine gültige 5-stellige PLZ ein.' };
   }
-  
-  // Use OpenStreetMap for accurate distance calculation
-  if (typeof window.checkDeliveryRangeOSM === 'function') {
-    try {
-      return await window.checkDeliveryRangeOSM(street, postal, city);
-    } catch (error) {
-      console.error('Error checking delivery range with OSM:', error);
-      // Fallback to simple postal code check
+
+  // Geocode customer address via Photon
+  let coords = null;
+  try {
+    const q = `${street}, ${postal} ${city}, Deutschland`;
+    const res = await fetch(
+      `https://photon.komoot.io/api/?q=${encodeURIComponent(q)}&limit=1`
+    );
+    const data = await res.json();
+    if (data && data.features && data.features.length > 0) {
+      coords = {
+        lat: parseFloat(data.features[0].geometry.coordinates[1]),
+        lng: parseFloat(data.features[0].geometry.coordinates[0])
+      };
+    }
+  } catch (e) {
+    console.error('Geocoding error:', e);
+  }
+
+  if (coords) {
+    // Haversine distance (km)
+    const R = 6371;
+    const dLat = (coords.lat - RESTAURANT_GPS.lat) * Math.PI / 180;
+    const dLng = (coords.lng - RESTAURANT_GPS.lng) * Math.PI / 180;
+    const a =
+      Math.sin(dLat / 2) ** 2 +
+      Math.cos(RESTAURANT_GPS.lat * Math.PI / 180) * Math.cos(coords.lat * Math.PI / 180) *
+      Math.sin(dLng / 2) ** 2;
+    const distance = R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    const distStr = distance.toFixed(1);
+
+    if (distance <= MAX_KM) {
+      return { withinRange: true, distance: distStr, message: `✓ Lieferung möglich (${distStr} km — kostenlos)` };
+    } else {
+      return {
+        withinRange: false, distance: distStr,
+        message: `✗ Lieferung nicht möglich: ${distStr} km entfernt (Maximal ${MAX_KM} km). Bitte wählen Sie „Abholung" oder „Tisch reservieren".`
+      };
     }
   }
-  
-  // Fallback: Simple postal code check
-  const customerPostal = parseInt(postal);
-  const restaurantPostal = parseInt(RESTAURANT_ADDRESS.postal);
-  const postalDiff = Math.abs(customerPostal - restaurantPostal);
-  
-  if (postalDiff <= 1600) {
-    return { 
-      withinRange: true, 
-      distance: null, 
-      message: '✓ Lieferung möglich (innerhalb 4km - kostenlos)' 
-    };
-  } else {
-    return { 
-      withinRange: false, 
-      distance: null, 
-      message: '✗ Lieferung nicht möglich: Adresse liegt außerhalb des 4km-Radius. Bitte wählen Sie stattdessen "Tisch reservieren".' 
-    };
+
+  // Geocoding failed — strict postal code fallback
+  const valid5kmZips = [
+    13187, 13189, 13156, 13158, 13127, 13086, 13088, 13089,
+    13347, 13359, 13357, 10439, 10437, 10435, 10405, 10407, 13409
+  ];
+  if (valid5kmZips.includes(parseInt(postal))) {
+    return { withinRange: true, distance: null, message: '✓ Lieferung voraussichtlich möglich (PLZ-Prüfung)' };
   }
+  return {
+    withinRange: false, distance: null,
+    message: '✗ Adresse konnte nicht exakt auf der Karte gefunden werden. Bitte überprüfen Sie die Schreibweise von Straße und PLZ.'
+  };
 }
 
 // Check delivery address and update UI
 async function checkAndUpdateDeliveryStatus(street, postal, city) {
   const deliveryStatusEl = document.getElementById('deliveryStatusMessage');
-  
+
   if (!deliveryStatusEl) {
     // Create status message element if it doesn't exist
     const deliveryAddressSection = document.getElementById('deliveryAddressSection');
@@ -188,10 +219,10 @@ async function checkAndUpdateDeliveryStatus(street, postal, city) {
       return;
     }
   }
-  
+
   const rangeCheck = await checkDeliveryRange(street, postal, city);
   const statusEl = document.getElementById('deliveryStatusMessage');
-  
+
   if (statusEl) {
     if (rangeCheck.withinRange) {
       statusEl.innerHTML = `<div style="color: #10b981; display: flex; align-items: center; gap: 8px;">
@@ -214,7 +245,7 @@ async function checkAndUpdateDeliveryStatus(street, postal, city) {
       statusEl.style.border = '1px solid rgba(239,68,68,.3)';
     }
   }
-  
+
   // Update payment summary to reflect delivery status
   if (typeof updatePaymentSummary === 'function') {
     updatePaymentSummary();
@@ -227,46 +258,46 @@ function getCurrentLocation() {
     alert('Geolocation wird von Ihrem Browser nicht unterstützt.');
     return;
   }
-  
+
   const streetInput = document.getElementById('deliveryStreet');
   const postalInput = document.getElementById('deliveryPostal');
   const cityInput = document.getElementById('deliveryCity');
-  
+
   if (!streetInput || !postalInput || !cityInput) {
     return;
   }
-  
+
   // Show loading state
   const originalStreetValue = streetInput.value;
   streetInput.value = 'Position wird ermittelt...';
   streetInput.disabled = true;
-  
+
   navigator.geolocation.getCurrentPosition(
     async (position) => {
       try {
         const lat = position.coords.latitude;
         const lng = position.coords.longitude;
-        
+
         // Use reverse geocoding to get address
         // Note: In production, use a proper geocoding service like Google Maps Geocoding API
         // For now, we'll use a free service like Nominatim (OpenStreetMap)
         const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&addressdetails=1`);
         const data = await response.json();
-        
+
         if (data && data.address) {
           const address = data.address;
-          
+
           // Fill in the address fields
           if (address.road) {
             streetInput.value = address.road + (address.house_number ? ' ' + address.house_number : '');
           } else if (address.pedestrian) {
             streetInput.value = address.pedestrian;
           }
-          
+
           if (address.postcode) {
             postalInput.value = address.postcode;
           }
-          
+
           if (address.city) {
             cityInput.value = address.city;
           } else if (address.town) {
@@ -274,7 +305,7 @@ function getCurrentLocation() {
           } else if (address.village) {
             cityInput.value = address.village;
           }
-          
+
           // Check delivery range after filling address
           if (streetInput.value && postalInput.value && cityInput.value) {
             checkAndUpdateDeliveryStatus(streetInput.value, postalInput.value, cityInput.value);
@@ -294,9 +325,9 @@ function getCurrentLocation() {
     (error) => {
       streetInput.disabled = false;
       streetInput.value = originalStreetValue;
-      
+
       let errorMessage = 'Fehler beim Ermitteln der Position. ';
-      switch(error.code) {
+      switch (error.code) {
         case error.PERMISSION_DENIED:
           errorMessage += 'Berechtigung zur Standortfreigabe wurde verweigert.';
           break;
@@ -324,30 +355,30 @@ function getCurrentLocation() {
 function selectServiceType(type) {
   window.selectedServiceType = type;
   selectedServiceType = type; // Keep local reference in sync
-  
+
   // Update UI buttons
   document.querySelectorAll('.service-type-btn').forEach(btn => {
     btn.classList.remove('active');
     btn.style.borderColor = 'rgba(229,207,142,.2)';
     btn.style.background = 'rgba(255,255,255,.05)';
   });
-  
+
   const activeBtn = document.querySelector(`.service-type-btn[data-service="${type}"]`);
   if (activeBtn) {
     activeBtn.classList.add('active');
     activeBtn.style.borderColor = 'var(--gold)';
     activeBtn.style.background = 'linear-gradient(135deg, rgba(194,163,85,.2), rgba(229,207,142,.1))';
   }
-  
+
   // Update payment modal UI
   updatePaymentModalServiceType();
-  
+
   // If delivery is selected, check address if already filled
   if (type === 'delivery') {
     const street = document.getElementById('deliveryStreet')?.value.trim();
     const postal = document.getElementById('deliveryPostal')?.value.trim();
     const city = document.getElementById('deliveryCity')?.value.trim();
-    
+
     if (street && postal && city) {
       checkAndUpdateDeliveryStatus(street, postal, city);
     }
@@ -358,17 +389,17 @@ function selectServiceType(type) {
 function setServiceType(type) {
   window.selectedServiceType = type;
   selectedServiceType = type; // Keep local reference in sync
-  
+
   // Update UI
   document.querySelectorAll('.service-btn').forEach(btn => {
     btn.classList.remove('active');
   });
-  
+
   const activeBtn = event?.target?.closest('.service-btn');
   if (activeBtn) {
     activeBtn.classList.add('active');
   }
-  
+
   // Update delivery fee and table selection visibility
   if (typeof updateServiceTypeUI === 'function') {
     updateServiceTypeUI();
@@ -380,9 +411,9 @@ function openPaymentModal() {
   // Redirect to checkout page instead of opening modal
   window.location.href = 'checkout.html';
   return;
-  
+
   console.log('🔍 openPaymentModal called');
-  
+
   // First, close reservation modal if it's open
   const reservationModal = document.getElementById('reservationModal');
   if (reservationModal && reservationModal.style.display === 'flex') {
@@ -409,7 +440,7 @@ function openPaymentModal() {
     }, 350);
     return;
   }
-  
+
   openPaymentModalInternal();
 }
 
@@ -421,9 +452,9 @@ function openPaymentModalInternal() {
     alert('Fehler: Zahlungs-Modal wurde nicht gefunden. Bitte laden Sie die Seite neu.');
     return;
   }
-  
+
   console.log('✅ Opening payment modal...');
-  
+
   // Ensure reservation modal is completely closed and hidden
   const reservationModal = document.getElementById('reservationModal');
   if (reservationModal) {
@@ -433,7 +464,7 @@ function openPaymentModalInternal() {
     reservationModal.style.visibility = 'hidden';
     reservationModal.style.zIndex = '0';
     reservationModal.style.pointerEvents = 'none';
-    
+
     const reservationOverlay = document.getElementById('reservationOverlay');
     if (reservationOverlay) {
       reservationOverlay.style.display = 'none';
@@ -444,14 +475,14 @@ function openPaymentModalInternal() {
       reservationOverlay.classList.remove('active');
     }
   }
-  
+
   // Force a reflow to ensure reservation modal is fully closed
   void document.body.offsetHeight;
-  
+
   // Reset form
   window.selectedServiceType = 'delivery'; // Default to delivery
   selectedServiceType = 'delivery'; // Keep local reference in sync
-  
+
   // Reset service type buttons
   document.querySelectorAll('.service-type-btn').forEach(btn => {
     btn.classList.remove('active');
@@ -464,20 +495,20 @@ function openPaymentModalInternal() {
     defaultBtn.style.borderColor = 'var(--gold)';
     defaultBtn.style.background = 'linear-gradient(135deg, rgba(194,163,85,.2), rgba(229,207,142,.1))';
   }
-  
+
   // Set min date for reservation date input
   const reserveDateInput = document.getElementById('reserveDateInPayment');
   if (reserveDateInput) {
     const today = new Date().toISOString().split('T')[0];
     reserveDateInput.setAttribute('min', today);
   }
-  
+
   // Update payment modal UI
   updatePaymentModalServiceType();
-  
+
   // Auto-fill from early customer code entry (deprecated - now using autoFillUserInfo)
   // Removed - using autoFillUserInfo instead
-  
+
   // Disable confirm payment button until customer code is entered and validated
   const confirmPaymentBtn = document.getElementById('confirmPaymentBtn');
   if (confirmPaymentBtn) {
@@ -485,10 +516,10 @@ function openPaymentModalInternal() {
     confirmPaymentBtn.style.opacity = '0.5';
     confirmPaymentBtn.style.cursor = 'not-allowed';
   }
-  
+
   // Setup customer code validation listener
   setupPaymentCustomerCodeValidation();
-  
+
   // Reset payment options UI
   const cashOption = document.getElementById('paymentOptionCash');
   const cardOption = document.getElementById('paymentOptionCard');
@@ -496,7 +527,7 @@ function openPaymentModalInternal() {
   if (cashOption) cashOption.classList.remove('selected');
   if (cardOption) cardOption.classList.remove('selected');
   if (paypalOption) paypalOption.classList.remove('selected');
-  
+
   // Set default payment method to "cash" if not already selected
   if (!selectedPaymentMethod) {
     selectedPaymentMethod = 'cash';
@@ -515,7 +546,7 @@ function openPaymentModalInternal() {
       paypalOption.classList.add('selected');
     }
   }
-  
+
   // Reset tip selection
   selectedTip = null;
   window.selectedTip = null;
@@ -527,31 +558,31 @@ function openPaymentModalInternal() {
   if (customInput) customInput.style.display = 'none';
   const customAmountInput = document.getElementById('customTipAmount');
   if (customAmountInput) customAmountInput.value = '';
-  
+
   // Update order summary (this will also update tip options)
   if (typeof updatePaymentSummary === 'function') {
     updatePaymentSummary();
   }
-  
+
   // Hide PayPal button container initially
   const paypalButtonContainer = document.getElementById('paypalButtonContainer');
   if (paypalButtonContainer) {
     paypalButtonContainer.style.display = 'none';
   }
-  
+
   // Show confirm button initially (reuse the variable declared above)
   if (confirmPaymentBtn) {
     confirmPaymentBtn.style.display = 'block';
   }
-  
+
   // Show modal
   modal.style.display = 'flex';
   modal.style.opacity = '0';
   document.body.style.overflow = 'hidden';
-  
+
   setTimeout(() => {
     modal.style.opacity = '1';
-    
+
     // Auto-fill user info - call multiple times to ensure it works
     const fillInfo = async () => {
       if (typeof autoFillUserInfo === 'function') {
@@ -578,40 +609,40 @@ function openPaymentModalInternal() {
         }
       }
     };
-    
+
     // Try immediately after modal is visible
     setTimeout(fillInfo, 200);
-    
+
     // Try again after longer delay
     setTimeout(fillInfo, 600);
-    
+
     // Try one more time
     setTimeout(fillInfo, 1200);
   }, 10);
-  
+
   // Also use MutationObserver to catch when modal becomes fully visible
   const observer = new MutationObserver((mutations) => {
-    const isVisible = modal.style.display === 'flex' && 
-                     (modal.style.opacity === '1' || parseFloat(modal.style.opacity) > 0);
+    const isVisible = modal.style.display === 'flex' &&
+      (modal.style.opacity === '1' || parseFloat(modal.style.opacity) > 0);
     if (isVisible && typeof autoFillUserInfo === 'function') {
       setTimeout(async () => {
         await autoFillUserInfo();
       }, 100);
     }
   });
-  
+
   observer.observe(modal, {
     attributes: true,
     attributeFilter: ['style', 'class'],
     childList: false,
     subtree: false
   });
-  
+
   // Disconnect observer after 3 seconds
   setTimeout(() => {
     observer.disconnect();
   }, 3000);
-  
+
   // Close on Escape key
   const handleEscape = (e) => {
     if (e.key === 'Escape') {
@@ -625,18 +656,18 @@ function openPaymentModalInternal() {
 function closePaymentModal() {
   const modal = document.getElementById('paymentModal');
   if (!modal) return;
-  
+
   console.log('🔒 Closing payment modal...');
-  
+
   modal.style.opacity = '0';
   modal.style.visibility = 'hidden';
   document.body.style.overflow = '';
-  
+
   setTimeout(() => {
     modal.style.display = 'none';
     modal.style.zIndex = '';
     console.log('✅ Payment modal closed');
-    
+
     // Ensure cart can be opened again after closing modal
     // Reset any styles that might prevent cart from opening
     const cartToggle = document.getElementById('cartToggle');
@@ -644,7 +675,7 @@ function closePaymentModal() {
       cartToggle.style.pointerEvents = 'auto';
       cartToggle.style.zIndex = '';
     }
-    
+
     // Also ensure cart sidebar can be opened
     const cartSidebar = document.getElementById('cartSidebar');
     if (cartSidebar) {
@@ -663,19 +694,19 @@ function updatePaymentModalServiceType() {
   const deliveryPostal = document.getElementById('deliveryPostal');
   const deliveryCity = document.getElementById('deliveryCity');
   const deliveryFeeEl = document.getElementById('paymentDelivery');
-  
+
   if (selectedServiceType === 'reservation') {
     // Reservation - show reservation form, hide delivery address
     if (deliveryAddressSection) deliveryAddressSection.style.display = 'none';
     if (reservationDetailsSection) reservationDetailsSection.style.display = 'block';
     if (orderTableStatusSection) orderTableStatusSection.style.display = 'none';
-    
+
     // Hide scheduled delivery time for reservation
     const scheduledDeliveryTimeGroup = document.getElementById('scheduledDeliveryTimeGroup');
     if (scheduledDeliveryTimeGroup) {
       scheduledDeliveryTimeGroup.style.display = 'none';
     }
-    
+
     // Table selection removed - admin will assign tables manually
     // Setup reservation customer code auto-fill (with delay to ensure field exists)
     setTimeout(() => {
@@ -683,7 +714,7 @@ function updatePaymentModalServiceType() {
         window.setupReservationCustomerCodeAutoFill();
       }
     }, 100);
-    
+
     // No delivery fee for reservation
     if (deliveryFeeEl && typeof window.formatPrice === 'function') {
       deliveryFeeEl.textContent = window.formatPrice(0);
@@ -691,29 +722,29 @@ function updatePaymentModalServiceType() {
       deliveryFeeEl.textContent = '€0,00';
     }
   } else if (selectedServiceType === 'pickup') {
-    // Pickup - show delivery address but make it optional, show table status
-    if (deliveryAddressSection) deliveryAddressSection.style.display = 'block';
+    // Pickup - hide delivery address (match checkout.js logic)
+    if (deliveryAddressSection) deliveryAddressSection.style.display = 'none';
     if (reservationDetailsSection) reservationDetailsSection.style.display = 'none';
     if (orderTableStatusSection) orderTableStatusSection.style.display = 'block';
-    
+
     // Hide scheduled delivery time for pickup
     const scheduledDeliveryTimeGroup = document.getElementById('scheduledDeliveryTimeGroup');
     if (scheduledDeliveryTimeGroup) {
       scheduledDeliveryTimeGroup.style.display = 'none';
     }
-    
+
     // Make address fields optional
     if (deliveryStreet) deliveryStreet.removeAttribute('required');
     if (deliveryPostal) deliveryPostal.removeAttribute('required');
     if (deliveryCity) deliveryCity.removeAttribute('required');
-    
+
     // Update table status
     if (typeof window.updateTableStatus === 'function') {
       const date = new Date().toISOString().split('T')[0];
       const time = new Date().toTimeString().slice(0, 5);
       window.updateTableStatus(date, time);
     }
-    
+
     // No delivery fee
     if (deliveryFeeEl && typeof window.formatPrice === 'function') {
       deliveryFeeEl.textContent = window.formatPrice(0);
@@ -725,7 +756,7 @@ function updatePaymentModalServiceType() {
     if (deliveryAddressSection) deliveryAddressSection.style.display = 'block';
     if (reservationDetailsSection) reservationDetailsSection.style.display = 'none';
     if (orderTableStatusSection) orderTableStatusSection.style.display = 'none';
-    
+
     // Show scheduled delivery time field for delivery
     const scheduledDeliveryTimeGroup = document.getElementById('scheduledDeliveryTimeGroup');
     if (scheduledDeliveryTimeGroup) {
@@ -738,22 +769,17 @@ function updatePaymentModalServiceType() {
         scheduledDate.value = today.toISOString().split('T')[0];
         scheduledDate.setAttribute('min', today.toISOString().split('T')[0]);
       }
-      if (scheduledTime && !scheduledTime.value) {
-        const now = new Date();
-        const minTime = new Date(now.getTime() + 30 * 60000); // 30 minutes from now
-        const hours = String(minTime.getHours()).padStart(2, '0');
-        const minutes = String(minTime.getMinutes()).padStart(2, '0');
-        scheduledTime.value = `${hours}:${minutes}`;
-      }
+      // We do NOT set a default value automatically! 
+      // It should remain empty so that orders default to ASAP.
       // Setup validation
       setupScheduledDeliveryTimeValidation();
     }
-    
+
     // Make address fields required
     if (deliveryStreet) deliveryStreet.setAttribute('required', 'required');
     if (deliveryPostal) deliveryPostal.setAttribute('required', 'required');
     if (deliveryCity) deliveryCity.setAttribute('required', 'required');
-    
+
     // Add event listeners to check delivery range when address changes
     if (deliveryStreet) {
       deliveryStreet.removeEventListener('blur', handleAddressChange);
@@ -767,7 +793,7 @@ function updatePaymentModalServiceType() {
       deliveryCity.removeEventListener('blur', handleAddressChange);
       deliveryCity.addEventListener('blur', handleAddressChange);
     }
-    
+
     // Delivery fee (free within 5km)
     if (deliveryFeeEl && typeof window.formatPrice === 'function') {
       deliveryFeeEl.textContent = window.formatPrice(0);
@@ -775,7 +801,7 @@ function updatePaymentModalServiceType() {
       deliveryFeeEl.textContent = '€0,00';
     }
   }
-  
+
   // Hide scheduled delivery time for non-delivery service types
   if (selectedServiceType !== 'delivery') {
     const scheduledDeliveryTimeGroup = document.getElementById('scheduledDeliveryTimeGroup');
@@ -783,18 +809,18 @@ function updatePaymentModalServiceType() {
       scheduledDeliveryTimeGroup.style.display = 'none';
     }
   }
-  
+
   // Helper function for address change
   function handleAddressChange() {
     const street = document.getElementById('deliveryStreet')?.value.trim();
     const postal = document.getElementById('deliveryPostal')?.value.trim();
     const city = document.getElementById('deliveryCity')?.value.trim();
-    
+
     if (street && postal && city) {
       checkAndUpdateDeliveryStatus(street, postal, city);
     }
   }
-  
+
   // Update total
   if (typeof updatePaymentSummary === 'function') {
     updatePaymentSummary();
@@ -806,57 +832,57 @@ function setupScheduledDeliveryTimeValidation() {
   const scheduledDate = document.getElementById('scheduledDeliveryDate');
   const scheduledTime = document.getElementById('scheduledDeliveryTime');
   const errorDiv = document.getElementById('scheduledDeliveryTimeError');
-  
+
   if (!scheduledDate || !scheduledTime || !errorDiv) return;
-  
+
   const validateScheduledTime = () => {
     const date = scheduledDate.value;
     const time = scheduledTime.value;
-    
+
     // If both are empty, it's optional (immediate delivery)
     if (!date && !time) {
       errorDiv.style.display = 'none';
       errorDiv.textContent = '';
       return true;
     }
-    
+
     // If one is filled but not the other, show error
     if ((date && !time) || (!date && time)) {
       errorDiv.style.display = 'block';
       errorDiv.textContent = 'Bitte wählen Sie sowohl Datum als auch Uhrzeit.';
       return false;
     }
-    
-    // Validate that the scheduled time is at least 30 minutes from now
+
+    // Validate that the scheduled time is in the future
     const now = new Date();
     const scheduledDateTime = new Date(`${date}T${time}`);
-    const minDateTime = new Date(now.getTime() + 30 * 60000); // 30 minutes from now
-    
+    const minDateTime = new Date(now.getTime()); // from now
+
     if (scheduledDateTime < minDateTime) {
       errorDiv.style.display = 'block';
       const minTimeStr = minDateTime.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
-      errorDiv.textContent = `Die gewünschte Lieferzeit muss mindestens 30 Minuten ab jetzt sein (frühestens ${minTimeStr}).`;
+      errorDiv.textContent = `Die gewünschte Lieferzeit muss in der Zukunft liegen (frühestens ${minTimeStr}).`;
       return false;
     }
-    
+
     // Valid
     errorDiv.style.display = 'none';
     errorDiv.textContent = '';
     return true;
   };
-  
+
   // Remove old listeners
   scheduledDate.removeEventListener('change', validateScheduledTime);
   scheduledTime.removeEventListener('change', validateScheduledTime);
   scheduledDate.removeEventListener('blur', validateScheduledTime);
   scheduledTime.removeEventListener('blur', validateScheduledTime);
-  
+
   // Add new listeners
   scheduledDate.addEventListener('change', validateScheduledTime);
   scheduledTime.addEventListener('change', validateScheduledTime);
   scheduledDate.addEventListener('blur', validateScheduledTime);
   scheduledTime.addEventListener('blur', validateScheduledTime);
-  
+
   // Initial validation
   validateScheduledTime();
 }
@@ -865,7 +891,7 @@ function setupScheduledDeliveryTimeValidation() {
 function getScheduledDeliveryTime() {
   const scheduledDate = document.getElementById('scheduledDeliveryDate')?.value;
   const scheduledTime = document.getElementById('scheduledDeliveryTime')?.value;
-  
+
   if (scheduledDate && scheduledTime) {
     return {
       date: scheduledDate,
@@ -873,7 +899,7 @@ function getScheduledDeliveryTime() {
       datetime: `${scheduledDate}T${scheduledTime}`
     };
   }
-  
+
   return null;
 }
 
@@ -883,13 +909,13 @@ function setupReservationTableSelectionListeners() {
   const timeInput = document.getElementById('reserveTimeInPayment');
   const container = document.getElementById('reservationTableSelectionContainer');
   const section = document.getElementById('reservationTableSelectionSection');
-  
+
   if (!dateInput || !timeInput || !container) return;
-  
+
   const updateTableSelection = () => {
     const date = dateInput.value;
     const time = timeInput.value;
-    
+
     if (date && time) {
       if (typeof window.renderTableSelection === 'function') {
         window.renderTableSelection(date, time, 'reservationTableSelectionContainer');
@@ -899,15 +925,15 @@ function setupReservationTableSelectionListeners() {
       if (section) section.style.display = 'none';
     }
   };
-  
+
   // Remove old listeners
   dateInput.removeEventListener('change', updateTableSelection);
   timeInput.removeEventListener('change', updateTableSelection);
-  
+
   // Add new listeners
   dateInput.addEventListener('change', updateTableSelection);
   timeInput.addEventListener('change', updateTableSelection);
-  
+
   // Initial check
   updateTableSelection();
 }
@@ -916,39 +942,56 @@ function selectPaymentOption(method) {
   console.log('🔄 [selectPaymentOption] Called with method:', method);
   window.selectedPaymentMethod = method;
   selectedPaymentMethod = window.selectedPaymentMethod; // Keep local reference in sync
-  
+
   // Update UI
   const cashOption = document.getElementById('paymentOptionCash');
   const cardOption = document.getElementById('paymentOptionCard');
   const paypalOption = document.getElementById('paymentOptionPayPal');
+  const stripeOption = document.getElementById('paymentOptionStripe');
   const paypalButtonContainer = document.getElementById('paypalButtonContainer');
+  const stripePaymentContainer = document.getElementById('stripePaymentContainer');
+
+  // Support both modal (confirmPaymentBtn) and checkout page (confirmCheckoutBtn)
   const confirmPaymentBtn = document.getElementById('confirmPaymentBtn');
-  
-  console.log('🔍 [selectPaymentOption] Elements found:', {
-    cashOption: !!cashOption,
-    cardOption: !!cardOption,
-    paypalOption: !!paypalOption,
-    paypalButtonContainer: !!paypalButtonContainer,
-    confirmPaymentBtn: !!confirmPaymentBtn
-  });
-  
+  const confirmCheckoutBtn = document.getElementById('confirmCheckoutBtn');
+
   if (cashOption) cashOption.classList.remove('selected');
   if (cardOption) cardOption.classList.remove('selected');
   if (paypalOption) paypalOption.classList.remove('selected');
-  
+  if (stripeOption) stripeOption.classList.remove('selected');
+
   // Hide PayPal button container by default
   if (paypalButtonContainer) {
     paypalButtonContainer.style.display = 'none';
-    // Clear existing PayPal buttons
     const container = document.getElementById('paypal-button-container');
     if (container) container.innerHTML = '';
   }
-  
-  // Show/hide confirm button based on payment method
-  if (confirmPaymentBtn) {
-    confirmPaymentBtn.style.display = method === 'paypal' ? 'none' : 'block';
+
+  // Hide Stripe payment container by default
+  if (stripePaymentContainer) {
+    stripePaymentContainer.style.display = 'none';
   }
-  
+
+  if (method === 'paypal' || method === 'stripe') {
+    // Ẩn nút đặt hàng thường - chỉ cho phép đặt qua PayPal / Stripe submit button
+    if (confirmPaymentBtn) {
+      confirmPaymentBtn.style.display = 'none';
+    }
+    if (confirmCheckoutBtn) {
+      confirmCheckoutBtn.style.display = 'none';
+    }
+    window._paypalPaymentCompleted = false;
+  } else {
+    // Hiện lại nút đặt hàng cho cash/card
+    if (confirmPaymentBtn) {
+      confirmPaymentBtn.style.display = 'block';
+    }
+    if (confirmCheckoutBtn) {
+      confirmCheckoutBtn.style.display = 'block';
+    }
+    window._paypalPaymentCompleted = false;
+  }
+
   if (method === 'cash' && cashOption) {
     cashOption.classList.add('selected');
   } else if (method === 'card' && cardOption) {
@@ -956,52 +999,394 @@ function selectPaymentOption(method) {
   } else if (method === 'paypal' && paypalOption) {
     console.log('💳 [selectPaymentOption] PayPal selected');
     paypalOption.classList.add('selected');
-    // Show PayPal button container and render PayPal button
     if (paypalButtonContainer) {
-      console.log('✅ [selectPaymentOption] PayPal container found, showing...');
       paypalButtonContainer.style.display = 'block';
-      console.log('✅ [selectPaymentOption] PayPal container shown, rendering button...');
       if (typeof renderPayPalButton === 'function') {
-        console.log('✅ [selectPaymentOption] renderPayPalButton function found, calling...');
         renderPayPalButton();
       } else {
         console.error('❌ [selectPaymentOption] renderPayPalButton function not found!');
-        console.error('❌ [selectPaymentOption] typeof renderPayPalButton:', typeof renderPayPalButton);
       }
     } else {
       console.error('❌ [selectPaymentOption] paypalButtonContainer not found!');
     }
-  } else {
-    console.log('⚠️ [selectPaymentOption] Method not matched:', method);
+  } else if (method === 'stripe' && stripeOption) {
+    console.log('⚡ [selectPaymentOption] Stripe (Apple Pay/Google Pay/Card) selected');
+    stripeOption.classList.add('selected');
+    if (stripePaymentContainer) {
+      stripePaymentContainer.style.display = 'block';
+      if (typeof initStripePaymentElement === 'function') {
+        initStripePaymentElement();
+      }
+    }
   }
 }
+
+window.selectPaymentOption = selectPaymentOption;
+
+// ==========================================
+// 💳 STRIPE PAYMENT INTEGRATION (Apple Pay, Google Pay, Credit/Debit Card)
+// ==========================================
+let _stripeObj = null;
+let _stripeElements = null;
+let _stripePaymentElement = null;
+let _currentStripeClientSecret = null;
+let _isStripeInitializing = false;
+
+async function initStripePaymentElement() {
+  console.log('💳 [Stripe] Initializing Payment Element...');
+  const container = document.getElementById('stripePaymentContainer');
+  const elementDiv = document.getElementById('stripe-payment-element');
+  const amountSpan = document.getElementById('stripePayAmount');
+  const errorDiv = document.getElementById('stripe-error-message');
+
+  if (!container || !elementDiv) return;
+  if (errorDiv) { errorDiv.style.display = 'none'; errorDiv.textContent = ''; }
+
+  if (typeof Stripe === 'undefined') {
+    console.error('❌ Stripe.js SDK not loaded!');
+    elementDiv.innerHTML = '<p style="color: #ef4444; padding: 10px;">Stripe SDK konnte nicht geladen werden. Bitte Seite neu laden.</p>';
+    return;
+  }
+
+  const publishableKey = (window.STRIPE_CONFIG && window.STRIPE_CONFIG.PUBLISHABLE_KEY) || 'pk_live_51U4LumD62AOvzFwzgvQfwbAZAAbXXeWK5zu5yWYbM15qLrIo9DY5pwdPuVXM8AWX98XXvHzNci1P2duYmWI1eWD100MPWiUQuS';
+  if (!_stripeObj) {
+    _stripeObj = Stripe(publishableKey);
+  }
+
+  // Calculate total order amount
+  let subtotal = 0;
+  if (typeof getTotal === 'function') {
+    subtotal = getTotal();
+  } else {
+    const cart = typeof window.getCart === 'function' ? window.getCart() : JSON.parse(localStorage.getItem('leoCart') || '[]');
+    subtotal = cart.reduce((sum, item) => sum + ((item.price || 0) * (item.qty || item.quantity || 1)), 0);
+  }
+
+  let deliveryFee = 0;
+  if (window.selectedServiceType === 'delivery') {
+    deliveryFee = 0;
+  }
+
+  let autoDiscount = subtotal > 15 ? (subtotal * 10 / 100) : 0;
+  let couponDiscount = 0;
+  if (window.appliedDiscount) {
+    const afterAuto = subtotal - autoDiscount;
+    couponDiscount = window.appliedDiscount.percentage > 0 ? (afterAuto * window.appliedDiscount.percentage / 100) : (window.appliedDiscount.discount || 0);
+  }
+
+  let tipAmount = 0;
+  if (window.selectedTip) {
+    tipAmount = window.selectedTip.amount || 0;
+  }
+
+  let total = Math.max(0, subtotal - autoDiscount - couponDiscount + deliveryFee + tipAmount);
+  if (amountSpan) {
+    amountSpan.textContent = total.toLocaleString('de-DE', { style: 'currency', currency: 'EUR' });
+  }
+
+  if (total <= 0) {
+    elementDiv.innerHTML = '<p style="color: #aaa; padding: 15px; text-align: center;">Warenkorb ist leer.</p>';
+    return;
+  }
+
+  try {
+    if (_isStripeInitializing) return;
+    _isStripeInitializing = true;
+
+    elementDiv.innerHTML = `
+      <div style="color: rgba(255,255,255,0.6); font-size: 14px; text-align: center; padding: 25px 0;">
+          <div style="display: inline-block; width: 24px; height: 24px; border: 3px solid rgba(229,207,142,0.3); border-top-color: #e5cf8e; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 8px;"></div>
+          <div>Zahlungsformular wird geladen...</div>
+      </div>
+    `;
+
+    const addr = getDeliveryAddress();
+    const apiUrl = (window.API_BASE_URL || '/api') + '/create-payment-intent.php';
+
+    const response = await fetch(apiUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        amount: total,
+        customer_email: addr.email || '',
+        customer_name: `${addr.firstName} ${addr.lastName}`.trim(),
+        order_id: 'LEO-' + Date.now()
+      })
+    });
+
+    const data = await response.json();
+    if (!data.success || !data.clientSecret) {
+      throw new Error(data.message || 'Fehler beim Erstellen der Zahlung');
+    }
+
+    _currentStripeClientSecret = data.clientSecret;
+    window._currentStripePaymentIntentId = data.paymentIntentId;
+
+    _stripeElements = _stripeObj.elements({
+      clientSecret: _currentStripeClientSecret,
+      appearance: {
+        theme: 'night',
+        variables: {
+          colorPrimary: '#e5cf8e',
+          colorBackground: '#1f1f1f',
+          colorText: '#ffffff',
+          colorDanger: '#ef4444',
+          borderRadius: '8px'
+        }
+      }
+    });
+
+    elementDiv.innerHTML = '';
+    _stripePaymentElement = _stripeElements.create('payment', {
+      layout: 'tabs'
+    });
+    _stripePaymentElement.mount('#stripe-payment-element');
+    console.log('✅ [Stripe] Payment Element mounted successfully');
+  } catch (err) {
+    console.error('❌ [Stripe] Error initializing:', err);
+    elementDiv.innerHTML = `<p style="color: #ef4444; padding: 15px; text-align: center;">Fehler: ${err.message || 'Verbindung zu Stripe fehlgeschlagen.'}</p>`;
+  } finally {
+    _isStripeInitializing = false;
+  }
+}
+
+async function handleStripePaymentSubmit() {
+  console.log('💳 [Stripe] Submitting payment...');
+  const payBtn = document.getElementById('stripePayBtn');
+  const errorDiv = document.getElementById('stripe-error-message');
+  if (errorDiv) { errorDiv.style.display = 'none'; errorDiv.textContent = ''; }
+
+  // Validate form fields
+  const addr = getDeliveryAddress();
+  const missing = [];
+  if (!addr.email) missing.push('E-Mail-Adresse');
+  if (!addr.firstName) missing.push('Vorname');
+  if (!addr.lastName) missing.push('Nachname');
+  if (!addr.phone) missing.push('Telefonnummer');
+
+  const svcType = window.selectedServiceType || selectedServiceType || 'delivery';
+  if (svcType === 'delivery') {
+    if (!addr.street) missing.push('Straße');
+    if (!addr.postal) missing.push('PLZ');
+    if (!addr.city) missing.push('Stadt');
+  }
+
+  if (missing.length > 0) {
+    alert('Bitte füllen Sie folgende Felder aus, bevor Sie bezahlen:\n\n• ' + missing.join('\n• '));
+    const firstEmptyId = !addr.firstName ? 'customerFirstName' :
+      !addr.lastName ? 'customerLastName' :
+        !addr.email ? 'customerEmail' :
+          !addr.phone ? 'customerPhone' :
+            !addr.street ? 'deliveryStreet' :
+              !addr.postal ? 'deliveryPostal' : 'deliveryCity';
+    const el = document.getElementById(firstEmptyId);
+    if (el) { el.focus(); el.style.borderColor = '#ef4444'; setTimeout(() => el.style.borderColor = '', 3000); }
+    return;
+  }
+
+  if (!_stripeObj || !_stripeElements) {
+    alert('Zahlungsformular ist noch nicht geladen. Bitte Seite neu laden.');
+    return;
+  }
+
+  if (payBtn) {
+    payBtn.disabled = true;
+    payBtn.innerHTML = '⏳ Zahlung wird verarbeitet...';
+  }
+
+  try {
+    const { error, paymentIntent } = await _stripeObj.confirmPayment({
+      elements: _stripeElements,
+      confirmParams: {
+        return_url: window.location.href,
+        receipt_email: addr.email || undefined
+      },
+      redirect: 'if_required'
+    });
+
+    if (error) {
+      console.error('❌ [Stripe] Payment confirmation error:', error);
+      if (errorDiv) {
+        errorDiv.style.display = 'block';
+        errorDiv.textContent = error.message || 'Die Zahlung konnte nicht durchgeführt werden.';
+      }
+      if (payBtn) {
+        payBtn.disabled = false;
+        payBtn.innerHTML = '💳 Jetzt sicher bezahlen (' + (document.getElementById('stripePayAmount')?.textContent || '€0,00') + ')';
+      }
+      return;
+    }
+
+    if (paymentIntent && (paymentIntent.status === 'succeeded' || paymentIntent.status === 'processing')) {
+      console.log('🎉 [Stripe] Payment SUCCEEDED:', paymentIntent.id);
+      
+      // Show overlay
+      const loadingDiv = document.createElement('div');
+      loadingDiv.id = 'stripeProcessingOverlay';
+      loadingDiv.innerHTML = `
+          <div style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.85); z-index: 99999; display: flex; flex-direction: column; justify-content: center; align-items: center; color: white; font-family: sans-serif;">
+              <div style="width: 50px; height: 50px; border: 5px solid #fff; border-top: 5px solid #e5cf8e; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 20px;"></div>
+              <h2 style="margin:0; padding:0; text-align:center;">Zahlung erfolgreich!</h2>
+              <p style="font-size: 18px; font-weight: bold; margin-top: 10px; color: #e5cf8e; text-align:center;">Ihre Bestellung wird gespeichert. Bitte warten...</p>
+              <style>@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }</style>
+          </div>
+      `;
+      document.body.appendChild(loadingDiv);
+
+      await processSuccessfulStripeOrder(paymentIntent);
+    }
+  } catch (err) {
+    console.error('❌ [Stripe] Exception during payment:', err);
+    if (errorDiv) {
+      errorDiv.style.display = 'block';
+      errorDiv.textContent = err.message || 'Unerwarteter Fehler bei der Zahlung.';
+    }
+    if (payBtn) {
+      payBtn.disabled = false;
+      payBtn.innerHTML = '💳 Jetzt sicher bezahlen (' + (document.getElementById('stripePayAmount')?.textContent || '€0,00') + ')';
+    }
+  }
+}
+
+async function processSuccessfulStripeOrder(paymentIntent) {
+  try {
+    const deliveryAddress = getDeliveryAddress();
+    let orderId = 'LEO-' + Date.now();
+    const orderTimestamp = new Date().toISOString();
+
+    let customerCode = null;
+    let user = null;
+    if (typeof getCurrentUser === 'function') {
+      user = getCurrentUser();
+      if (user) customerCode = user.customerCode || null;
+    }
+
+    const subtotal = typeof window.getTotal === 'function' ? window.getTotal() : 0;
+    let deliveryFee = 0;
+    let autoDiscount = subtotal > 15 ? (subtotal * 10 / 100) : 0;
+    let couponDiscount = 0;
+    let discountCode = null;
+    if (window.appliedDiscount) {
+      const afterAuto = subtotal - autoDiscount;
+      couponDiscount = window.appliedDiscount.percentage > 0 ? (afterAuto * window.appliedDiscount.percentage / 100) : (window.appliedDiscount.discount || 0);
+      discountCode = window.appliedDiscount.code || null;
+    }
+
+    let tipAmount = 0;
+    if (window.selectedTip) tipAmount = window.selectedTip.amount || 0;
+
+    let total = Math.max(0, subtotal - autoDiscount - couponDiscount + deliveryFee + tipAmount);
+    const cart = typeof window.getCart === 'function' ? window.getCart() : JSON.parse(localStorage.getItem('leoCart') || '[]');
+    const branch = typeof window.getSelectedBranch === 'function' ? window.getSelectedBranch() : null;
+
+    const apiOrderData = {
+      order_id: orderId,
+      branch: branch,
+      branch_id: branch ? branch.id : null,
+      items: cart.map(item => ({
+        name: item.name,
+        quantity: item.qty || item.quantity || 1,
+        total: ((item.price || 0) * (item.qty || item.quantity || 1)).toFixed(2) + ' €'
+      })),
+      service_type: (selectedServiceType === 'pickup') ? 'Abholung' : (selectedServiceType === 'dinein' ? 'Vor Ort' : 'Lieferung'),
+      payment_method: 'Stripe (Apple Pay/Karte)',
+      payment_status: 'paid',
+      order_total: total.toFixed(2) + ' €',
+      customer: {
+        firstName: deliveryAddress.firstName || '',
+        lastName: deliveryAddress.lastName || '',
+        email: deliveryAddress.email || '',
+        phone: deliveryAddress.phone || '',
+        street: deliveryAddress.street || '',
+        houseNumber: deliveryAddress.houseNumber || '',
+        postal: deliveryAddress.postal || '',
+        city: deliveryAddress.city || '',
+        note: deliveryAddress.note || ''
+      },
+      discount_code: discountCode,
+      promotion_id: window.appliedDiscount ? window.appliedDiscount.promotion_id : null,
+      automatic_discount: autoDiscount > 0 ? { percentage: 10, amount: autoDiscount.toFixed(2) + ' €' } : null,
+      tip: tipAmount > 0 ? tipAmount.toFixed(2) + ' €' : null,
+      deliveryFee: deliveryFee > 0 ? deliveryFee.toFixed(2) + ' €' : null,
+      scheduled_delivery_time: (window.getScheduledDeliveryTime && window.getScheduledDeliveryTime()) || null,
+      stripe_payment_id: paymentIntent.id
+    };
+
+    let apiResult = null;
+    if (window.api && window.api.orders && window.api.orders.saveOrder) {
+      console.log('📦 Sending Stripe order to API:', apiOrderData);
+      apiResult = await window.api.orders.saveOrder(apiOrderData);
+      if (apiResult && apiResult.order_id) {
+        orderId = apiResult.order_id;
+      }
+    }
+
+    // Save recent order
+    const recentOrders = JSON.parse(localStorage.getItem('leoRecentOrders') || '[]');
+    if (orderId && !recentOrders.includes(orderId)) {
+      recentOrders.unshift(orderId);
+      if (recentOrders.length > 10) recentOrders.pop();
+      localStorage.setItem('leoRecentOrders', JSON.stringify(recentOrders));
+    }
+
+    // Clear cart
+    if (typeof window.clearCart === 'function') {
+      window.clearCart();
+    } else {
+      localStorage.setItem('leoCart', '[]');
+    }
+
+    if (document.getElementById('stripeProcessingOverlay')) {
+      document.getElementById('stripeProcessingOverlay').remove();
+    }
+
+    const orderData = {
+      summary: {
+        item_count: cart.reduce((sum, item) => sum + (item.qty || item.quantity || 1), 0),
+        total: total.toFixed(2)
+      }
+    };
+
+    showOrderSuccessNotification(orderData, deliveryAddress, orderId);
+  } catch (e) {
+    console.error('Error processing successful Stripe order:', e);
+    if (document.getElementById('stripeProcessingOverlay')) {
+      document.getElementById('stripeProcessingOverlay').remove();
+    }
+    alert('Zahlung war erfolgreich! Ihre Bestellnummer wird in Kürze bestätigt.');
+  }
+}
+
+window.initStripePaymentElement = initStripePaymentElement;
+window.handleStripePaymentSubmit = handleStripePaymentSubmit;
+
 
 // Apply discount code
 async function applyDiscountCode() {
   const discountCodeInput = document.getElementById('discountCode');
   const discountCodeMessage = document.getElementById('discountCodeMessage');
   const applyBtn = document.getElementById('applyDiscountBtn');
-  
+
   if (!discountCodeInput || !discountCodeMessage) return;
-  
+
   const code = discountCodeInput.value.trim().toUpperCase();
-  
+
   if (!code) {
     discountCodeMessage.textContent = 'Bitte geben Sie einen Gutscheincode ein';
     discountCodeMessage.style.color = 'rgba(255,255,255,.6)';
     return;
   }
-  
+
   // Disable button
   if (applyBtn) {
     applyBtn.disabled = true;
     applyBtn.textContent = 'Wird geprüft...';
   }
-  
+
   // Validate discount code
   if (typeof validateDiscountCode === 'function') {
     const result = await validateDiscountCode(code);
-    
+
     if (result.valid) {
       // Apply discount
       appliedDiscount = {
@@ -1010,19 +1395,19 @@ async function applyDiscountCode() {
         percentage: result.discount || 10
       };
       window.appliedDiscount = appliedDiscount;
-      
+
       discountCodeMessage.textContent = result.message || 'Gutscheincode erfolgreich angewendet!';
       discountCodeMessage.style.color = '#10b981';
-      
+
       // Update payment summary
       updatePaymentSummary();
     } else {
       appliedDiscount = null;
       window.appliedDiscount = null;
-      
+
       discountCodeMessage.textContent = result.message || 'Ungültiger Gutscheincode';
       discountCodeMessage.style.color = '#ef4444';
-      
+
       // Update payment summary
       updatePaymentSummary();
     }
@@ -1030,7 +1415,7 @@ async function applyDiscountCode() {
     discountCodeMessage.textContent = 'Fehler: Validierungsfunktion nicht verfügbar';
     discountCodeMessage.style.color = '#ef4444';
   }
-  
+
   // Re-enable button
   if (applyBtn) {
     applyBtn.disabled = false;
@@ -1048,16 +1433,16 @@ async function updatePaymentSummary() {
     console.warn('getTotal function not available');
     return;
   }
-  
+
   const subtotal = getTotal();
   let deliveryFee = 0;
-  
+
   if (selectedServiceType === 'delivery') {
     // Check if address is filled and within range
     const street = document.getElementById('deliveryStreet')?.value.trim();
     const postal = document.getElementById('deliveryPostal')?.value.trim();
     const city = document.getElementById('deliveryCity')?.value.trim();
-    
+
     if (street && postal && city) {
       const rangeCheck = await checkDeliveryRange(street, postal, city);
       if (rangeCheck.withinRange) {
@@ -1071,13 +1456,13 @@ async function updatePaymentSummary() {
   } else if (selectedServiceType === 'pickup' || selectedServiceType === 'reservation') {
     deliveryFee = 0;
   }
-  
+
   // Calculate discount
   let discountAmount = 0;
   if (appliedDiscount) {
     discountAmount = (subtotal * appliedDiscount.percentage) / 100;
   }
-  
+
   // Calculate tip
   let tipAmount = 0;
   if (selectedTip) {
@@ -1089,12 +1474,12 @@ async function updatePaymentSummary() {
       tipAmount = selectedTip.amount || 0;
     }
   }
-  
+
   // Service fee (3% of subtotal after discount)
   const serviceFee = ((subtotal - discountAmount) * 0.03);
-  
+
   const total = subtotal - discountAmount + deliveryFee + tipAmount + serviceFee;
-  
+
   const subtotalEl = document.getElementById('paymentSubtotal');
   const discountEl = document.getElementById('paymentDiscount');
   const discountRow = document.getElementById('discountRow');
@@ -1104,9 +1489,9 @@ async function updatePaymentSummary() {
   const serviceFeeEl = document.getElementById('paymentServiceFee');
   const serviceFeeRow = document.getElementById('serviceFeeRow');
   const totalEl = document.getElementById('paymentTotal');
-  
+
   if (subtotalEl && typeof formatPrice === 'function') subtotalEl.textContent = formatPrice(subtotal);
-  
+
   // Show/hide discount row
   if (discountRow) {
     if (discountAmount > 0) {
@@ -1118,9 +1503,9 @@ async function updatePaymentSummary() {
       discountRow.style.display = 'none';
     }
   }
-  
+
   if (deliveryEl && typeof formatPrice === 'function') deliveryEl.textContent = formatPrice(deliveryFee);
-  
+
   // Show/hide tip row
   if (tipRow) {
     if (tipAmount > 0) {
@@ -1132,7 +1517,7 @@ async function updatePaymentSummary() {
       tipRow.style.display = 'none';
     }
   }
-  
+
   // Show/hide service fee row
   if (serviceFeeRow) {
     if (serviceFee > 0) {
@@ -1144,12 +1529,12 @@ async function updatePaymentSummary() {
       serviceFeeRow.style.display = 'none';
     }
   }
-  
+
   if (totalEl && typeof formatPrice === 'function') totalEl.textContent = formatPrice(total);
-  
+
   // Update tip option amounts
   updateTipOptions();
-  
+
   // Re-render PayPal button if PayPal is selected and total changed
   if (selectedPaymentMethod === 'paypal') {
     const paypalButtonContainer = document.getElementById('paypalButtonContainer');
@@ -1166,24 +1551,24 @@ async function confirmPayment() {
   // Check if reservation section is visible - if so, treat as reservation
   const reservationDetailsSection = document.getElementById('reservationDetailsSection');
   const isReservationVisible = reservationDetailsSection && reservationDetailsSection.style.display !== 'none';
-  
+
   // If reservation section is visible, override selectedServiceType
   if (isReservationVisible && selectedServiceType !== 'reservation') {
     window.selectedServiceType = 'reservation';
     selectedServiceType = 'reservation'; // Keep local reference in sync
   }
-  
+
   // Get customer info from authentication (user is already logged in)
   let customerCode = null;
   let user = null;
-  
+
   if (typeof getCurrentUser === 'function') {
     user = getCurrentUser();
     if (user) {
       customerCode = user.customerCode || null;
     }
   }
-  
+
   // Fallback: try to get from form if not in user object
   if (!customerCode) {
     if (selectedServiceType === 'reservation') {
@@ -1192,7 +1577,7 @@ async function confirmPayment() {
       customerCode = document.getElementById('customerCode')?.value.trim() || '';
     }
   }
-  
+
   // VALIDATE: For payment (not reservation), cart must have items
   if (selectedServiceType !== 'reservation' && !isReservationVisible) {
     const cart = typeof window.getCart === 'function' ? window.getCart() : JSON.parse(localStorage.getItem('leoCart') || '[]');
@@ -1201,7 +1586,7 @@ async function confirmPayment() {
       return;
     }
   }
-  
+
   // Validate form
   const customerFirstName = document.getElementById('customerFirstName')?.value.trim();
   const customerLastName = document.getElementById('customerLastName')?.value.trim();
@@ -1211,7 +1596,23 @@ async function confirmPayment() {
   const note = document.getElementById('deliveryNote')?.value.trim();
   const customerPhone = document.getElementById('customerPhone')?.value.trim();
   const customerEmail = document.getElementById('customerEmail')?.value.trim();
-  
+
+  // Helper to log validation errors
+  const logValidationError = (errType, message) => {
+    if (typeof window.logCheckoutError === 'function') {
+      const name = ((customerFirstName || '') + ' ' + (customerLastName || '')).trim() || 'Gast';
+      const totalEl = document.getElementById('paymentModalTotal') || document.getElementById('cart-total-value');
+      const totalStr = totalEl ? (totalEl.innerText || totalEl.textContent) : '0.00 €';
+      window.logCheckoutError(
+        'validation_' + errType,
+        message,
+        { name, phone: customerPhone || 'N/A', email: customerEmail || 'N/A' },
+        totalStr,
+        selectedPaymentMethod || 'N/A'
+      );
+    }
+  };
+
   // Handle reservation service type
   if (selectedServiceType === 'reservation') {
     // Get reservation-specific fields
@@ -1223,20 +1624,20 @@ async function confirmPayment() {
     const reserveTime = document.getElementById('reserveTimeInPayment')?.value;
     const reserveGuests = document.getElementById('reserveGuestsInPayment')?.value;
     const reservationCustomerCode = document.getElementById('reservationCustomerCode')?.value.trim() || '';
-    
+
     // Validate reservation fields
     if (!reserveFirstName || !reserveLastName || !reserveEmail || !reservePhone) {
       alert('Bitte füllen Sie alle Pflichtfelder (Vorname, Nachname, E-Mail, Telefon) aus.');
       return;
     }
-    
+
     // Validate email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(reserveEmail)) {
       alert('Bitte geben Sie eine gültige E-Mail-Adresse ein.');
       return;
     }
-    
+
     // Validate phone format (more flexible - accepts various formats)
     const phoneClean = reservePhone.replace(/[\s\-\+\(\)]/g, ''); // Remove spaces, dashes, plus, parentheses
     const phoneRegex = /^[\d]{8,15}$/; // 8-15 digits only
@@ -1244,36 +1645,36 @@ async function confirmPayment() {
       alert('Bitte geben Sie eine gültige Telefonnummer ein (8-15 Ziffern).');
       return;
     }
-    
+
     // Validate reservation details
     if (!reserveDate || !reserveTime || !reserveGuests) {
       alert('Bitte füllen Sie alle Reservierungsinformationen aus (Datum, Uhrzeit, Anzahl Personen).');
       return;
     }
-    
+
     // Table selection removed - admin will assign tables manually
     // No need to validate table selection
-    
+
     if (!selectedPaymentMethod) {
       alert('Bitte wählen Sie eine Zahlungsmethode aus.');
       return;
     }
-    
+
     // Table selection removed - admin will assign tables manually
     // No need to check table availability
-    
+
     // Get items from reservation cart if available, otherwise use regular cart
     const reservationCart = JSON.parse(localStorage.getItem('leoReservationCart') || '[]');
     const cart = typeof window.getCart === 'function' ? window.getCart() : JSON.parse(localStorage.getItem('leoCart') || '[]');
     const itemsToUse = reservationCart.length > 0 ? reservationCart : cart;
-    
+
     // Create reservation with order
     const reservationId = `RES-${Date.now()}`;
     const reservationTimestamp = new Date().toISOString();
-    
+
     // Calculate subtotal from items
     const subtotal = itemsToUse.reduce((sum, item) => sum + (item.price * item.qty), 0);
-    
+
     const reservationData = {
       reservationId: reservationId,
       status: 'pending',
@@ -1291,7 +1692,7 @@ async function confirmPayment() {
       timestamp: reservationTimestamp,
       createdAt: reservationTimestamp
     };
-    
+
     // Create order linked to reservation (only if there are items)
     let orderData = null;
     if (itemsToUse.length > 0) {
@@ -1299,7 +1700,7 @@ async function confirmPayment() {
       orderData = {
         order_id: orderId,
         status: 'pending',
-        service_type: 'pickup',
+        service_type: 'dinein',
         table_number: null, // Admin will assign table manually
         reservation_id: reservationId,
         items: itemsToUse.map(item => ({
@@ -1334,10 +1735,10 @@ async function confirmPayment() {
         createdAt: reservationTimestamp
       };
     }
-    
+
     // Get customer code from form if entered
     const customerCode = document.getElementById('customerCode')?.value.trim() || null;
-    
+
     // Save customer information for future orders (and get customer code)
     if (typeof window.saveCustomerInfo === 'function') {
       const savedCustomerInfo = await window.saveCustomerInfo({
@@ -1351,35 +1752,35 @@ async function confirmPayment() {
         note: note || '',
         customerCode: customerCode // Include customer code if entered
       });
-      
+
       // Store customer code in reservation data if available
       if (savedCustomerInfo && savedCustomerInfo.customerCode) {
         reservationData.customerCode = savedCustomerInfo.customerCode;
       }
     }
-    
+
     // Save reservation
     if (typeof window.saveReservationToDailyReport === 'function') {
       window.saveReservationToDailyReport(reservationData);
     }
-    
+
     // Save order only if there are items
     if (orderData && typeof window.saveOrderToDailyReport === 'function') {
       window.saveOrderToDailyReport(orderData);
     }
-    
+
     // NOTE: KHÔNG gửi email khi khách đặt bàn
     // Email sẽ CHỈ được gửi cho customer SAU KHI admin xác nhận đặt bàn (trong admin.html)
     // Admin xem đặt bàn trong admin panel, không cần email thông báo
-    
+
     // Show confirmation
     showNotification('✓ Reservierung erfolgreich! Wir haben Ihre Reservierung erhalten und werden Sie per E-Mail bestätigen.', false);
-    
+
     // Close payment modal after a short delay
     setTimeout(() => {
       closePaymentModal();
     }, 2000);
-    
+
     // Clear carts
     if (typeof window.clearCart === 'function') {
       window.clearCart();
@@ -1394,63 +1795,70 @@ async function confirmPayment() {
     if (typeof window.updateReservationCartDisplay === 'function') {
       window.updateReservationCartDisplay();
     }
-    
+
     // Close modal
     closePaymentModal();
     return;
   }
-  
+
   // Validate based on service type (for delivery and pickup only, reservation is handled above)
   // Only validate customer info for delivery and pickup
   if (selectedServiceType === 'delivery' || selectedServiceType === 'pickup') {
     if (!customerFirstName || !customerLastName || !customerPhone || !customerEmail) {
+      logValidationError('missing_fields', 'Fehlende Pflichtfelder (Vorname, Nachname, Telefon or Email)');
       alert('Bitte füllen Sie alle Pflichtfelder aus.');
       return;
     }
-    
+
     // Validate phone format (more flexible - accepts various formats)
     const phoneClean = customerPhone.replace(/[\s\-\+\(\)]/g, ''); // Remove spaces, dashes, plus, parentheses
     const phoneRegex = /^[\d]{8,15}$/; // 8-15 digits only
     if (!phoneRegex.test(phoneClean)) {
+      logValidationError('invalid_phone', 'Ungültige Telefonnummer: ' + customerPhone);
       alert('Bitte geben Sie eine gültige Telefonnummer ein (8-15 Ziffern).');
       return;
     }
-    
+
     // Validate email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(customerEmail)) {
+      logValidationError('invalid_email', 'Ungültige E-Mail-Adresse: ' + customerEmail);
       alert('Bitte geben Sie eine gültige E-Mail-Adresse ein.');
       return;
     }
   }
-  
+
   if (!selectedPaymentMethod) {
+    logValidationError('missing_payment_method', 'Keine Zahlungsmethode ausgewählt');
     alert('Bitte wählen Sie eine Zahlungsmethode aus.');
     return;
   }
-  
+
   // For delivery, address is required and must be within range
   // Only validate if service type is delivery AND reservation section is not visible
   if (selectedServiceType === 'delivery' && !isReservationVisible) {
     if (!street || !postal || !city) {
+      logValidationError('missing_address', 'Lieferadresse fehlt (Strasse, PLZ or Stadt)');
       alert('Bitte füllen Sie die Lieferadresse aus.');
       return;
     }
-    
+
     // Validate postal code for delivery
     if (postal && !/^\d{5}$/.test(postal)) {
+      logValidationError('invalid_postal', 'Ungültige PLZ: ' + postal);
       alert('Bitte geben Sie eine gültige 5-stellige PLZ ein.\n\nBeispiel: 13187');
       return;
     }
-    
+
     // Check if address is within delivery range (5km)
     const rangeCheck = await checkDeliveryRange(street, postal, city);
     if (!rangeCheck.withinRange) {
+      logValidationError('out_of_range', 'Adresse ausserhalb des Liefergebiets: ' + street + ', ' + postal + ' | ' + rangeCheck.message);
       alert('Lieferung nicht möglich!\n\n' + rangeCheck.message + '\n\nBitte wählen Sie stattdessen:\n• "Tisch reservieren"');
       return;
     }
   }
-  
+
   // For pickup, check if tables are available
   if (selectedServiceType === 'pickup') {
     const date = new Date().toISOString().split('T')[0];
@@ -1458,12 +1866,13 @@ async function confirmPayment() {
     if (typeof getAvailableTables === 'function') {
       const availableTables = getAvailableTables(date, time);
       if (availableTables.length === 0) {
+        logValidationError('no_tables_available', 'Keine Tische für Abholung verfügbar');
         alert('Entschuldigung, derzeit sind keine Tische verfügbar. Bitte wählen Sie eine andere Zeit oder bestellen Sie eine Lieferung.');
         return;
       }
     }
   }
-  
+
   // Prepare delivery address
   const deliveryAddress = {
     firstName: customerFirstName,
@@ -1475,7 +1884,7 @@ async function confirmPayment() {
     phone: customerPhone,
     email: customerEmail
   };
-  
+
   // Customer code already validated at the beginning of function
   // Reuse the customerCode variable declared earlier (line 653)
   if (selectedServiceType === 'reservation') {
@@ -1483,7 +1892,7 @@ async function confirmPayment() {
   } else {
     customerCode = document.getElementById('customerCode')?.value.trim() || null;
   }
-  
+
   // Save customer information for future orders (and get customer code)
   let savedCustomerInfo = null;
   if (typeof window.saveCustomerInfo === 'function') {
@@ -1499,7 +1908,7 @@ async function confirmPayment() {
       customerCode: customerCode // Include customer code if entered
     });
   }
-  
+
   // Store customer code for display in success notification and in order data
   if (savedCustomerInfo && savedCustomerInfo.customerCode) {
     deliveryAddress.customerCode = savedCustomerInfo.customerCode;
@@ -1512,7 +1921,7 @@ async function confirmPayment() {
       console.log('✅ Using customer code from form:', customerCode);
     }
   }
-  
+
   // Calculate totals
   const subtotal = typeof window.getTotal === 'function' ? window.getTotal() : 0;
   let deliveryFee = 0;
@@ -1520,7 +1929,7 @@ async function confirmPayment() {
     // Delivery is free within 5km (already validated above)
     deliveryFee = 0;
   }
-  
+
   // Calculate discount
   let discountAmount = 0;
   let discountCode = null;
@@ -1528,7 +1937,7 @@ async function confirmPayment() {
     discountAmount = (subtotal * appliedDiscount.percentage) / 100;
     discountCode = appliedDiscount.code;
   }
-  
+
   // Calculate tip
   let tipAmount = 0;
   if (selectedTip) {
@@ -1539,19 +1948,19 @@ async function confirmPayment() {
       tipAmount = selectedTip.amount || 0;
     }
   }
-  
-  // Service fee (3% of subtotal after discount)
-  const serviceFee = ((subtotal - discountAmount) * 0.03);
-  
+
+  // Service fee (0% - Disabled to match checkout.js flow)
+  const serviceFee = 0;
+
   const total = subtotal - discountAmount + deliveryFee + tipAmount + serviceFee;
-  
+
   // Generate unique order ID
   const orderId = `ORD-${Date.now()}`;
   const orderTimestamp = new Date().toISOString();
-  
+
   // Get cart
   const cart = typeof window.getCart === 'function' ? window.getCart() : JSON.parse(localStorage.getItem('leoCart') || '[]');
-  
+
   // Prepare detailed cart data for GloriaFood
   const orderData = {
     order_id: orderId,
@@ -1588,14 +1997,14 @@ async function confirmPayment() {
     },
     createdAt: orderTimestamp
   };
-  
+
   // Log customer code in order data
   if (orderData.customerCode) {
     console.log('✅ Customer code included in orderData:', orderData.customerCode);
   } else {
     console.warn('⚠️ No customer code in orderData');
   }
-  
+
   // Handle PayPal payment
   // Note: PayPal payment is handled directly by the PayPal button's onApprove callback
   // If user selected PayPal but somehow reached here, show error
@@ -1603,47 +2012,47 @@ async function confirmPayment() {
     alert('Bitte verwenden Sie den PayPal-Button zum Bezahlen.');
     return;
   }
-  
+
   // Save to localStorage - GloriaFood widget/script can read this
   localStorage.setItem('leoOrderData', JSON.stringify(orderData));
   localStorage.setItem('gloriafood_cart', JSON.stringify(orderData.items));
   localStorage.setItem('order_summary', JSON.stringify(orderData.summary));
   localStorage.setItem('payment_method', selectedPaymentMethod);
   localStorage.setItem('delivery_address', JSON.stringify(deliveryAddress));
-  
+
   // Save order to daily orders list for reporting
   if (typeof window.saveOrderToDailyReport === 'function') {
     window.saveOrderToDailyReport(orderData);
   }
-  
+
   // Mark discount code as used if applied
   if (appliedDiscount && typeof markDiscountCodeUsed === 'function') {
     await markDiscountCodeUsed();
     appliedDiscount = null;
     window.appliedDiscount = null;
   }
-  
+
   // Note: Table will be assigned by admin later, no automatic reservation needed
-  
+
   // NOTE: KHÔNG gửi email khi khách đặt hàng
   // Email sẽ CHỈ được gửi cho customer SAU KHI admin xác nhận đơn hàng (trong admin.html)
   // Admin xem đơn hàng trong admin panel, không cần email thông báo
-  
+
   // NOTE: Print bills will be generated when admin confirms the order
-  
+
   // Clear cart after successful order
   if (typeof window.clearCart === 'function') {
     window.clearCart();
   } else {
     localStorage.setItem('leoCart', '[]');
   }
-  
+
   // Set flag to prevent cart from auto-opening after successful payment
   sessionStorage.setItem('orderJustCompleted', 'true');
-  
+
   // Close payment modal
   closePaymentModal();
-  
+
   // Ensure customer code is in deliveryAddress for display
   // Priority: savedCustomerInfo > orderData > form input
   if (!deliveryAddress.customerCode) {
@@ -1655,19 +2064,19 @@ async function confirmPayment() {
       deliveryAddress.customerCode = customerCode;
     }
   }
-  
+
   console.log('📋 Final deliveryAddress.customerCode:', deliveryAddress.customerCode);
-  
+
   // Show beautiful success notification
   showOrderSuccessNotification(orderData, deliveryAddress, orderId);
-  
+
   // Update cart UI after a delay to ensure notification is shown first
   setTimeout(() => {
     if (typeof window.updateCartUI === 'function') {
       window.updateCartUI();
     }
   }, 500);
-  
+
   // NOTE: Disabled GloriaFood widget trigger to prevent cart from reopening
   // If you need GloriaFood integration, uncomment and test carefully
   /*
@@ -1802,7 +2211,7 @@ function showOrderSuccessNotification(orderData, deliveryAddress, orderId) {
       <button class="order-success-btn" onclick="closeOrderSuccessNotification()">Verstanden</button>
     </div>
   `;
-  
+
   // Add styles if not already added
   if (!document.getElementById('orderSuccessNotificationStyles')) {
     const style = document.createElement('style');
@@ -1990,9 +2399,9 @@ function showOrderSuccessNotification(orderData, deliveryAddress, orderId) {
     `;
     document.head.appendChild(style);
   }
-  
+
   document.body.appendChild(notification);
-  
+
   // Auto close after 10 seconds
   setTimeout(() => {
     closeOrderSuccessNotification();
@@ -2017,9 +2426,9 @@ function setupPaymentCustomerCodeValidation() {
   const customerCodeField = document.getElementById('customerCode');
   const reservationCustomerCodeField = document.getElementById('reservationCustomerCode');
   const confirmPaymentBtn = document.getElementById('confirmPaymentBtn');
-  
+
   if (!confirmPaymentBtn) return;
-  
+
   const validateAndEnableButton = async () => {
     let code = '';
     if (selectedServiceType === 'reservation' && reservationCustomerCodeField) {
@@ -2027,13 +2436,13 @@ function setupPaymentCustomerCodeValidation() {
     } else if (customerCodeField) {
       code = customerCodeField.value.trim();
     }
-    
+
     // Check if code is valid
     if (code && code.length >= 7 && code.match(/^LEO-[A-Z0-9]+$/i)) {
       // Check if already loaded
       const savedInfo = localStorage.getItem('leoEarlyCustomerInfo');
       let isValid = false;
-      
+
       if (savedInfo) {
         try {
           const info = JSON.parse(savedInfo);
@@ -2046,7 +2455,7 @@ function setupPaymentCustomerCodeValidation() {
           console.error('Error checking saved customer info:', e);
         }
       }
-      
+
       // If not in localStorage, try to validate
       if (!isValid && typeof window.validateCustomerCode === 'function') {
         try {
@@ -2070,7 +2479,7 @@ function setupPaymentCustomerCodeValidation() {
           console.error('Error validating customer code:', e);
         }
       }
-      
+
       if (isValid) {
         confirmPaymentBtn.disabled = false;
         confirmPaymentBtn.style.opacity = '1';
@@ -2086,7 +2495,7 @@ function setupPaymentCustomerCodeValidation() {
       confirmPaymentBtn.style.cursor = 'not-allowed';
     }
   };
-  
+
   // Simple debounce function
   const debounce = (func, wait) => {
     let timeout;
@@ -2099,22 +2508,22 @@ function setupPaymentCustomerCodeValidation() {
       timeout = setTimeout(later, wait);
     };
   };
-  
+
   // Listen to customer code fields
   if (customerCodeField) {
     customerCodeField.addEventListener('blur', validateAndEnableButton);
     customerCodeField.addEventListener('input', debounce(validateAndEnableButton, 500));
   }
-  
+
   if (reservationCustomerCodeField) {
     reservationCustomerCodeField.addEventListener('blur', validateAndEnableButton);
     reservationCustomerCodeField.addEventListener('input', debounce(validateAndEnableButton, 500));
   }
-  
+
   // Also check when service type changes - use event listener instead of override
   // Store reference to validate function
   window._validatePaymentCustomerCode = validateAndEnableButton;
-  
+
   // Check initially
   setTimeout(validateAndEnableButton, 300);
 }
@@ -2128,7 +2537,7 @@ async function renderPayPalButton() {
     return;
   }
   console.log('✅ [renderPayPalButton] Container found');
-  
+
   // Check if PayPal SDK is loaded
   if (typeof paypal === 'undefined') {
     console.error('❌ [renderPayPalButton] PayPal SDK not loaded!');
@@ -2136,15 +2545,17 @@ async function renderPayPalButton() {
     return;
   }
   console.log('✅ [renderPayPalButton] PayPal SDK loaded');
-  
+
   // Clear container
   container.innerHTML = '';
-  console.log('🔄 [renderPayPalButton] Container cleared, calculating totals...');
-  
+  // Reset idempotency guard for fresh PayPal session
+  window._paypalOrderSubmitting = false;
+  console.log('🔄 [renderPayPalButton] Container cleared, _paypalOrderSubmitting reset, calculating totals...');
+
   // Calculate total with discount
   // Try multiple ways to get subtotal
   let subtotal = 0;
-  
+
   // Method 1: Try getTotal() from cart.js
   if (typeof getTotal === 'function') {
     subtotal = getTotal();
@@ -2170,7 +2581,7 @@ async function renderPayPalButton() {
       console.warn('⚠️ [renderPayPalButton] Cart is empty or not found');
     }
   }
-  
+
   let deliveryFee = 0;
   if (window.selectedServiceType === 'delivery') {
     const street = document.getElementById('deliveryStreet')?.value || '';
@@ -2183,25 +2594,53 @@ async function renderPayPalButton() {
       }
     }
   }
-  
-  // Calculate discount
+
+  // Calculate automatic discount (10% if subtotal > 15€)
+  let automaticDiscountAmount = 0;
+  if (subtotal > 15) {
+    automaticDiscountAmount = (subtotal * 10) / 100;
+  }
+
+  // Calculate discount code (applied after automatic discount)
   let discountAmount = 0;
   if (window.appliedDiscount) {
+    const subtotalAfterAutoDiscount = subtotal - automaticDiscountAmount;
     if (window.appliedDiscount.percentage > 0) {
-      discountAmount = (subtotal * window.appliedDiscount.percentage) / 100;
+      discountAmount = (subtotalAfterAutoDiscount * window.appliedDiscount.percentage) / 100;
     } else {
       discountAmount = window.appliedDiscount.discount || 0;
     }
   }
-  
-  const total = subtotal - discountAmount + deliveryFee;
+
+  // Total discount = automatic + code discount
+  const totalDiscountAmount = automaticDiscountAmount + discountAmount;
+
+  // Calculate tip
+  let tipAmount = 0;
+  if (window.selectedTip) {
+    if (window.selectedTip.type === 'percent') {
+      // Standardize: Tip is calculated on GROSS subtotal (before discounts) to match checkout.js
+      tipAmount = (subtotal * window.selectedTip.value) / 100;
+    } else if (window.selectedTip.type === 'custom') {
+      tipAmount = window.selectedTip.amount || 0;
+    }
+  }
+
+  // Service fee (0% - Sync with checkout.js)
+  const serviceFee = 0;
+
+  const total = subtotal - totalDiscountAmount + deliveryFee + tipAmount + serviceFee;
   console.log('💰 [renderPayPalButton] Total calculated:', {
     subtotal,
+    automaticDiscountAmount,
     discountAmount,
+    totalDiscountAmount,
     deliveryFee,
+    tipAmount,
+    serviceFee,
     total
   });
-  
+
   // Get cart - try multiple methods
   let cart = [];
   if (typeof window.getCart === 'function') {
@@ -2219,270 +2658,649 @@ async function renderPayPalButton() {
       cart = [];
     }
   }
-  
+
   console.log('🛒 [renderPayPalButton] Cart details:', {
     length: cart.length,
     items: cart.map(item => ({ name: item.name, price: item.price, qty: item.qty || item.quantity }))
   });
-  
+
   // Validate total - PayPal requires minimum amount
   if (total <= 0) {
     console.error('❌ [renderPayPalButton] Total is 0 or negative, cannot create PayPal order');
     container.innerHTML = '<p style="color: #ef4444; padding: 10px;">Fehler: Gesamtbetrag ist 0. Bitte fügen Sie Artikel zum Warenkorb hinzu.</p>';
     return;
   }
-  
+
   if (!cart || cart.length === 0) {
     console.error('❌ [renderPayPalButton] Cart is empty, cannot create PayPal order');
     container.innerHTML = '<p style="color: #ef4444; padding: 10px;">Fehler: Warenkorb ist leer. Bitte fügen Sie Artikel hinzu.</p>';
     return;
   }
-  
+
+  // Validate Minimum Order for Delivery (15 €)
+  const svcType = window.selectedServiceType || (typeof selectedServiceType !== 'undefined' ? selectedServiceType : 'delivery');
+  if (svcType === 'delivery' && subtotal < 15) {
+    console.warn('⚠️ [renderPayPalButton] Subtotal under 15€ for delivery. PayPal disabled.');
+    container.innerHTML = `<p style="color: #ef4444; padding: 10px; font-weight: 600; text-align: center; border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 8px; background: rgba(239, 68, 68, 0.05);">⚠️ Mindestbestellwert für Lieferung: 15,00 €<br><span style="font-size: 13px; font-weight: normal; opacity: 0.8;">Aktuell: ${subtotal.toFixed(2)} €</span></p>`;
+    return;
+  }
+
   // Render PayPal button
   console.log('🔄 [renderPayPalButton] Creating PayPal button with total:', total);
   try {
     paypal.Buttons({
-    style: {
-      layout: 'vertical',
-      color: 'gold',
-      shape: 'rect',
-      label: 'paypal'
-    },
-    createOrder: function(data, actions) {
-      console.log('🔄 [PayPal createOrder] Creating order with total:', total.toFixed(2));
-      console.log('🛒 [PayPal createOrder] Cart items:', cart.length);
-      // Create order on PayPal
-      try {
-        const orderData = {
-          intent: 'CAPTURE',
-          purchase_units: [{
-            reference_id: 'default',
-            amount: {
-              value: total.toFixed(2),
-              currency_code: 'EUR',
-              breakdown: {
-                item_total: {
-                  value: subtotal.toFixed(2),
-                  currency_code: 'EUR'
-                },
-                discount: discountAmount > 0 ? {
-                  value: discountAmount.toFixed(2),
-                  currency_code: 'EUR'
-                } : undefined,
-                shipping: deliveryFee > 0 ? {
-                  value: deliveryFee.toFixed(2),
-                  currency_code: 'EUR'
-                } : undefined
-              }
-            },
-            description: `LEO SUSHI Bestellung - ${cart.length} Artikel${window.appliedDiscount ? ` (Rabatt: ${window.appliedDiscount.code})` : ''}`,
-            items: cart.map(item => ({
-              name: item.name || 'Item',
-              unit_amount: {
-                value: item.price.toFixed(2),
-                currency_code: 'EUR'
+      style: {
+        layout: 'vertical',
+        color: 'gold',
+        shape: 'rect',
+        label: 'paypal'
+      },
+      createOrder: function (data, actions) {
+        console.log('🔄 [PayPal createOrder] Creating order with total:', total.toFixed(2));
+        console.log('🛒 [PayPal createOrder] Cart items:', cart.length);
+
+        // ★ VALIDATE FORM BEFORE ALLOWING PAYPAL ★
+        const addr = getDeliveryAddress();
+        const missingFields = [];
+        if (!addr.email) missingFields.push('E-Mail-Adresse');
+        if (!addr.firstName) missingFields.push('Vorname');
+        if (!addr.lastName) missingFields.push('Nachname');
+        if (!addr.phone) missingFields.push('Telefonnummer');
+        // For delivery, also require address fields
+        const svcType = window.selectedServiceType || selectedServiceType || 'delivery';
+        if (svcType === 'delivery') {
+          if (!addr.street) missingFields.push('Straße');
+          if (!addr.postal) missingFields.push('PLZ');
+          if (!addr.city) missingFields.push('Stadt');
+        }
+        if (missingFields.length > 0) {
+          alert('Bitte füllen Sie folgende Felder aus, bevor Sie mit PayPal bezahlen:\n\n• ' + missingFields.join('\n• '));
+          // Scroll to the first empty field
+          const firstEmptyId = !addr.firstName ? 'customerFirstName' :
+            !addr.lastName ? 'customerLastName' :
+              !addr.email ? 'customerEmail' :
+                !addr.phone ? 'customerPhone' :
+                  !addr.street ? 'deliveryStreet' :
+                    !addr.postal ? 'deliveryPostal' : 'deliveryCity';
+          const el = document.getElementById(firstEmptyId);
+          if (el) { el.focus(); el.style.borderColor = '#ef4444'; setTimeout(() => el.style.borderColor = '', 3000); }
+          return Promise.reject(new Error('Form validation failed'));
+        }
+
+        // Create order on PayPal
+        try {
+          const orderData = {
+            intent: 'CAPTURE',
+            purchase_units: [{
+              reference_id: 'default',
+              amount: {
+                value: total.toFixed(2),
+                currency_code: 'EUR',
+                breakdown: {
+                  item_total: {
+                    value: subtotal.toFixed(2),
+                    currency_code: 'EUR'
+                  },
+                  discount: totalDiscountAmount > 0 ? {
+                    value: totalDiscountAmount.toFixed(2),
+                    currency_code: 'EUR'
+                  } : undefined,
+                  shipping: deliveryFee > 0 ? {
+                    value: deliveryFee.toFixed(2),
+                    currency_code: 'EUR'
+                  } : undefined,
+                  handling: (tipAmount + serviceFee) > 0 ? {
+                    value: (tipAmount + serviceFee).toFixed(2),
+                    currency_code: 'EUR'
+                  } : undefined
+                }
               },
-              quantity: (item.qty || item.quantity || 1).toString()
-            }))
-          }],
-          application_context: {
-            brand_name: 'LEO SUSHI',
-            landing_page: 'NO_PREFERENCE',
-            user_action: 'PAY_NOW',
-            return_url: window.location.href,
-            cancel_url: window.location.href
-          }
-        };
-        console.log('📦 [PayPal createOrder] Order data:', JSON.stringify(orderData, null, 2));
-        return actions.order.create(orderData).then(function(orderId) {
-          console.log('✅ [PayPal createOrder] Order created successfully:', orderId);
-          return orderId;
-        }).catch(function(error) {
-          console.error('❌ [PayPal createOrder] Error creating order:', error);
+              description: `LEO SUSHI Bestellung - ${cart.length} Artikel${window.appliedDiscount ? ` (Rabatt: ${window.appliedDiscount.code})` : ''}${automaticDiscountAmount > 0 ? ' (Inkl. 10% Auto-Rabatt)' : ''}`,
+              items: cart.map(item => {
+                const itemPrice = typeof item.price === 'number' ? item.price : parseFloat(item.price) || 0;
+                return {
+                  name: item.name || 'Item',
+                  unit_amount: {
+                    value: itemPrice.toFixed(2),
+                    currency_code: 'EUR'
+                  },
+                  quantity: (item.qty || item.quantity || 1).toString()
+                };
+              })
+            }],
+            application_context: {
+              brand_name: 'LEO SUSHI',
+              landing_page: 'NO_PREFERENCE',
+              user_action: 'PAY_NOW',
+              return_url: window.location.href,
+              cancel_url: window.location.href
+            }
+          };
+          console.log('📦 [PayPal createOrder] Order data:', JSON.stringify(orderData, null, 2));
+          return actions.order.create(orderData).then(function (orderId) {
+            console.log('✅ [PayPal createOrder] Order created successfully:', orderId);
+            return orderId;
+          }).catch(function (error) {
+            console.error('❌ [PayPal createOrder] Error creating order:', error);
+            throw error;
+          });
+        } catch (error) {
+          console.error('❌ [PayPal createOrder] Exception creating order:', error);
           throw error;
-        });
-      } catch (error) {
-        console.error('❌ [PayPal createOrder] Exception creating order:', error);
-        throw error;
-      }
-    },
-    onApprove: async function(data, actions) {
-      console.log('✅ [PayPal onApprove] Payment approved, capturing...');
-      console.log('📦 [PayPal onApprove] Order ID:', data.orderID);
-      // Capture the payment
-      return actions.order.capture().then(async function(details) {
-        console.log('✅ [PayPal onApprove] Payment captured successfully:', details);
-        console.log('💰 [PayPal onApprove] Payment amount:', details.purchase_units[0]?.payments?.captures[0]?.amount);
-        
-        // Get order data (similar to confirmPayment but for PayPal)
-        const deliveryAddress = getDeliveryAddress();
-        const orderId = `ORD-${Date.now()}`;
-        const orderTimestamp = new Date().toISOString();
-        
-        // Get customer info from authentication
-        let customerCode = null;
-        let user = null;
-        if (typeof getCurrentUser === 'function') {
-          user = getCurrentUser();
-          if (user) {
-            customerCode = user.customerCode || null;
+        }
+      },
+      onApprove: async function (data, actions) {
+        console.log('✅ [PayPal onApprove] Payment approved by user, capturing payment...');
+        console.log('📦 [PayPal onApprove] PayPal Order ID:', data.orderID);
+
+        // ⛔ IDEMPOTENCY GUARD: Ngăn chặn gọi onApprove nhiều lần
+        if (window._paypalOrderSubmitting) {
+          console.warn('⛔ [PayPal onApprove] BLOCKED: Order already being submitted! Ignoring duplicate onApprove call.');
+          return;
+        }
+        window._paypalOrderSubmitting = true;
+        console.log('🔒 [PayPal onApprove] Lock acquired: _paypalOrderSubmitting = true');
+
+        // 🔥 HIỂN THỊ MÀN HÌNH KHÓA (LOADING) ĐỂ NGĂN KHÁCH TẮT TRÌNH DUYỆT SỚM
+        const loadingDiv = document.createElement('div');
+        loadingDiv.id = 'paypalProcessingOverlay';
+        loadingDiv.innerHTML = `
+            <div style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.8); z-index: 99999; display: flex; flex-direction: column; justify-content: center; align-items: center; color: white; font-family: sans-serif;">
+                <div style="width: 50px; height: 50px; border: 5px solid #fff; border-top: 5px solid #d4af37; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 20px;"></div>
+                <h2 style="margin:0; padding:0; text-align:center;">Zahlung erfolgreich!</h2>
+                <p style="font-size: 18px; font-weight: bold; margin-top: 10px; color: #d4af37; text-align:center;">Ihre Bestellung wird gespeichert. Bitte schließen Sie diese Seite NICHT...</p>
+                <style>@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }</style>
+            </div>
+        `;
+        document.body.appendChild(loadingDiv);
+
+        // Capture the payment first
+        return actions.order.capture().then(async function (details) {
+          console.log('✅ [PayPal onApprove] Payment CAPTURED successfully:', details.id);
+          console.log('💰 [PayPal onApprove] Capture status:', details.status);
+          console.log('💰 [PayPal onApprove] Amount:', details.purchase_units[0]?.payments?.captures[0]?.amount);
+
+          // ✅ Chấp nhận COMPLETED, PENDING, PROCESSING (SEPA/Bank Transfer sẽ trả về PENDING)
+          if (!['COMPLETED', 'PENDING', 'PROCESSING'].includes(details.status)) {
+            console.error('❌ [PayPal onApprove] Capture status không hợp lệ:', details.status);
+            window._paypalPaymentCompleted = false;
+            window._paypalOrderSubmitting = false; // Release lock
+            if (document.getElementById('paypalProcessingOverlay')) {
+                document.getElementById('paypalProcessingOverlay').remove();
+            }
+            alert('⚠️ PayPal-Zahlung wurde nicht bestätigt oder abgelehnt. Bitte versuchen Sie es erneut oder wählen Sie eine andere Zahlungsmethode.');
+            return;
           }
-        }
-        
-        // Calculate totals with discount
-        const subtotal = typeof window.getTotal === 'function' ? window.getTotal() : 0;
-        let deliveryFee = 0;
-        if (window.selectedServiceType === 'delivery') {
-          deliveryFee = 0; // Free within 5km
-        }
-        
-        let discountAmount = 0;
-        let discountCode = null;
-        if (window.appliedDiscount) {
-          if (window.appliedDiscount.percentage > 0) {
-            discountAmount = (subtotal * window.appliedDiscount.percentage) / 100;
-          } else {
-            discountAmount = window.appliedDiscount.discount || 0;
+
+          window._paypalPaymentCompleted = true;
+          console.log('🎉 [PayPal onApprove] Cờ _paypalPaymentCompleted = true - tiến hành tạo đơn hàng...');
+
+          // Get order data (similar to confirmPayment but for PayPal)
+          const deliveryAddress = getDeliveryAddress();
+          let orderId = `LEO-${Date.now()}`;
+          const orderTimestamp = new Date().toISOString();
+
+          // Get customer info from authentication
+          let customerCode = null;
+          let user = null;
+          if (typeof getCurrentUser === 'function') {
+            user = getCurrentUser();
+            if (user) {
+              customerCode = user.customerCode || null;
+            }
           }
-          discountCode = window.appliedDiscount.code;
-        }
-        
-        // Calculate tip
-        let tipAmount = 0;
-        if (window.selectedTip) {
-          if (window.selectedTip.type === 'percent') {
-            const amountAfterDiscount = subtotal - discountAmount;
-            tipAmount = (amountAfterDiscount * window.selectedTip.value) / 100;
-          } else if (window.selectedTip.type === 'custom') {
-            tipAmount = window.selectedTip.amount || 0;
+
+          // Calculate totals with discount
+          const subtotal = typeof window.getTotal === 'function' ? window.getTotal() : 0;
+          let deliveryFee = 0;
+          if (window.selectedServiceType === 'delivery') {
+            deliveryFee = 0; // Free within 5km
           }
-        }
-        
-        // Service fee (3% of subtotal after discount)
-        const serviceFee = ((subtotal - discountAmount) * 0.03);
-        
-        const total = subtotal - discountAmount + deliveryFee + tipAmount + serviceFee;
-        
-        // Get cart
-        const cart = typeof window.getCart === 'function' ? window.getCart() : JSON.parse(localStorage.getItem('leoCart') || '[]');
-        
-        // Prepare order data
-        const orderData = {
-          order_id: orderId,
-          status: 'pending',
-          service_type: selectedServiceType,
-          table_number: null,
-          items: cart.map(item => ({
-            name: item.name,
-            price: item.price,
-            quantity: item.qty,
-            description: item.desc || '',
-            note: item.note || '',
-            total: (item.price * item.qty).toFixed(2)
-          })),
-          delivery: {
-            address: {
-              ...deliveryAddress,
-              customerCode: customerCode || null
-            },
-            fee: deliveryFee.toFixed(2)
-          },
-          customerCode: customerCode || null,
-          summary: {
-            item_count: cart.reduce((sum, item) => sum + item.qty, 0),
-            subtotal: subtotal.toFixed(2),
-            discount: discountAmount.toFixed(2),
-            discount_code: discountCode || null,
-            delivery_fee: deliveryFee.toFixed(2),
-            tip: tipAmount.toFixed(2),
-            service_fee: serviceFee.toFixed(2),
-            total: total.toFixed(2),
-            payment_method: 'paypal',
-            timestamp: orderTimestamp
-          },
-          createdAt: orderTimestamp,
-          paypal_payment_id: details.id
-        };
-        
-        // Save order
-        if (typeof window.saveOrderToDailyReport === 'function') {
-          window.saveOrderToDailyReport(orderData);
-        }
-        
-        // Mark discount code as used
-        if (appliedDiscount && typeof markDiscountCodeUsed === 'function') {
-          await markDiscountCodeUsed();
-          appliedDiscount = null;
-          window.appliedDiscount = null;
-        }
-        
-        // Clear cart
-        if (typeof window.clearCart === 'function') {
-          window.clearCart();
-        } else {
-          localStorage.setItem('leoCart', '[]');
-        }
-        
-        // Close payment modal
-        if (typeof closePaymentModal === 'function') {
-          closePaymentModal();
-        }
-        
-        // Show success notification
-        console.log('🎉 [PayPal onApprove] Showing success notification...');
-        if (typeof showOrderSuccessNotification === 'function') {
-          showOrderSuccessNotification(orderData, deliveryAddress, orderId);
-        } else {
-          console.error('❌ [PayPal onApprove] showOrderSuccessNotification function not found!');
-          alert('✅ Zahlung erfolgreich! Bestellnummer: ' + orderId);
-        }
-        
-        console.log('✅ [PayPal onApprove] Order processing completed');
-      }).catch(function(error) {
-        console.error('❌ [PayPal onApprove] Error capturing payment:', error);
-        alert('Fehler beim Verarbeiten der Zahlung. Bitte kontaktieren Sie uns mit Ihrer Bestellnummer.');
-      });
-    },
-    onError: function(err) {
-      console.error('❌ [PayPal onError] PayPal error:', err);
-      console.error('❌ [PayPal onError] Error details:', JSON.stringify(err, null, 2));
-      
-      // Extract error details
-      let errorMessage = 'Fehler bei der PayPal-Zahlung.';
-      let errorDetails = '';
-      
-      if (err && err.data && err.data.body) {
-        const body = err.data.body;
-        if (body.name === 'UNPROCESSABLE_ENTITY') {
-          if (body.details && body.details.length > 0) {
-            const detail = body.details[0];
-            if (detail.issue === 'PAYEE_ACCOUNT_RESTRICTED') {
-              errorMessage = 'PayPal-Zahlung nicht verfügbar';
-              errorDetails = 'Das PayPal-Merchant-Konto ist derzeit eingeschränkt. Bitte verwenden Sie eine andere Zahlungsmethode (Barzahlung oder Kartenzahlung).';
+
+          // Calculate automatic discount (10% if subtotal > 15€)
+          let automaticDiscountAmount = 0;
+          if (subtotal > 15) {
+            automaticDiscountAmount = (subtotal * 10) / 100;
+          }
+
+          // Calculate discount code (applied after automatic discount)
+          let discountAmount = 0;
+          let discountCode = null;
+          if (window.appliedDiscount) {
+            const subtotalAfterAutoDiscount = subtotal - automaticDiscountAmount;
+            if (window.appliedDiscount.percentage > 0) {
+              discountAmount = (subtotalAfterAutoDiscount * window.appliedDiscount.percentage) / 100;
             } else {
-              errorDetails = detail.description || body.message || '';
+              discountAmount = window.appliedDiscount.discount || 0;
+            }
+            discountCode = window.appliedDiscount.code;
+          }
+
+          // Total discount = automatic + code discount
+          const totalDiscountAmount = automaticDiscountAmount + discountAmount;
+
+          // Calculate tip
+          let tipAmount = 0;
+          if (window.selectedTip) {
+            if (window.selectedTip.type === 'percent') {
+              // Standardize: Tip is calculated on GROSS subtotal (before discounts) to match checkout.js
+              tipAmount = (subtotal * window.selectedTip.value) / 100;
+            } else if (window.selectedTip.type === 'custom') {
+              tipAmount = window.selectedTip.amount || 0;
+            }
+          }
+
+          // Calculate VAT (7% of subtotal after all discounts) - informational
+          const vatAmount = ((subtotal - totalDiscountAmount) * 7) / 100;
+
+          // Service fee (0% - Sync with checkout.js)
+          const serviceFee = 0;
+
+          const total = subtotal - totalDiscountAmount + deliveryFee + tipAmount + serviceFee;
+
+          // Get cart
+          const cart = typeof window.getCart === 'function' ? window.getCart() : JSON.parse(localStorage.getItem('leoCart') || '[]');
+
+          // Prepare order data
+          const orderData = {
+            order_id: orderId,
+            status: 'pending',
+            service_type: selectedServiceType,
+            table_number: null,
+            items: cart.map(item => ({
+              name: item.name,
+              price: item.price,
+              quantity: item.qty,
+              description: item.desc || '',
+              note: item.note || '',
+              total: (item.price * item.qty).toFixed(2)
+            })),
+            delivery: {
+              address: {
+                ...deliveryAddress,
+                customerCode: customerCode || null
+              },
+              fee: deliveryFee.toFixed(2)
+            },
+            customerCode: customerCode || null,
+            summary: {
+              item_count: cart.reduce((sum, item) => sum + item.qty, 0),
+              subtotal: subtotal.toFixed(2),
+              discount: discountAmount.toFixed(2),
+              discount_code: discountCode || null,
+              delivery_fee: deliveryFee.toFixed(2),
+              tip: tipAmount.toFixed(2),
+              serviceFee: serviceFee.toFixed(2),
+              total: total.toFixed(2),
+              payment_method: 'paypal',
+              automatic_discount: automaticDiscountAmount > 0 ? {
+                percentage: 10,
+                amount: automaticDiscountAmount.toFixed(2)
+              } : null,
+              timestamp: orderTimestamp
+            },
+            createdAt: orderTimestamp,
+            paypal_payment_id: details.id
+          };
+
+          // Fallback to PayPal payer info if checkout form fields are empty
+          const payerEmail = deliveryAddress.email || details?.payer?.email_address || '';
+          const payerFirstName = deliveryAddress.firstName || details?.payer?.name?.given_name || '';
+          const payerLastName = deliveryAddress.lastName || details?.payer?.name?.surname || '';
+
+          // Get branch info
+          const branch = typeof window.getSelectedBranch === 'function' ? window.getSelectedBranch() : null;
+
+          // Prepare API order data strictly matching the expected backend format
+          const apiOrderData = {
+            order_id: orderId,
+            branch: branch,
+            branch_id: branch ? branch.id : null,
+            items: cart.map(item => ({
+              name: item.name,
+              quantity: item.qty || item.quantity || 1,
+              total: ((item.price || 0) * (item.qty || item.quantity || 1)).toFixed(2) + ' €'
+            })),
+            service_type: (selectedServiceType === 'pickup') ? 'Abholung' : (selectedServiceType === 'dinein' ? 'Vor Ort' : 'Lieferung'),
+            payment_method: 'PayPal',
+            payment_status: 'paid', // Explicitly mark as paid since funds are captured
+            order_total: total.toFixed(2) + ' €',
+            customer: {
+              firstName: payerFirstName,
+              lastName: payerLastName,
+              email: payerEmail,
+              phone: deliveryAddress.phone || '',
+              street: deliveryAddress.street || '',
+              houseNumber: deliveryAddress.houseNumber || '',
+              postal: deliveryAddress.postal || '',
+              city: deliveryAddress.city || '',
+              note: deliveryAddress.note || ''
+            },
+            discount_code: discountCode || null,
+            promotion_id: window.appliedDiscount ? window.appliedDiscount.promotion_id : null,
+            automatic_discount: automaticDiscountAmount > 0 ? {
+              percentage: 10,
+              amount: automaticDiscountAmount.toFixed(2) + ' €'
+            } : null,
+            tip: tipAmount > 0 ? tipAmount.toFixed(2) + ' €' : null,
+            deliveryFee: deliveryFee > 0 ? deliveryFee.toFixed(2) + ' €' : null,
+            vat: vatAmount > 0 ? vatAmount.toFixed(2) + ' €' : null,
+            serviceFee: serviceFee > 0 ? serviceFee.toFixed(2) + ' €' : null,
+            scheduled_delivery_time: (window.getScheduledDeliveryTime && window.getScheduledDeliveryTime()) || null,
+            paypal_payment_id: details.id
+          };
+
+          // Call API to create order
+          let apiResult = null;
+          if (window.api && window.api.orders && window.api.orders.saveOrder) {
+            console.log('📦 Sending PayPal order to API:', apiOrderData);
+            try {
+              apiResult = await window.api.orders.saveOrder(apiOrderData);
+              console.log('📦 API Response:', apiResult);
+              if (!apiResult || !apiResult.success) {
+                console.error('API declined order saving:', apiResult);
+                if (typeof window.logCheckoutError === 'function') {
+                  window.logCheckoutError('paypal_api_save_declined', apiResult ? apiResult.message : 'No response', {
+                    name: (apiOrderData.customer?.firstName || '') + ' ' + (apiOrderData.customer?.lastName || ''),
+                    phone: apiOrderData.customer?.phone || '',
+                    email: apiOrderData.customer?.email || ''
+                  }, apiOrderData.order_total, 'paypal');
+                }
+                alert('Zahlung war erfolgreich, aber es gab einen Fehler beim Speichern der Bestellung im System. Bitte kontaktieren Sie uns!');
+                return;
+              }
+              if (apiResult.order_id) {
+                orderId = apiResult.order_id;
+                orderData.order_id = orderId;
+              }
+            } catch (apiErr) {
+              console.error('API Error saving order:', apiErr);
+              if (typeof window.logCheckoutError === 'function') {
+                window.logCheckoutError('paypal_api_save_exception', apiErr.message, {
+                  name: (apiOrderData.customer?.firstName || '') + ' ' + (apiOrderData.customer?.lastName || ''),
+                  phone: apiOrderData.customer?.phone || '',
+                  email: apiOrderData.customer?.email || ''
+                }, apiOrderData.order_total, 'paypal');
+              }
+              alert('Zahlung war erfolgreich, aber das System konnte nicht erreicht werden.\n\nFehlerdetail: ' + apiErr.message + '\n\nBitte rufen Sie uns an!');
+              return;
             }
           } else {
-            errorDetails = body.message || '';
+            console.error('API not found for saving order.');
+            if (typeof window.logCheckoutError === 'function') {
+              window.logCheckoutError('paypal_api_not_found', 'window.api.orders.saveOrder not defined', {
+                name: (apiOrderData.customer?.firstName || '') + ' ' + (apiOrderData.customer?.lastName || ''),
+                phone: apiOrderData.customer?.phone || '',
+                email: apiOrderData.customer?.email || ''
+              }, apiOrderData.order_total, 'paypal');
+            }
+            alert('Interner Systemfehler. Zahlung erfolgreich, aber Bestellung konnte nicht übermittelt werden.');
+            return;
           }
-        } else {
-          errorDetails = body.message || err.message || '';
+          // Save customer info to localStorage for profile page (matching Cash flow)
+          try {
+            const customerKey = payerEmail.toLowerCase().trim();
+            const customerInfo = {
+              firstName: payerFirstName,
+              lastName: payerLastName,
+              email: payerEmail,
+              phone: deliveryAddress.phone || '',
+              street: deliveryAddress.street || '',
+              houseNumber: deliveryAddress.houseNumber || '',
+              postal: deliveryAddress.postal || '',
+              city: deliveryAddress.city || '',
+              note: deliveryAddress.note || '',
+              customerCode: apiResult?.customer_code || apiOrderData.customer?.customerCode || null
+            };
+
+            const savedCustomers = JSON.parse(localStorage.getItem('leoCustomers') || '{}');
+            savedCustomers[customerKey] = customerInfo;
+            localStorage.setItem('leoCustomers', JSON.stringify(savedCustomers));
+
+            if (customerInfo.customerCode) {
+              localStorage.setItem('leo_customer_code', customerInfo.customerCode);
+            }
+            console.log('✅ [PayPal] Saved customer info to localStorage:', customerInfo);
+          } catch (e) {
+            console.error('Error saving customer to localStorage:', e);
+          }
+
+          // Save order ID to recent orders for polling (matching Cash flow)
+          const recentOrders = JSON.parse(localStorage.getItem('leoRecentOrders') || '[]');
+          if (orderId && !recentOrders.includes(orderId)) {
+            recentOrders.unshift(orderId);
+            if (recentOrders.length > 10) recentOrders.pop();
+            localStorage.setItem('leoRecentOrders', JSON.stringify(recentOrders));
+          }
+          // Save order to daily report (local storage fallback)
+          if (typeof window.saveOrderToDailyReport === 'function') {
+            window.saveOrderToDailyReport(orderData);
+          }
+
+          // Mark discount code as used
+          if (appliedDiscount && typeof markDiscountCodeUsed === 'function') {
+            await markDiscountCodeUsed();
+            appliedDiscount = null;
+            window.appliedDiscount = null;
+          }
+
+          // Clear cart
+          if (typeof window.clearCart === 'function') {
+            window.clearCart();
+          } else {
+            localStorage.setItem('leoCart', '[]');
+          }
+
+          // Close payment modal
+          closePaymentModal();
+
+          // Ensure customer code is in deliveryAddress for display
+          deliveryAddress.customerCode = customerCode || apiResult.customer_code || null;
+
+          // Show beautiful success notification
+          showOrderSuccessNotification(orderData, deliveryAddress, orderId);
+
+          // Redirect to menu after 5 seconds to show success
+          setTimeout(() => {
+            window.location.href = 'menu.html';
+          }, 5000);
+
+          // Show success notification and redirect (matching Cash flow)
+          console.log('🎉 [PayPal onApprove] Showing success notification...');
+          const orderIdShort = orderId ? orderId.replace(/^(LEO-|ORD-)/, '') : 'N/A';
+
+          if (window.addNotification && window.NOTIFICATION_TYPES) {
+            window.addNotification(
+              window.NOTIFICATION_TYPES.ORDER_SUCCESS,
+              '✅ PayPal Zahlung erfolgreich!',
+              `Ihre Bestellung #${orderIdShort} wurde bezahlt und aufgegeben. Sie werden zum Menü weitergeleitet.`,
+              { orderId: orderId }
+            );
+          } else if (typeof showOrderSuccessNotification === 'function') {
+            showOrderSuccessNotification(orderData, deliveryAddress, orderId);
+          } else {
+            alert('✅ Zahlung erfolgreich! Bestellnummer: ' + orderId);
+          }
+
+          // Disable the main order button to prevent double submission
+          const confirmBtn = document.getElementById('confirmCheckoutBtn');
+          if (confirmBtn) {
+            confirmBtn.disabled = true;
+            confirmBtn.innerHTML = '✅ Bezahlt & Aufgegeben';
+          }
+
+          // Redirect to menu page after a short delay
+          setTimeout(() => {
+            window._paypalOrderSubmitting = false; // Release lock before redirect
+            window.location.href = 'menu.html';
+          }, 2500);
+
+          console.log('✅ [PayPal onApprove] Order processing completed');
+        }).catch(async function (captureError) {
+          console.error('❌ [PayPal onApprove] Error during capture:', captureError);
+          // ⛔ Reset flags - order not created
+          window._paypalPaymentCompleted = false;
+          window._paypalOrderSubmitting = false; // Release lock on error
+
+          if (document.getElementById('paypalProcessingOverlay')) {
+              document.getElementById('paypalProcessingOverlay').remove();
+          }
+
+          let detailedError = captureError ? (captureError.message || JSON.stringify(captureError)) : 'Unknown capture error';
+          
+          if (typeof window.logCheckoutError === 'function') {
+              window.logCheckoutError('paypal_capture_failed', detailedError, { name: 'Capture Failed' }, '0', 'paypal');
+          }
+
+          // Klare Benachrichtigung: BESTELLUNG FEHLGESCHLAGEN
+          if (window.addNotification && window.NOTIFICATION_TYPES) {
+            window.addNotification(
+              window.NOTIFICATION_TYPES.ORDER_SUCCESS,
+              '❌ Bestellung fehlgeschlagen!',
+              'Die PayPal-Zahlung konnte nicht verarbeitet werden. Grund: ' + detailedError + '. Bitte versuchen Sie es erneut.',
+              { error: true }
+            );
+          } else {
+            alert('❌ Bestellung fehlgeschlagen!\n\nDie PayPal-Zahlung konnte nicht verarbeitet werden.\nGrund: ' + detailedError + '\n\nBitte versuchen Sie es erneut oder wählen Sie eine andere Zahlungsmethode.');
+          }
+
+          // UI aktualisieren - PayPal-Button wieder anzeigen
+          const errContainer = document.getElementById('paypal-button-container');
+          if (errContainer) {
+            errContainer.innerHTML = `
+              <div style="background: rgba(239,68,68,.12); border: 1px solid rgba(239,68,68,.5); border-radius: 10px; padding: 18px; text-align: center; color: #ff6b6b; margin-top: 8px;">
+                <div style="font-size: 28px; margin-bottom: 8px;">❌</div>
+                <div style="font-weight: 700; font-size: 15px; margin-bottom: 6px;">Bestellung fehlgeschlagen</div>
+                <div style="font-size: 13px; margin-bottom: 14px; opacity: 0.85;">PayPal-Zahlung fehlgeschlagen. Bitte versuchen Sie es erneut.</div>
+                <button onclick="selectPaymentOption('paypal')" style="padding: 10px 20px; background: rgba(229,207,142,.2); border: 1px solid rgba(229,207,142,.5); border-radius: 8px; color: #e5cf8e; cursor: pointer; font-size: 14px; margin: 4px;">🔄 PayPal erneut versuchen</button>
+                <button onclick="selectPaymentOption('cash')" style="padding: 10px 20px; background: rgba(16,185,129,.15); border: 1px solid rgba(16,185,129,.4); border-radius: 8px; color: #10b981; cursor: pointer; font-size: 14px; margin: 4px;">💵 Barzahlung wählen</button>
+              </div>
+            `;
+          }
+        });
+      },
+      onError: function (err) {
+        console.error('❌ [PayPal onError] PayPal error:', err);
+
+        // ⛔ Reset flag - order not created
+        window._paypalPaymentCompleted = false;
+        console.log('⛔ [PayPal onError] Reset _paypalPaymentCompleted = false');
+
+        // Extract error details
+        let errorMessage = '❌ PayPal-Zahlung fehlgeschlagen!';
+        let errorDetails = 'Bitte versuchen Sie es erneut oder wählen Sie eine andere Zahlungsmethode.';
+
+        // Log checkout error to server
+        if (typeof window.logCheckoutError === 'function') {
+          const savedAddr = localStorage.getItem('delivery_address');
+          let custName = 'Gast';
+          let custPhone = 'N/A';
+          let custEmail = 'N/A';
+          let totalStr = '0.00 €';
+          try {
+            if (savedAddr) {
+              const addr = JSON.parse(savedAddr);
+              custName = ((addr.firstName || addr.first_name || '') + ' ' + (addr.lastName || addr.last_name || '')).trim() || 'Gast';
+              custPhone = addr.phone || 'N/A';
+              custEmail = addr.email || 'N/A';
+            }
+            const totalEl = document.getElementById('paymentModalTotal') || document.getElementById('cart-total-value');
+            if (totalEl) {
+              totalStr = totalEl.innerText || totalEl.textContent;
+            }
+          } catch(e){}
+          
+          window.logCheckoutError(
+            'paypal_button_onerror',
+            'PayPal Button triggered onError. Details: ' + errorDetails + ' | Raw error: ' + (err ? (err.message || (typeof err === 'string' ? err : JSON.stringify(err))) : 'No error object'),
+            { name: custName, phone: custPhone, email: custEmail },
+            totalStr,
+            'paypal'
+          );
         }
-      } else if (err && err.message) {
-        errorDetails = err.message;
+
+        if (err && err.data && err.data.body) {
+          const body = err.data.body;
+          if (body.name === 'UNPROCESSABLE_ENTITY') {
+            if (body.details && body.details.length > 0) {
+              const detail = body.details[0];
+              if (detail.issue === 'PAYEE_ACCOUNT_RESTRICTED') {
+                errorMessage = '❌ PayPal derzeit nicht verfügbar';
+                errorDetails = 'Das PayPal-Konto des Restaurants ist eingeschränkt.\nBitte wählen Sie eine andere Zahlungsmethode: Barzahlung oder Kartenzahlung.';
+              } else {
+                errorDetails = detail.description || body.message || errorDetails;
+              }
+            } else {
+              errorDetails = body.message || errorDetails;
+            }
+          } else {
+            errorDetails = body.message || err.message || errorDetails;
+          }
+        } else if (err && err.message) {
+          errorDetails = err.message;
+        }
+
+        // Klare Fehlermeldung — BESTELLUNG FEHLGESCHLAGEN
+        if (window.addNotification && window.NOTIFICATION_TYPES) {
+          window.addNotification(
+            window.NOTIFICATION_TYPES.ORDER_SUCCESS,
+            '❌ Bestellung fehlgeschlagen!',
+            errorMessage.replace('❌ ', '') + ' — ' + errorDetails + '\nIhre Bestellung wurde nicht aufgegeben.',
+            { error: true }
+          );
+        } else {
+          alert('❌ Bestellung fehlgeschlagen!\n\n' + errorMessage.replace('❌ ', '') + '\n' + errorDetails + '\n\nIhre Bestellung wurde nicht aufgegeben.');
+        }
+
+        // UI im PayPal-Button-Container aktualisieren
+        const paypalContainer = document.getElementById('paypal-button-container');
+        if (paypalContainer) {
+          paypalContainer.innerHTML = `
+            <div style="background: rgba(239,68,68,.12); border: 1px solid rgba(239,68,68,.5); border-radius: 10px; padding: 18px; text-align: center; color: #ff6b6b; margin-top: 8px;">
+              <div style="font-size: 28px; margin-bottom: 8px;">❌</div>
+              <div style="font-weight: 700; font-size: 15px; margin-bottom: 4px;">Bestellung fehlgeschlagen</div>
+              <div style="font-size: 13px; margin-bottom: 6px; font-weight: 600;">${errorMessage.replace('❌ ', '')}</div>
+              <div style="font-size: 12px; margin-bottom: 14px; opacity: 0.85;">${errorDetails}</div>
+              <button onclick="selectPaymentOption('paypal')" style="padding: 10px 20px; background: rgba(229,207,142,.2); border: 1px solid rgba(229,207,142,.5); border-radius: 8px; color: #e5cf8e; cursor: pointer; font-size: 14px; margin: 4px;">🔄 PayPal erneut versuchen</button>
+              <button onclick="selectPaymentOption('cash')" style="padding: 10px 20px; background: rgba(16,185,129,.15); border: 1px solid rgba(16,185,129,.4); border-radius: 8px; color: #10b981; cursor: pointer; font-size: 14px; margin: 4px;">💵 Barzahlung wählen</button>
+            </div>
+          `;
+        }
+      },
+      onCancel: function (data) {
+        if(typeof window.logActivity==='function')window.logActivity('paypal_cancelled', 'Khách hàng đã tắt cửa sổ PayPal', {}, '0.00 €', 'paypal', typeof window.getCart === 'function' ? window.getCart() : JSON.parse(localStorage.getItem('leoCart') || '[]'));
+        console.log('⚠️ [PayPal onCancel] User cancelled PayPal payment:', data);
+        // ⛔ Reset flag - order not created
+        window._paypalPaymentCompleted = false;
+        console.log('⛔ [PayPal onCancel] Reset _paypalPaymentCompleted = false - order not created');
+
+        // Klare Benachrichtigung: BESTELLUNG NICHT AUFGEGEBEN
+        if (window.addNotification && window.NOTIFICATION_TYPES) {
+          window.addNotification(
+            window.NOTIFICATION_TYPES.ORDER_SUCCESS,
+            '⚠️ Bestellung nicht aufgegeben',
+            'Sie haben die PayPal-Zahlung abgebrochen. Ihre Bestellung wurde nicht aufgegeben. Ihr Warenkorb bleibt erhalten — Sie können es erneut versuchen oder eine andere Zahlungsmethode wählen.',
+            { error: true }
+          );
+        } else {
+          alert('⚠️ Bestellung nicht aufgegeben!\n\nSie haben die PayPal-Zahlung abgebrochen.\nIhre Bestellung wurde nicht aufgegeben.\n\nIhr Warenkorb bleibt erhalten. Bitte versuchen Sie es erneut oder wählen Sie eine andere Zahlungsmethode.');
+        }
+
+        // UI aktualisieren - Optionen wieder anzeigen
+        const paypalContainer = document.getElementById('paypal-button-container');
+        if (paypalContainer) {
+          paypalContainer.innerHTML = `
+            <div style="background: rgba(229,207,142,.08); border: 1px solid rgba(229,207,142,.3); border-radius: 10px; padding: 18px; text-align: center; color: rgba(255,255,255,0.85); margin-top: 8px;">
+              <div style="font-size: 28px; margin-bottom: 8px;">⚠️</div>
+              <div style="font-weight: 700; font-size: 15px; margin-bottom: 6px; color: #f59e0b;">Bestellung nicht aufgegeben</div>
+              <div style="font-size: 13px; margin-bottom: 14px; opacity: 0.75;">Sie haben die Zahlung abgebrochen. Ihr Warenkorb bleibt erhalten.</div>
+              <button onclick="selectPaymentOption('paypal')" style="padding: 10px 20px; background: rgba(229,207,142,.2); border: 1px solid rgba(229,207,142,.5); border-radius: 8px; color: #e5cf8e; cursor: pointer; font-size: 14px; margin: 4px;">🔄 Erneut mit PayPal bezahlen</button>
+              <button onclick="selectPaymentOption('cash')" style="padding: 10px 20px; background: rgba(16,185,129,.15); border: 1px solid rgba(16,185,129,.4); border-radius: 8px; color: #10b981; cursor: pointer; font-size: 14px; margin: 4px;">💵 Barzahlung wählen</button>
+            </div>
+          `;
+        }
       }
-      
-      if (errorDetails) {
-        errorMessage += '\n\n' + errorDetails;
-      }
-      
-      console.error('❌ [PayPal onError] Final error message:', errorMessage);
-      alert(errorMessage);
-    },
-    onCancel: function(data) {
-      console.log('⚠️ [PayPal onCancel] User cancelled PayPal payment:', data);
-    }
-  }).render('#paypal-button-container');
+    }).render('#paypal-button-container');
     console.log('✅ [renderPayPalButton] PayPal button rendered successfully');
   } catch (error) {
     console.error('❌ [renderPayPalButton] Error rendering PayPal button:', error);
@@ -2498,23 +3316,23 @@ function selectTip(percent) {
     amount: 0 // Will be calculated in updatePaymentSummary
   };
   window.selectedTip = selectedTip;
-  
+
   // Update UI
   document.querySelectorAll('.tip-option').forEach(btn => {
     btn.style.borderColor = 'rgba(229,207,142,.2)';
     btn.style.background = 'rgba(255,255,255,.05)';
   });
-  
+
   const selectedBtn = document.querySelector(`.tip-option[data-tip-percent="${percent}"]`);
   if (selectedBtn) {
     selectedBtn.style.borderColor = 'var(--gold)';
     selectedBtn.style.background = 'linear-gradient(135deg, rgba(194,163,85,.2), rgba(229,207,142,.1))';
   }
-  
+
   // Hide custom input
   const customInput = document.querySelector('.tip-custom-input');
   if (customInput) customInput.style.display = 'none';
-  
+
   // Update summary
   if (typeof updatePaymentSummary === 'function') {
     updatePaymentSummary();
@@ -2532,7 +3350,7 @@ function openCustomTip() {
       input.value = selectedTip && selectedTip.type === 'custom' ? selectedTip.amount : '';
     }
   }
-  
+
   // Update button styles
   document.querySelectorAll('.tip-option').forEach(btn => {
     if (btn.classList.contains('tip-custom')) {
@@ -2553,7 +3371,7 @@ function updateCustomTip(value) {
     amount: amount
   };
   window.selectedTip = selectedTip;
-  
+
   if (typeof updatePaymentSummary === 'function') {
     updatePaymentSummary();
   }
@@ -2562,18 +3380,18 @@ function updateCustomTip(value) {
 function clearTip() {
   selectedTip = null;
   window.selectedTip = null;
-  
+
   // Reset UI
   document.querySelectorAll('.tip-option').forEach(btn => {
     btn.style.borderColor = 'rgba(229,207,142,.2)';
     btn.style.background = 'rgba(255,255,255,.05)';
   });
-  
+
   const customInput = document.querySelector('.tip-custom-input');
   if (customInput) customInput.style.display = 'none';
   const customAmountInput = document.getElementById('customTipAmount');
   if (customAmountInput) customAmountInput.value = '';
-  
+
   if (typeof updatePaymentSummary === 'function') {
     updatePaymentSummary();
   }
@@ -2581,14 +3399,14 @@ function clearTip() {
 
 function updateTipOptions() {
   if (typeof getTotal !== 'function') return;
-  
+
   const subtotal = getTotal();
   let discountAmount = 0;
   if (appliedDiscount) {
     discountAmount = (subtotal * appliedDiscount.percentage) / 100;
   }
   const amountAfterDiscount = subtotal - discountAmount;
-  
+
   // Update tip option amounts
   [5, 10, 15].forEach(percent => {
     const btn = document.querySelector(`.tip-option[data-tip-percent="${percent}"]`);
@@ -2600,7 +3418,7 @@ function updateTipOptions() {
       }
     }
   });
-  
+
   // Update selected tip display
   const selectedTipEl = document.getElementById('selectedTipAmount');
   if (selectedTipEl) {

@@ -159,6 +159,12 @@ async function loginUser(email, phone, password) {
     localStorage.setItem('leo_user', JSON.stringify(user));
     localStorage.setItem('leo_user_email', user.email);
 
+    if (typeof window.updateHeaderAuth === 'function') {
+      window.updateHeaderAuth();
+    }
+    window.dispatchEvent(new CustomEvent('userLoggedIn', { detail: { user } }));
+    window.dispatchEvent(new CustomEvent('authSuccess', { detail: { user } }));
+
     console.log('✅ User logged in successfully:', user.email);
     return { success: true, user: user };
   } catch (error) {
@@ -171,6 +177,10 @@ async function loginUser(email, phone, password) {
 function logoutUser() {
   localStorage.removeItem('leo_user');
   localStorage.removeItem('leo_user_email');
+  if (typeof window.updateHeaderAuth === 'function') {
+    window.updateHeaderAuth();
+  }
+  window.dispatchEvent(new CustomEvent('userLoggedOut'));
   console.log('✅ User logged out');
 }
 

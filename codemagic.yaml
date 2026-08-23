@@ -17,6 +17,12 @@ workflows:
         - pattern: 'main'
           include: true
           source: true
+        - pattern: 'shipper-app'
+          include: true
+          source: true
+        - pattern: '*'
+          include: true
+          source: true
     integrations:
       app_store_connect: LEO SUSHI
     scripts:
@@ -28,40 +34,8 @@ workflows:
       - name: Build Web Assets
         script: |
           set -e
-          echo "=== Copying website files to www folder ==="
-          
-          # Create www folder
-          mkdir -p www
-          
-          # Copy HTML files
-          cp -v *.html www/ 2>/dev/null || true
-          
-          # Copy CSS files
-          cp -v *.css www/ 2>/dev/null || true
-          
-          # Copy JS files  
-          mkdir -p www/js
-          cp -rv js/* www/js/
-          
-          # Copy assets
-          if [ -d "assets" ]; then
-            cp -rv assets www/
-          fi
-          
-          # Copy CSS folder
-          if [ -d "css" ]; then
-            cp -rv css www/
-          fi
-          
-          # Copy manifest and service worker
-          cp -v manifest.json www/ 2>/dev/null || true
-          cp -v sw.js www/ 2>/dev/null || true
-          
-          # Copy API folder for any client-side needs
-          if [ -d "api" ]; then
-            cp -rv api www/
-          fi
-          
+          echo "=== Building web assets with node build.js ==="
+          node build.js
           echo "=== www folder contents ==="
           ls -la www/
 

@@ -2,6 +2,16 @@
 <html lang="de">
 
 <head>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-868WTJTFBM"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-868WTJTFBM');
+    </script>
+
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mein Profil - LEO SUSHI</title>
@@ -9,6 +19,8 @@
     <link rel="icon" href="assets/logo.png">
     <link rel="apple-touch-icon" href="assets/logo.png">
     <link rel="stylesheet" href="styles.css?v=20260408">
+    <link rel="stylesheet" href="css/mobile-app.css?v=20260824_v54">
+    <script src="js/app-mode-gate.js?v=20260824_v51"></script>
     <style>
         body {
             background: linear-gradient(180deg, #09090a, #0b0b0c 30%, #0b0b0c 70%, #0a0a0b);
@@ -334,16 +346,16 @@
     <!-- Header -->
     <header class="site-header">
         <div class="container nav">
-            <a class="brand" href="/">
+            <a class="brand" href="index.html">
                 <img src="assets/logo.png" alt="LEO SUSHI" class="brand-logo" loading="lazy" width="256" height="256">
                 <span class="brand-name">LEO SUSHI</span>
             </a>
             <nav id="primaryNav" class="menu" role="navigation" aria-label="Hauptnavigation">
                 <a href="menu.html" id="menuLink">Menü</a>
-                <a href="/#about">Über uns</a>
-                <a href="/#reviews">Bewertungen</a>
-                <a href="/#contact">Kontakt</a>
-                <a href="book-table" style="color: var(--gold); font-weight: 600;">Reservieren</a>
+                <a href="index.html#about">Über uns</a>
+                <a href="index.html#reviews">Bewertungen</a>
+                <a href="index.html#contact">Kontakt</a>
+                <a href="reservation.html" style="color: var(--gold); font-weight: 600;">Reservieren</a>
                 <!-- Auth Links (shown when not logged in) -->
                 <div class="auth-links" id="authLinks">
                     <a href="#"
@@ -370,10 +382,10 @@
                                 <div class="user-email" id="userEmail"></div>
                                 <div class="user-status" id="userStatus"></div>
                             </div>
-                            <a href="account" class="user-menu-item">
+                            <a href="profile.html" class="user-menu-item">
                                 <span>👤</span> Mein Profil
                             </a>
-                            <a href="orders" class="user-menu-item">
+                            <a href="my-orders.html" class="user-menu-item">
                                 <span>📦</span> Meine Bestellungen
                             </a>
                             <a href="#" class="user-menu-item" id="logoutBtn">
@@ -402,11 +414,11 @@
                     <span>👤</span>
                     <span>Profil</span>
                 </a>
-                <a href="orders" class="profile-nav-item">
+                <a href="my-orders.html" class="profile-nav-item">
                     <span>📦</span>
                     <span>Bestellungen</span>
                 </a>
-                <a href="rewards" class="profile-nav-item">
+                <a href="points.html" class="profile-nav-item">
                     <span>⭐</span>
                     <span>Punkte</span>
                 </a>
@@ -428,7 +440,106 @@
                 <p>Lade Profil...</p>
             </div>
 
+            <!-- Guest Welcome & Auth Screen (When user is not logged in) -->
+            <div id="guestAuthCard" style="display: none; text-align: center; padding: 40px 24px;" class="profile-card">
+                <div style="width: 76px; height: 76px; margin: 0 auto 18px; border-radius: 50%; background: linear-gradient(135deg, rgba(229,207,142,0.2), rgba(194,163,85,0.1)); display: flex; align-items: center; justify-content: center; font-size: 34px; border: 2px solid var(--gold); box-shadow: 0 0 25px rgba(229,207,142,0.25);">
+                    🍣
+                </div>
+                <h2 style="color: var(--gold); font-size: 24px; font-weight: 700; margin-bottom: 8px;">Willkommen bei LEO SUSHI</h2>
+                <p style="color: rgba(255,255,255,0.7); font-size: 14px; max-width: 440px; margin: 0 auto 24px; line-height: 1.6;">
+                    Melden Sie sich an oder erstellen Sie ein Konto, um Treuepunkte zu sammeln, Gutscheine zu sichern und bequemer zu bestellen.
+                </p>
+
+                <!-- App VIP Benefits Box -->
+                <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(229,207,142,0.25); border-radius: 14px; padding: 18px; max-width: 440px; margin: 0 auto 26px; text-align: left;">
+                    <div style="font-size: 13px; font-weight: 700; color: var(--gold); margin-bottom: 12px; display: flex; align-items: center; gap: 6px;">
+                        <span>👑</span> Ihre Club-Vorteile:
+                    </div>
+                    <div style="font-size: 13px; color: rgba(255,255,255,0.85); display: flex; flex-direction: column; gap: 10px;">
+                        <div>🎁 <strong>10% Rabatt</strong> auf Ihre nächste Bestellung (Code: <strong>APP10</strong>)</div>
+                        <div>⭐ <strong>Treuepunkte sammeln</strong> & gegen gratis Menüs eintauschen</div>
+                        <div>🔄 <strong>1-Klick Nachbestellung</strong> Ihrer letzten Lieblingsgerichte</div>
+                        <div>📦 <strong>Live-Bestellstatus & Liefer-Tracking</strong></div>
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 12px; justify-content: center; max-width: 440px; margin: 0 auto; flex-wrap: wrap;">
+                    <button onclick="if(window.openAuthModal) window.openAuthModal('login'); else window.location.href='menu.html?auth=login';" class="btn-save" style="flex: 1; min-width: 140px; padding: 14px 20px; font-weight: 700; border-radius: 12px;">
+                        Anmelden
+                    </button>
+                    <button onclick="if(window.openAuthModal) window.openAuthModal('register'); else window.location.href='menu.html?auth=register';" class="btn-save" style="flex: 1; min-width: 140px; padding: 14px 20px; font-weight: 700; background: rgba(255,255,255,0.08); border: 1.5px solid rgba(229,207,142,0.4); color: var(--gold); border-radius: 12px;">
+                        Registrieren
+                    </button>
+                </div>
+            </div>
+
             <div id="profileContent" style="display: none;">
+                <!-- Digital VIP Membership Card -->
+                <div class="app-member-card" id="digitalMemberCard" style="display: none;">
+                    <div class="member-card-header">
+                        <div class="member-brand">
+                            <img src="assets/logo.png" alt="Leo Sushi">
+                            <div>
+                                <div class="member-brand-title">LEO SUSHI VIP</div>
+                                <div style="font-size: 11px; color: var(--app-gold); opacity: 0.8;">Premium Club Member</div>
+                            </div>
+                        </div>
+                        <div class="member-vip-pill" id="memberTierBadge">VIP Gold</div>
+                    </div>
+                    <div class="member-card-body">
+                        <div class="member-info">
+                            <h3 id="cardMemberName">Gäste</h3>
+                            <div class="member-code-text" id="cardMemberCode">ID: LEO-8888</div>
+                        </div>
+                        <div class="member-points-box">
+                            <div class="member-points-num" id="cardPointsNum">0</div>
+                            <div class="member-points-label">⭐ Treuepunkte</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- My Vouchers Wallet (Ví Voucher Cá Nhân) -->
+                <div class="profile-card" id="myVouchersWalletCard" style="margin-bottom: 24px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+                        <h2 class="profile-section-title" style="margin-bottom: 0;">
+                            <span>🎁</span> Meine Gutscheine & Rabatte
+                        </h2>
+                        <a href="points.html" style="font-size: 12px; color: var(--gold); text-decoration: none; font-weight: 600;">+ Punkte einlösen</a>
+                    </div>
+                    <p style="color: rgba(255,255,255,0.6); font-size: 13px; margin-bottom: 16px;">
+                        Verfügbare Rabattcodes für Ihre nächsten Bestellungen:
+                    </p>
+                    <div class="app-wallet-container" id="vouchersWalletList">
+                        <!-- APP10 Voucher -->
+                        <div class="app-coupon-item">
+                            <div class="coupon-left">
+                                <div class="coupon-badge-icon">📱</div>
+                                <div>
+                                    <div class="coupon-title">APP10 · 10% Rabatt</div>
+                                    <div class="coupon-desc">Exklusiver Willkommensrabatt für App-Nutzer</div>
+                                </div>
+                            </div>
+                            <button class="coupon-btn-apply" onclick="applyVoucherCode('APP10')">Anwenden</button>
+                        </div>
+                <!-- Quick Order History & Live Tracking Card -->
+                <div class="profile-card" id="quickOrdersCard" style="margin-bottom: 24px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                        <h2 class="profile-section-title" style="margin-bottom: 0;">
+                            <span>📦</span> Meine Bestellungen
+                        </h2>
+                        <a href="my-orders.html" class="profile-orders-link" style="font-size: 13px; color: var(--gold); text-decoration: none; font-weight: 700;">Alle anzeigen →</a>
+                    </div>
+                    <p style="color: rgba(255,255,255,0.6); font-size: 13px; margin-bottom: 14px;">
+                        Verfolgen Sie Ihre Bestellungen live oder bestellen Sie Ihre Lieblingsgerichte mit 1 Klick nach:
+                    </p>
+                    <div id="profileRecentOrdersList">
+                        <a href="my-orders.html" class="profile-orders-link app-cart-checkout-btn" style="text-decoration: none; justify-content: space-between; padding: 14px 18px; font-size: 14px;">
+                            <span>📦 Live-Bestellstatus & Historie öffnen</span>
+                            <span>➔</span>
+                        </a>
+                    </div>
+                </div>
+
                 <!-- Personal Information Form -->
                 <div class="profile-card">
                     <h2 class="profile-section-title">
@@ -566,6 +677,132 @@
         </div>
     </div>
 
+    <!-- Auth Modal - Single modal with sliding forms -->
+    <div class="auth-modal" id="authModal" aria-hidden="true">
+        <div class="auth-modal-content" role="dialog" aria-modal="true" aria-labelledby="authModalTitle">
+            <div class="auth-modal-header">
+                <h3 id="authModalTitle">Willkommen zurück</h3>
+                <button type="button" class="auth-modal-close" onclick="closeAuthModal()" aria-label="Schließen">×</button>
+            </div>
+            <div class="auth-forms-container">
+                <!-- Login Form -->
+                <div class="auth-form-wrapper active" id="loginFormWrapper">
+                    <div class="auth-modal-body">
+                        <div class="auth-error-message" id="loginErrorMessage"></div>
+                        <form id="loginModalForm">
+                            <div class="auth-form-group">
+                                <label for="loginIdentifier">E-Mail oder Telefonnummer <span class="auth-required">*</span></label>
+                                <input type="text" id="loginIdentifier" placeholder="E-Mail oder Telefonnummer" autocomplete="username">
+                                <div class="auth-info-text">Geben Sie Ihre E-Mail-Adresse oder Telefonnummer ein</div>
+                            </div>
+                            <div class="auth-form-group">
+                                <label for="loginPassword">Passwort <span class="auth-required">*</span></label>
+                                <input type="password" id="loginPassword" required placeholder="Passwort" autocomplete="current-password">
+                            </div>
+                            <button type="submit" class="auth-btn-primary" id="loginModalBtn">
+                                Anmelden
+                            </button>
+                        </form>
+                        <div class="auth-switch-link" style="margin-top: 12px;">
+                            <a href="#" onclick="event.preventDefault(); switchAuthForm('forgot');">Passwort vergessen?</a>
+                        </div>
+                        <div class="auth-switch-link">
+                            Noch kein Konto? <a href="#" onclick="event.preventDefault(); switchAuthForm('register');">Jetzt
+                                registrieren</a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Forgot Password Form -->
+                <div class="auth-form-wrapper" id="forgotFormWrapper">
+                    <div class="auth-modal-body">
+                        <div class="auth-error-message" id="forgotErrorMessage"></div>
+                        <div class="auth-success-message" id="forgotSuccessMessage"></div>
+                        <form id="forgotPasswordForm">
+                            <div class="auth-form-group">
+                                <label for="forgotIdentifier">E-Mail <span class="auth-required">*</span></label>
+                                <input type="text" id="forgotIdentifier" required placeholder="E-Mail oder Telefonnummer" autocomplete="username">
+                            </div>
+                            <button type="submit" class="auth-btn-primary" id="forgotPasswordBtn">
+                                Reset-Link senden
+                            </button>
+                        </form>
+                        <div class="auth-switch-link">
+                            <a href="#" onclick="event.preventDefault(); switchAuthForm('login');">Zurück zur Anmeldung</a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Register Form -->
+                <div class="auth-form-wrapper" id="registerFormWrapper">
+                    <div class="auth-modal-body">
+                        <div class="auth-error-message" id="registerErrorMessage"></div>
+                        <div class="auth-success-message" id="registerSuccessMessage"></div>
+                        <form id="registerModalForm">
+                            <div class="auth-form-group">
+                                <label for="registerFirstName">Vorname <span class="auth-required">*</span></label>
+                                <input type="text" id="registerFirstName" required placeholder="Ihr Vorname" autocomplete="given-name">
+                            </div>
+                            <div class="auth-form-group">
+                                <label for="registerLastName">Nachname <span class="auth-required">*</span></label>
+                                <input type="text" id="registerLastName" required placeholder="Ihr Nachname" autocomplete="family-name">
+                            </div>
+                            <div class="auth-form-group">
+                                <label for="registerEmail">E-Mail <span class="auth-required">*</span></label>
+                                <input type="email" id="registerEmail" required placeholder="ihre.email@beispiel.de" autocomplete="email">
+                            </div>
+                            <div class="auth-form-group">
+                                <label for="registerPhone">Telefonnummer <span class="auth-required">*</span></label>
+                                <input type="tel" id="registerPhone" required placeholder="+49 123 456789" autocomplete="tel">
+                            </div>
+                            <div class="auth-form-group">
+                                <label for="registerPassword">Passwort <span class="auth-required">*</span></label>
+                                <input type="password" id="registerPassword" required minlength="6"
+                                    placeholder="Mindestens 6 Zeichen" autocomplete="new-password">
+                            </div>
+                            <div class="auth-form-group">
+                                <label for="registerConfirmPassword">Passwort bestätigen <span class="auth-required">*</span></label>
+                                <input type="password" id="registerConfirmPassword" required minlength="6"
+                                    placeholder="Passwort erneut eingeben" autocomplete="new-password">
+                            </div>
+                            <div class="auth-form-group">
+                                <label for="registerBirthday">🎂 Geburtstag</label>
+                                <input type="date" id="registerBirthday" placeholder="Geburtsdatum" autocomplete="bday">
+                                <small style="color: rgba(255,255,255,0.6); font-size: 12px; margin-top: 4px; display: block;">Wir
+                                    senden Ihnen an Ihrem Geburtstag einen besonderen Gutschein!</small>
+                            </div>
+                            <div class="auth-form-group">
+                                <label for="registerStreet">Straße</label>
+                                <input type="text" id="registerStreet" placeholder="Straße und Hausnummer" autocomplete="street-address">
+                            </div>
+                            <div class="auth-form-row">
+                                <div class="auth-form-group">
+                                    <label for="registerPostal">PLZ</label>
+                                    <input type="text" id="registerPostal" placeholder="13187" autocomplete="postal-code">
+                                </div>
+                                <div class="auth-form-group">
+                                    <label for="registerCity">Stadt</label>
+                                    <input type="text" id="registerCity" placeholder="Berlin" autocomplete="address-level2">
+                                </div>
+                            </div>
+                            <button type="submit" class="auth-btn-primary" id="registerModalBtn">
+                                Registrieren
+                            </button>
+                        </form>
+                        <div class="auth-discount-badge hidden" id="registerDiscountBadge">
+                            <div style="font-size: 16px; margin-bottom: 4px;">📧 E-Mail-Bestätigung gesendet!</div>
+                            <div style="font-size: 13px;">Bitte überprüfen Sie Ihr E-Mail-Postfach</div>
+                        </div>
+                        <div class="auth-switch-link">
+                            Bereits registriert? <a href="#" onclick="event.preventDefault(); switchAuthForm('login');">Jetzt
+                                anmelden</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Notification Container -->
     <div id="notificationContainer"></div>
 
@@ -591,12 +828,12 @@
                     <nav class="footer-nav">
                         <div class="footer-nav-section">
                             <h4>Navigation</h4>
-                            <a href="/">Home</a>
+                            <a href="index.html">Home</a>
                             <a href="menu.html">Menü</a>
-                            <a href="/#about">Über uns</a>
-                            <a href="/#reviews">Bewertungen</a>
-                            <a href="/#contact">Kontakt</a>
-                            <a href="book-table">Reservieren</a>
+                            <a href="index.html#about">Über uns</a>
+                            <a href="index.html#reviews">Bewertungen</a>
+                            <a href="index.html#contact">Kontakt</a>
+                            <a href="reservation.html">Reservieren</a>
                         </div>
                     </nav>
                     <div class="footer-contact">
@@ -679,6 +916,7 @@
     <script src="js/cart.js"></script>
     <script src="js/customer.js"></script>
     <script src="js/notifications.js"></script>
+    <script src="js/auth-modal.js"></script>
     <script src="script.js?v=20260408"></script>
 
     <script>
@@ -689,19 +927,27 @@
         async function loadProfile() {
             const loadingMessage = document.getElementById('loadingMessage');
             const profileContent = document.getElementById('profileContent');
+            const guestAuthCard = document.getElementById('guestAuthCard');
 
             try {
                 // Check if user is logged in
                 if (!window.getCurrentUser || typeof window.getCurrentUser !== 'function') {
-                    window.location.href = '/';
+                    if (loadingMessage) loadingMessage.style.display = 'none';
+                    if (guestAuthCard) guestAuthCard.style.display = 'block';
+                    if (profileContent) profileContent.style.display = 'none';
                     return;
                 }
 
                 currentUser = await window.getCurrentUser();
                 if (!currentUser || !currentUser.email) {
-                    window.location.href = '/';
+                    if (loadingMessage) loadingMessage.style.display = 'none';
+                    if (guestAuthCard) guestAuthCard.style.display = 'block';
+                    if (profileContent) profileContent.style.display = 'none';
                     return;
                 }
+
+                if (guestAuthCard) guestAuthCard.style.display = 'none';
+                if (profileContent) profileContent.style.display = 'block';
 
                 // Load customer data from API first (most accurate)
                 try {
@@ -845,9 +1091,21 @@
                 document.getElementById('postal').value = customerData?.postal || '';
                 document.getElementById('city').value = customerData?.city || '';
                 document.getElementById('note').value = customerData?.note || '';
+                
+                // Update Digital Member Card
+                const memberCard = document.getElementById('digitalMemberCard');
+                const fullName = `${customerData?.first_name || currentUser.firstName || ''} ${customerData?.last_name || currentUser.lastName || ''}`.trim() || 'Leo Sushi Gast';
+                const memberCode = customerData?.customerCode || (currentUser.id ? `ID: LEO-${currentUser.id.toString().slice(-4).toUpperCase()}` : 'ID: LEO-MEMBER');
+                
+                if (document.getElementById('cardMemberName')) document.getElementById('cardMemberName').textContent = fullName;
+                if (document.getElementById('cardMemberCode')) document.getElementById('cardMemberCode').textContent = memberCode;
+                if (memberCard) memberCard.style.display = 'block';
 
                 // Load points data
                 await loadPointsData();
+
+                // Load recent orders preview
+                await loadProfileRecentOrders(currentUser.email);
 
                 loadingMessage.style.display = 'none';
                 profileContent.style.display = 'block';
@@ -855,10 +1113,100 @@
                 console.error('Error loading profile:', error);
                 loadingMessage.innerHTML = `
                     <p style="color: #ff6666;">Fehler beim Laden des Profils. Bitte versuchen Sie es erneut.</p>
-                    <a href="/" style="color: var(--gold);">Zurück zur Startseite</a>
+                    <a href="index.html" style="color: var(--gold);">Zurück zur Startseite</a>
                 `;
             }
         }
+
+        // Load profile recent orders preview
+        async function loadProfileRecentOrders(userEmail) {
+            const listEl = document.getElementById('profileRecentOrdersList');
+            if (!listEl || !userEmail) return;
+
+            try {
+                const apiBase = window.API_PHP_BASE_URL || (() => {
+                    const protocol = window.location.protocol;
+                    const host = window.location.host;
+                    const path = window.location.pathname.includes('/leosushi') ? '/leosushi/api' : '/api';
+                    return `${protocol}//${host}${path}`;
+                })();
+
+                const apiUrl = `${apiBase}/orders.php?action=list&email=${encodeURIComponent(userEmail)}`;
+                const response = await fetch(apiUrl, {
+                    method: 'GET',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                const result = await response.json();
+
+                if (result && result.success && result.orders) {
+                    const userOrders = result.orders.filter(order => {
+                        const orderEmail = order.delivery_address?.email ||
+                            (typeof order.delivery_address === 'string' ? JSON.parse(order.delivery_address).email : null) ||
+                            order.delivery?.address?.email ||
+                            order.customer?.email || '';
+                        return orderEmail && orderEmail.toLowerCase() === userEmail.toLowerCase();
+                    });
+
+                    if (userOrders.length > 0) {
+                        userOrders.sort((a, b) => new Date(b.created_at || b.date || 0) - new Date(a.created_at || a.date || 0));
+                        const recent = userOrders.slice(0, 2);
+
+                        const statusMap = {
+                            'pending': 'Eingegangen ⏳',
+                            'confirmed': 'In Zubereitung 👨‍🍳',
+                            'in_delivery': 'Unterwegs 🚚',
+                            'completed': 'Abgeschlossen ✅',
+                            'cancelled': 'Storniert ❌'
+                        };
+
+                        const appSuffix = window.location.search.includes('app=true') ? '?app=true' : '';
+
+                        listEl.innerHTML = recent.map(order => {
+                            const oId = order.order_id || order._id || 'N/A';
+                            const oDate = order.created_at || order.date || '';
+                            const formattedDate = oDate ? new Date(oDate).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '';
+                            const total = order.summary?.total || order.order_total || '0,00 €';
+                            const status = order.status || 'pending';
+                            const statusText = statusMap[status] || status;
+
+                            return `
+                                <div style="background: rgba(255,255,255,0.04); border: 1px solid rgba(229,207,142,0.2); border-radius: 14px; padding: 14px 16px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;">
+                                    <div>
+                                        <div style="font-weight: 700; font-size: 14px; color: #fff;">Bestellung #${oId.replace(/^(LEO-|ORD-)/, '').slice(-8)}</div>
+                                        <div style="font-size: 12px; color: rgba(255,255,255,0.5); margin-top: 2px;">${formattedDate}</div>
+                                        <div style="font-size: 12px; color: var(--gold); font-weight: 600; margin-top: 4px;">${statusText}</div>
+                                    </div>
+                                    <div style="text-align: right;">
+                                        <div style="font-weight: 800; font-size: 15px; color: var(--gold);">${typeof total === 'number' ? total.toFixed(2).replace('.', ',') + ' €' : total}</div>
+                                        <a href="my-orders.html${appSuffix}" style="display: inline-block; margin-top: 6px; padding: 6px 12px; background: rgba(229,207,142,0.15); border: 1px solid rgba(229,207,142,0.3); border-radius: 8px; color: var(--gold); font-size: 11px; font-weight: 700; text-decoration: none;">Live-Tracking →</a>
+                                    </div>
+                                </div>
+                            `;
+                        }).join('') + `
+                            <a href="my-orders.html${appSuffix}" class="app-cart-checkout-btn" style="text-decoration: none; justify-content: space-between; padding: 12px 18px; font-size: 13px; margin-top: 8px;">
+                                <span>📦 Alle ${userOrders.length} Bestellungen anzeigen</span>
+                                <span>➔</span>
+                            </a>
+                        `;
+                    }
+                }
+            } catch (e) {
+                console.log('Error loading profile recent orders:', e);
+            }
+        }
+
+        // Apply voucher code helper
+        function applyVoucherCode(code) {
+            localStorage.setItem('discountCode', code);
+            localStorage.setItem('leo_applied_coupon', code);
+            if (window.addNotification) {
+                window.addNotification('success', 'Gutschein aktiviert', `Gutscheincode ${code} wurde für Ihre nächste Bestellung aktiviert!`);
+            }
+            setTimeout(() => {
+                window.location.href = 'menu.html?openCart=true';
+            }, 400);
+        }
+        window.applyVoucherCode = applyVoucherCode;
 
         // Save profile
         async function saveProfile(event) {
@@ -1186,7 +1534,7 @@
         window.hideDeleteModal = hideDeleteModal;
         window.confirmDeleteAccount = confirmDeleteAccount;
 
-        // Initialize
+        // Initialize & Listen to Auth Events
         document.addEventListener('DOMContentLoaded', () => {
             loadProfile();
             const profileForm = document.getElementById('profileForm');
@@ -1199,7 +1547,24 @@
                 yearEl.textContent = new Date().getFullYear();
             }
         });
+
+        // Listen for live login / logout events
+        window.addEventListener('userLoggedIn', () => {
+            console.log('🔄 userLoggedIn event received in profile.html');
+            loadProfile();
+            if (typeof closeAuthModal === 'function') closeAuthModal();
+        });
+        window.addEventListener('authSuccess', () => {
+            console.log('🔄 authSuccess event received in profile.html');
+            loadProfile();
+            if (typeof closeAuthModal === 'function') closeAuthModal();
+        });
+        window.addEventListener('userLoggedOut', () => {
+            console.log('🔄 userLoggedOut event received in profile.html');
+            loadProfile();
+        });
     </script>
+    <script src="js/mobile-app.js?v=20260824_v54"></script>
 </body>
 
 </html>

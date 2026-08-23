@@ -1,0 +1,58 @@
+{
+	"appId": "com.leosushi.berlin",
+	"appName": "LEO SUSHI",
+	"webDir": "www",
+	"server": {
+		"url": "https://www.leo-sushi-berlin.de/",
+		"cleartext": false,
+		"allowNavigation": [
+			"https://www.leo-sushi-berlin.de/*",
+			"https://leo-sushi-berlin.de/*",
+			"https://*.stripe.com/*",
+			"https://*.paypal.com/*"
+		]
+	},
+	"appendUserAgent": "LeoSushiApp Capacitor",
+	"android": {
+		"backgroundColor": "#0b0b0c",
+		"webContentsDebuggingEnabled": true,
+		"allowMixedContent": true
+	},
+	"ios": {
+		"contentInset": "never",
+		"backgroundColor": "#0b0b0c",
+		"preferredContentMode": "mobile",
+		"allowsLinkPreview": true,
+		"scrollEnabled": true,
+		"limitsNavigationsToAppBoundDomains": false,
+		"webContentsDebuggingEnabled": true
+	},
+	"plugins": {
+		"SplashScreen": {
+			"launchShowDuration": 3000,
+			"launchAutoHide": true,
+			"backgroundColor": "#0b0b0c",
+			"showSpinner": false
+		},
+		"StatusBar": {
+			"style": "dark",
+			"backgroundColor": "#0b0b0c"
+		},
+		"Keyboard": {
+			"resize": "body",
+			"style": "dark"
+		},
+		"CapacitorHttp": {
+			"enabled": true
+		}
+	},
+	"packageClassList": [
+		"AppPlugin",
+		"GeolocationPlugin",
+		"HapticsPlugin",
+		"KeyboardPlugin",
+		"PushNotificationsPlugin",
+		"SplashScreenPlugin",
+		"StatusBarPlugin"
+	]
+}

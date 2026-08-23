@@ -13,7 +13,19 @@ function handleOrderRequest($method, $action, $input)
     $action = (string)$action;
     $method = (string)$method;
 
-    if ($method === 'GET' && ($action === 'list' || $action === '')) {
+    if ($method === 'GET' && $action === 'bestsellers') {
+        getBestsellingDishes($input);
+    }
+    elseif ($method === 'GET' && ($action === 'list' || $action === '')) {
+        $customerEmail = $_GET['email'] ?? $_GET['customer_email'] ?? '';
+        $customerPhone = $_GET['phone'] ?? $_GET['customer_phone'] ?? '';
+        $customerId = $_GET['customer_id'] ?? '';
+
+        if (!empty($customerEmail) || !empty($customerPhone) || !empty($customerId)) {
+            listCustomerOrders($customerEmail, $customerPhone, $customerId);
+            return;
+        }
+
         // Simple security for shipper: check passcode if provided in header or server vars
         $passcode = $_SERVER['HTTP_X_SHIPPER_PASSCODE'] ?? $_GET['passcode'] ?? '';
 
@@ -65,6 +77,77 @@ function handleOrderRequest($method, $action, $input)
     else {
         http_response_code(405);
         echo json_encode(['success' => false, 'message' => 'Method not allowed: ' . $method . ' ' . $action]);
+    }
+}
+
+/**
+ * Public, aggregate-only bestseller statistics. No customer or order details
+ * are returned. Only accepted/completed orders count so unpaid or cancelled
+ * orders cannot influence the ranking.
+ */
+function getBestsellingDishes($input)
+{
+    try {
+        $limit = max(1, min(24, intval($_GET['limit'] ?? $input['limit'] ?? 12)));
+        $days = max(7, min(365, intval($_GET['days'] ?? $input['days'] ?? 90)));
+        $conn = getDbConnection();
+
+        $sql = "SELECT items FROM orders
+                WHERE status IN ('confirmed', 'in_delivery', 'completed')
+                  AND created_at >= DATE_SUB(NOW(), INTERVAL {$days} DAY)
+                ORDER BY created_at DESC
+                LIMIT 5000";
+        $result = $conn->query($sql);
+        $totals = [];
+
+        while ($row = $result->fetch_assoc()) {
+            $items = json_decode($row['items'] ?? '[]', true);
+            if (!is_array($items)) continue;
+            $seenInOrder = [];
+
+            foreach ($items as $item) {
+                $name = trim((string)($item['name'] ?? ''));
+                if ($name === '') continue;
+                // App option items are stored as "Dish - Option"; aggregate them
+                // under the parent dish so protein/size choices do not split rank.
+                $baseName = preg_replace('/\s+-\s+.+$/u', '', $name) ?: $name;
+                $key = function_exists('mb_strtolower') ? mb_strtolower($baseName, 'UTF-8') : strtolower($baseName);
+                $qty = max(1, intval($item['qty'] ?? $item['quantity'] ?? 1));
+
+                if (!isset($totals[$key])) {
+                    $totals[$key] = ['name' => $baseName, 'quantity' => 0, 'order_count' => 0];
+                }
+                $totals[$key]['quantity'] += $qty;
+                if (!isset($seenInOrder[$key])) {
+                    $totals[$key]['order_count'] += 1;
+                    $seenInOrder[$key] = true;
+                }
+            }
+        }
+
+        $dishes = array_values($totals);
+        usort($dishes, function ($a, $b) {
+            if ($a['quantity'] === $b['quantity']) {
+                if ($a['order_count'] === $b['order_count']) return strcasecmp($a['name'], $b['name']);
+                return $b['order_count'] <=> $a['order_count'];
+            }
+            return $b['quantity'] <=> $a['quantity'];
+        });
+        $dishes = array_slice($dishes, 0, $limit);
+        foreach ($dishes as $index => &$dish) $dish['rank'] = $index + 1;
+        unset($dish);
+
+        echo json_encode([
+            'success' => true,
+            'dishes' => $dishes,
+            'period_days' => $days,
+            'generated_at' => date('c')
+        ]);
+    }
+    catch (Exception $e) {
+        http_response_code(500);
+        echo json_encode(['success' => false, 'message' => 'Bestseller konnten nicht geladen werden']);
+        error_log('Error loading bestsellers: ' . $e->getMessage());
     }
 }
 
@@ -151,6 +234,7 @@ function createOrder($input)
             'payment_method' => $input['payment_method'] ?? 'Barzahlung',
             'timestamp' => date('Y-m-d H:i:s'),
             'scheduled_delivery_time' => $scheduledDeliveryTime,
+            'delivery_distance_km' => isset($input['delivery_distance_km']) ? floatval($input['delivery_distance_km']) : null,
             'branch' => $input['branch'] ?? null
         ];
 
@@ -169,6 +253,8 @@ function createOrder($input)
             $paymentMethod = 'card';
         if (strtolower($paymentMethod) === 'paypal')
             $paymentMethod = 'paypal';
+        if (stripos($paymentMethod, 'stripe') !== false || stripos($paymentMethod, 'apple') !== false || stripos($paymentMethod, 'google') !== false || strtolower($paymentMethod) === 'stripe')
+            $paymentMethod = 'stripe';
 
         // Save to database
         $conn = getDbConnection();
@@ -337,8 +423,38 @@ function createOrder($input)
             $customerName = 'Gast';
         }
 
-        // CRITICAL NOTIFICATION: Send Admin Email BEFORE finishing request 
-        // to ensure owner gets the mail even if the connection closes
+        // ==========================================
+        // FASTCGI FINISH REQUEST - SPEED OPTIMIZATION
+        // Send success response to browser IMMEDIATELY so customer never hangs
+        // ==========================================
+        if (ob_get_level()) {
+            ob_clean();
+        }
+        header('Content-Type: application/json; charset=utf-8');
+        
+        $responsePayload = json_encode([
+            'success' => true,
+            'message' => 'Bestellung erstellt',
+            'discount_code' => $discountCode,
+            'order_id' => $orderId,
+            'status' => $autoStatus,
+            'eta' => $confirmEmailEta,
+            'service_type' => $serviceType,
+            'is_scheduled' => $isScheduled
+        ]);
+
+        echo $responsePayload;
+
+        if (function_exists('fastcgi_finish_request')) {
+            fastcgi_finish_request();
+        } else {
+            @ob_flush();
+            @flush();
+        }
+
+        // ==========================================
+        // BACKGROUND NOTIFICATIONS (Admin Email & Push)
+        // ==========================================
         $adminOrderData = [
             'order_id' => $orderId,
             'items' => $orderItems,
@@ -355,34 +471,10 @@ function createOrder($input)
         ];
 
         try {
-            require_once 'mailer.php';
+            require_once __DIR__ . '/mailer.php';
             sendAdminNewOrderEmail($adminOrderData);
         } catch (Exception $e) {
             error_log("CRITICAL: Failed to send admin email: " . $e->getMessage());
-        }
-
-        // ==========================================
-        // FASTCGI FINISH REQUEST - SPEED OPTIMIZATION
-        // Send success response to browser IMMEDIATELY after admin email
-        // ==========================================
-        ob_start();
-        echo json_encode([
-            'success' => true,
-            'message' => 'Bestellung erstellt',
-            'discount_code' => $discountCode,
-            'order_id' => $orderId,
-            'status' => $autoStatus,
-            'eta' => $confirmEmailEta,
-            'service_type' => $serviceType,
-            'is_scheduled' => $isScheduled
-        ]);
-        $response_size = ob_get_length();
-        header("Content-Length: $response_size");
-        header("Connection: close");
-        ob_end_flush();
-        flush();
-        if (function_exists('fastcgi_finish_request')) {
-            fastcgi_finish_request();
         }
 
         // ==========================================
@@ -492,6 +584,73 @@ function listOrders($input)
     }
 }
 
+/**
+ * List orders for a specific customer (by email, phone, or customer_id)
+ */
+function listCustomerOrders($customerEmail, $customerPhone, $customerId)
+{
+    try {
+        $conn = getDbConnection();
+        $conditions = [];
+        $params = [];
+        $types = '';
+
+        if (!empty($customerEmail)) {
+            $conditions[] = 'LOWER(delivery_address) LIKE ?';
+            $params[] = '%' . strtolower($customerEmail) . '%';
+            $types .= 's';
+        }
+
+        if (!empty($customerPhone)) {
+            $cleanPhone = preg_replace('/[^\d]/', '', $customerPhone);
+            $conditions[] = 'delivery_address LIKE ?';
+            $params[] = '%' . $customerPhone . '%';
+            $types .= 's';
+            if ($cleanPhone !== $customerPhone && strlen($cleanPhone) >= 6) {
+                $conditions[] = 'delivery_address LIKE ?';
+                $params[] = '%' . $cleanPhone . '%';
+                $types .= 's';
+            }
+        }
+
+        if (!empty($customerId)) {
+            $conditions[] = 'customer_id = ?';
+            $params[] = $customerId;
+            $types .= 's';
+        }
+
+        if (empty($conditions)) {
+            echo json_encode(['success' => true, 'orders' => [], 'count' => 0]);
+            return;
+        }
+
+        $sql = 'SELECT * FROM orders WHERE (' . implode(' OR ', $conditions) . ') ORDER BY created_at DESC LIMIT 100';
+        $stmt = $conn->prepare($sql);
+        if ($stmt && !empty($params)) {
+            $stmt->bind_param($types, ...$params);
+        }
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        $orders = [];
+        while ($row = $result->fetch_assoc()) {
+            $row['items']            = json_decode($row['items']            ?? '[]', true);
+            $row['delivery_address'] = json_decode($row['delivery_address'] ?? '{}', true);
+            $row['summary']          = json_decode($row['summary']          ?? '{}', true);
+            $orders[] = $row;
+        }
+
+        echo json_encode([
+            'success' => true,
+            'orders'  => $orders,
+            'count'   => count($orders)
+        ], JSON_PARTIAL_OUTPUT_ON_ERROR | JSON_UNESCAPED_UNICODE);
+    } catch (Throwable $e) {
+        http_response_code(500);
+        echo json_encode(['success' => false, 'message' => 'Fehler: ' . $e->getMessage()]);
+    }
+}
+
 
 // Get single order
 function getOrder($input)
@@ -538,20 +697,45 @@ function getOrder($input)
 function updateOrderLocation($input)
 {
     try {
+        $passcode = $_SERVER['HTTP_X_SHIPPER_PASSCODE'] ?? $input['passcode'] ?? '';
+        if ($passcode !== SHIPPER_PASSCODE) {
+            http_response_code(403);
+            echo json_encode(['success' => false, 'message' => 'Falscher Sicherheitscode']);
+            return;
+        }
+
         $orderId = $input['order_id'] ?? '';
+        $shipperName = trim((string)($input['shipper_name'] ?? ''));
         $lat = isset($input['lat']) ? floatval($input['lat']) : null;
         $lng = isset($input['lng']) ? floatval($input['lng']) : null;
 
-        if (!$orderId || $lat === null || $lng === null) {
+        if (!$orderId || !$shipperName || $lat === null || $lng === null || abs($lat) > 90 || abs($lng) > 180) {
             http_response_code(400);
-            echo json_encode(['success' => false, 'message' => 'Order ID, Lat, and Lng are required']);
+            echo json_encode(['success' => false, 'message' => 'Bestellnummer, Fahrer und gültige Position sind erforderlich']);
             return;
         }
 
         $conn = getDbConnection();
+        $orderStmt = $conn->prepare('SELECT status, summary FROM orders WHERE order_id = ? LIMIT 1');
+        $orderStmt->bind_param('s', $orderId);
+        $orderStmt->execute();
+        $orderResult = $orderStmt->get_result();
+        if ($orderResult->num_rows === 0) {
+            http_response_code(404);
+            echo json_encode(['success' => false, 'message' => 'Bestellung nicht gefunden']);
+            return;
+        }
+        $order = $orderResult->fetch_assoc();
+        $summary = json_decode($order['summary'] ?? '{}', true) ?: [];
+        if ($order['status'] !== 'in_delivery' || ($summary['shipper_name'] ?? '') !== $shipperName) {
+            http_response_code(409);
+            echo json_encode(['success' => false, 'message' => 'Diese Lieferung ist diesem Fahrer nicht zugeordnet']);
+            return;
+        }
+
         $location = json_encode(['lat' => $lat, 'lng' => $lng]);
 
-        $stmt = $conn->prepare('UPDATE orders SET delivery_location = ?, updated_at = CURRENT_TIMESTAMP WHERE order_id = ?');
+        $stmt = $conn->prepare("UPDATE orders SET delivery_location = ?, updated_at = CURRENT_TIMESTAMP WHERE order_id = ? AND status = 'in_delivery'");
         $stmt->bind_param('ss', $location, $orderId);
         $stmt->execute();
 
@@ -1284,10 +1468,15 @@ function acceptDelivery($input)
         $summary['shipper_accepted_at'] = date('c');
         $summaryJson = json_encode($summary);
 
-        $updateStmt = $conn->prepare('UPDATE orders SET status = ?, summary = ?, updated_at = CURRENT_TIMESTAMP WHERE order_id = ?');
+        $updateStmt = $conn->prepare("UPDATE orders SET status = ?, summary = ?, updated_at = CURRENT_TIMESTAMP WHERE order_id = ? AND status = 'confirmed'");
         $newStatus = 'in_delivery';
         $updateStmt->bind_param('sss', $newStatus, $summaryJson, $orderId);
         $updateStmt->execute();
+        if ($updateStmt->affected_rows !== 1) {
+            http_response_code(409);
+            echo json_encode(['success' => false, 'message' => 'Diese Bestellung wurde bereits von einem anderen Fahrer angenommen']);
+            return;
+        }
 
         // Decode order data for response
         $order['items'] = json_decode($order['items'] ?? '[]', true);
@@ -1377,14 +1566,24 @@ function completeDelivery($input)
 
         // Update status to completed, clear delivery_location
         $summary = json_decode($order['summary'] ?? '{}', true);
+        if (($summary['shipper_name'] ?? '') !== $shipperName) {
+            http_response_code(403);
+            echo json_encode(['success' => false, 'message' => 'Diese Lieferung ist einem anderen Fahrer zugeordnet']);
+            return;
+        }
         $summary['delivered_at'] = date('c');
         $summary['delivered_by'] = $shipperName;
         $summaryJson = json_encode($summary);
 
-        $updateStmt = $conn->prepare('UPDATE orders SET status = ?, summary = ?, delivery_location = NULL, updated_at = CURRENT_TIMESTAMP WHERE order_id = ?');
+        $updateStmt = $conn->prepare("UPDATE orders SET status = ?, summary = ?, delivery_location = NULL, updated_at = CURRENT_TIMESTAMP WHERE order_id = ? AND status = 'in_delivery'");
         $completedStatus = 'completed';
         $updateStmt->bind_param('sss', $completedStatus, $summaryJson, $orderId);
         $updateStmt->execute();
+        if ($updateStmt->affected_rows !== 1) {
+            http_response_code(409);
+            echo json_encode(['success' => false, 'message' => 'Lieferstatus wurde bereits geändert']);
+            return;
+        }
 
         // Send response immediately
         ob_start();

@@ -35,9 +35,20 @@ const RESTAURANT_HOURS = {
 function getSelectedBranch() {
   const savedBranch = localStorage.getItem('leoSelectedBranch');
   if (savedBranch) {
-    try { return JSON.parse(savedBranch); } catch (e) { }
+    try {
+      const parsedBranch = JSON.parse(savedBranch);
+      if (parsedBranch && (parsedBranch.id === 'branch_flora' || parsedBranch.id === 'branch_haupt')) {
+        return parsedBranch;
+      }
+    } catch (e) { }
   }
-  return null;
+
+  const branchKey = localStorage.getItem('selected_branch');
+  if (branchKey === 'haupt') {
+    return { id: 'branch_haupt', name: 'Leo Sushi - Hauptstraße', address: 'Hauptstraße 29a, 13158 Berlin' };
+  }
+
+  return { id: 'branch_flora', name: 'Leo Sushi - Florastraße', address: 'Florastraße 10A, 13187 Berlin' };
 }
 
 // Get branch coordinates
@@ -289,12 +300,15 @@ async function checkAndUpdateDeliveryStatus(coords = null) {
   if (!messageEl) return;
 
   // Save selected coordinates globally for reference if provided
-  if (coords) window._selectedAddressCoords = coords;
+  if (coords) {
+    selectedAddressCoords = coords;
+    window.selectedAddressCoords = coords;
+  }
 
   if (!streetOnly || !houseNumber || !postal || !city) {
     messageEl.style.display = 'none';
     // Disable button if address is incomplete for delivery
-    if (confirmBtn && window.currentOrderType === 'delivery') {
+    if (confirmBtn && window.selectedServiceType === 'delivery') {
       confirmBtn.disabled = true;
       confirmBtn.style.opacity = '0.5';
       confirmBtn.style.cursor = 'not-allowed';
@@ -303,12 +317,13 @@ async function checkAndUpdateDeliveryStatus(coords = null) {
     return;
   }
 
-  const rangeCheck = await checkDeliveryRange(street, postal, city, coords || window._selectedAddressCoords);
+  const rangeCheck = await checkDeliveryRange(street, postal, city, coords || selectedAddressCoords || window.selectedAddressCoords);
 
   if (rangeCheck.withinRange) {
+    window.selectedDeliveryDistanceKm = rangeCheck.distance ? Number(rangeCheck.distance) : null;
     messageEl.innerHTML = `<div style="color: #10b981; display: flex; align-items: center; gap: 8px;">
       <span style="font-size: 18px;">✓</span>
-      <span>${rangeCheck.message}</span>
+      <span>${rangeCheck.message}<br><small style="opacity:.8">Voraussichtliche Lieferzeit: ca. 30–45 Min.</small></span>
     </div>`;
     messageEl.style.background = 'rgba(16,185,129,.1)';
     messageEl.style.border = '1px solid rgba(16,185,129,.3)';
@@ -348,159 +363,9 @@ async function checkAndUpdateDeliveryStatus(coords = null) {
 }
 
 // Initialize checkout page
-// Auto-fill function that can be called multiple times
+// Auto-fill function that delegates directly to autoFillUserInfo
 async function tryAutoFillUserInfo() {
-  console.log('🔄 Trying to auto-fill user info...');
-
-  // Check if getCurrentUser is available (from auth-mysql.js)
-  let user = null;
-
-  if (typeof getCurrentUser === 'function') {
-    user = getCurrentUser();
-    console.log('✅ getCurrentUser available, user:', user ? { email: user.email, phone: user.phone } : 'null');
-  } else {
-    // Fallback: try to get from localStorage directly
-    try {
-      const userStr = localStorage.getItem('leo_user');
-      if (userStr) {
-        user = JSON.parse(userStr);
-        console.log('✅ Got user from localStorage directly:', { email: user.email, phone: user.phone });
-      }
-    } catch (e) {
-      console.error('Error reading user from localStorage:', e);
-    }
-  }
-
-  if (!user) {
-    console.log('⚠️ No user found, skipping auto-fill');
-    console.log('💡 Debug: localStorage.getItem("leo_user") =', localStorage.getItem('leo_user'));
-    return false;
-  }
-
-  // Try to fetch fresh data from API if user has token
-  if (user.token && window.api && window.api.auth && window.api.auth.getCurrentUser) {
-    try {
-      console.log('🔄 Fetching fresh user data from API...');
-      const result = await window.api.auth.getCurrentUser();
-      if (result && result.success && result.user) {
-        // Merge API data with localStorage data
-        user = {
-          ...user,
-          firstName: result.user.firstName || user.firstName || '',
-          lastName: result.user.lastName || user.lastName || '',
-          email: result.user.email || user.email || '',
-          phone: result.user.phone || user.phone || '',
-          street: result.user.street || user.street || '',
-          postal: result.user.postal || user.postal || '',
-          city: result.user.city || user.city || '',
-          note: result.user.note || user.note || ''
-        };
-        // Update localStorage
-        localStorage.setItem('leo_user', JSON.stringify(user));
-        console.log('✅ Updated user data from API');
-      }
-    } catch (error) {
-      console.log('⚠️ Could not fetch from API, using localStorage data:', error);
-    }
-  }
-
-  // Debug: Log full user object (without sensitive data)
-  console.log('👤 User data found:', {
-    hasFirstName: !!user.firstName,
-    hasLastName: !!user.lastName,
-    hasEmail: !!user.email,
-    hasPhone: !!user.phone,
-    hasStreet: !!user.street,
-    hasPostal: !!user.postal,
-    hasCity: !!user.city
-  });
-
-  // Get input fields
-  const firstNameInput = document.getElementById('customerFirstName');
-  const lastNameInput = document.getElementById('customerLastName');
-  const emailInput = document.getElementById('customerEmail');
-  const phoneInput = document.getElementById('customerPhone');
-  const streetInput = document.getElementById('deliveryStreet');
-  const postalInput = document.getElementById('deliveryPostal');
-  const cityInput = document.getElementById('deliveryCity');
-  const noteInput = document.getElementById('deliveryNote');
-
-  if (!firstNameInput || !lastNameInput || !emailInput || !phoneInput) {
-    console.log('⚠️ Form fields not found yet');
-    return false;
-  }
-
-  // Fill fields with user info - always fill if user is logged in
-  let filledAny = false;
-  if (user.firstName) {
-    firstNameInput.value = user.firstName;
-    filledAny = true;
-  }
-  if (user.lastName) {
-    lastNameInput.value = user.lastName;
-    filledAny = true;
-  }
-  if (user.email) {
-    emailInput.value = user.email;
-    filledAny = true;
-  }
-  if (user.phone) {
-    phoneInput.value = user.phone;
-    filledAny = true;
-  }
-  if (user.street) {
-    streetInput.value = user.street;
-    filledAny = true;
-  }
-  if (user.postal) {
-    postalInput.value = user.postal;
-    filledAny = true;
-  }
-  if (user.city) {
-    cityInput.value = user.city;
-    filledAny = true;
-  }
-  if (user.note) {
-    noteInput.value = user.note;
-  }
-
-  if (!filledAny) {
-    console.log('⚠️ User found but no data to fill');
-    return false;
-  }
-
-  console.log('✅ Auto-filled form fields:', {
-    firstName: firstNameInput.value,
-    lastName: lastNameInput.value,
-    email: emailInput.value,
-    phone: phoneInput.value,
-    street: streetInput.value,
-    postal: postalInput.value,
-    city: cityInput.value
-  });
-
-  // Trigger events
-  [firstNameInput, lastNameInput, emailInput, phoneInput, streetInput, postalInput, cityInput].forEach(input => {
-    if (input && input.value) {
-      input.dispatchEvent(new Event('input', { bubbles: true }));
-      input.dispatchEvent(new Event('change', { bubbles: true }));
-    }
-  });
-
-  // Check delivery range if address is filled
-  if (streetInput && postalInput && cityInput && streetInput.value && postalInput.value && cityInput.value) {
-    const rangeCheck = await checkDeliveryRange(streetInput.value, postalInput.value, cityInput.value);
-    const messageDiv = document.getElementById('deliveryRangeMessage');
-    if (messageDiv) {
-      messageDiv.style.display = 'block';
-      messageDiv.textContent = rangeCheck.message;
-      messageDiv.style.background = rangeCheck.withinRange ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)';
-      messageDiv.style.border = rangeCheck.withinRange ? '1px solid rgba(16, 185, 129, 0.3)' : '1px solid rgba(239, 68, 68, 0.3)';
-      messageDiv.style.color = rangeCheck.withinRange ? '#10b981' : '#ef4444';
-    }
-  }
-
-  return true;
+  return await autoFillUserInfo();
 }
 
 // Auto-apply 10% flyer discount if user came from QR flyer (one-time only)
@@ -576,6 +441,58 @@ function initCheckout() {
 
   // Auto-apply flyer discount (10%) if user came from QR flyer
   applyFlyerDiscountIfEligible();
+
+  // Auto-apply saved coupon from wallet (e.g. APP10)
+  const savedCoupon = localStorage.getItem('leo_applied_coupon') || localStorage.getItem('leo_applied_voucher') || localStorage.getItem('discountCode');
+  if (savedCoupon) {
+    const discountInput = document.getElementById('discountCode');
+    if (discountInput && !discountInput.value) {
+      discountInput.value = savedCoupon;
+      if (typeof applyDiscountCode === 'function') {
+        setTimeout(applyDiscountCode, 300);
+      }
+    }
+  }
+
+  // Check Table Dine-in mode (Khi khách đặt món tại bàn qua QR)
+  const urlParams = new URLSearchParams(window.location.search);
+  const tableNum = urlParams.get('table') || urlParams.get('table_id') || urlParams.get('t') || localStorage.getItem('leo_table_number');
+  if (tableNum) {
+    localStorage.setItem('leo_table_number', tableNum);
+    localStorage.setItem('leo_service_type', 'dine-in');
+    
+    setTimeout(() => {
+      if (typeof selectServiceType === 'function') {
+        selectServiceType('dinein');
+      }
+      
+      const noteEl = document.getElementById('orderNote');
+      if (noteEl && !noteEl.value.includes('Tisch')) {
+        noteEl.value = `[DINE-IN] Tisch ${tableNum}. ` + (noteEl.value || '');
+      }
+
+      // Add prominent Table Banner on Checkout
+      const checkoutContainer = document.querySelector('.checkout-container') || document.querySelector('.checkout-main') || document.querySelector('.checkout-grid');
+      if (checkoutContainer && !document.getElementById('dineInTableCheckoutBanner')) {
+        const tableBanner = document.createElement('div');
+        tableBanner.id = 'dineInTableCheckoutBanner';
+        tableBanner.style.cssText = 'background: linear-gradient(135deg, rgba(229,207,142,0.2), rgba(194,163,85,0.1)); border: 2px solid #e5cf8e; border-radius: 12px; padding: 14px 20px; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between;';
+        tableBanner.innerHTML = `
+          <div>
+            <div style="color: var(--gold, #e5cf8e); font-weight: 800; font-size: 16px;">🍽️ Tisch-Bestellung: TISCH ${tableNum}</div>
+            <div style="color: rgba(255,255,255,0.7); font-size: 12px;">Ihre Bestellung wird direkt an Ihren Tisch serviert.</div>
+          </div>
+          <span style="font-size: 24px;">🍣</span>
+        `;
+        checkoutContainer.insertBefore(tableBanner, checkoutContainer.firstChild);
+      }
+    }, 200);
+  } else {
+    window.selectedDeliveryDistanceKm = null;
+    const savedServiceType = localStorage.getItem('selected_service_type') || localStorage.getItem('leo_service_type') || 'delivery';
+    const normalizedServiceType = savedServiceType === 'dine-in' ? 'dinein' : savedServiceType;
+    selectServiceType(['delivery', 'pickup', 'dinein'].includes(normalizedServiceType) ? normalizedServiceType : 'delivery');
+  }
 
   // Update order summary immediately
   console.log('🔄 Updating order summary...');
@@ -759,6 +676,19 @@ function setupCheckoutPage() {
     });
   }
 
+  // Attach real-time auto-saving to all checkout form inputs
+  const autoSaveFieldIds = [
+    'customerFirstName', 'customerLastName', 'customerEmail', 'customerPhone',
+    'deliveryStreet', 'deliveryPostal', 'deliveryCity', 'deliveryNote'
+  ];
+  autoSaveFieldIds.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.addEventListener('input', debounceSaveCheckoutFormData);
+      el.addEventListener('change', saveCheckoutFormData);
+    }
+  });
+
   // Also check on page load if address is already filled
   setTimeout(() => {
     checkAndUpdateDeliveryStatus();
@@ -812,53 +742,39 @@ function setupCheckoutPage() {
   }
 }
 
-// Auto-fill user info from database - ONLY when user is logged in
-async function autoFillUserInfo() {
-  console.log('🔍 [autoFillUserInfo] Starting...');
-
-  // Get user from localStorage first (most reliable)
-  let localUser = null;
+// Auto-save form inputs in real-time
+function saveCheckoutFormData() {
   try {
-    const userStr = localStorage.getItem('leo_user');
-    if (userStr) {
-      localUser = JSON.parse(userStr);
-      console.log('✅ [autoFillUserInfo] Got user from localStorage:', {
-        hasEmail: !!localUser.email,
-        hasPhone: !!localUser.phone,
-        hasFirstName: !!localUser.firstName,
-        hasLastName: !!localUser.lastName
-      });
-    } else {
-      console.log('⚠️ [autoFillUserInfo] No user in localStorage');
+    const data = {
+      firstName: document.getElementById('customerFirstName')?.value?.trim() || '',
+      lastName: document.getElementById('customerLastName')?.value?.trim() || '',
+      email: document.getElementById('customerEmail')?.value?.trim() || '',
+      phone: document.getElementById('customerPhone')?.value?.trim() || '',
+      street: document.getElementById('deliveryStreet')?.value?.trim() || '',
+      postal: document.getElementById('deliveryPostal')?.value?.trim() || '',
+      city: document.getElementById('deliveryCity')?.value?.trim() || '',
+      note: document.getElementById('deliveryNote')?.value?.trim() || ''
+    };
+    // Only save if at least one field has content
+    if (data.firstName || data.lastName || data.email || data.phone || data.street) {
+      localStorage.setItem('leo_checkout_customer', JSON.stringify(data));
+      localStorage.setItem('leo_last_customer_info', JSON.stringify(data));
     }
   } catch (e) {
-    console.error('❌ [autoFillUserInfo] Error reading localStorage:', e);
+    console.error('Error saving checkout form data:', e);
   }
+}
 
-  // Fallback: try getCurrentUser if available
-  if (!localUser && typeof getCurrentUser === 'function') {
-    try {
-      localUser = getCurrentUser();
-      console.log('✅ [autoFillUserInfo] Got user from getCurrentUser');
-    } catch (e) {
-      console.error('❌ [autoFillUserInfo] Error calling getCurrentUser:', e);
-    }
-  }
+let _saveCheckoutTimer = null;
+function debounceSaveCheckoutFormData() {
+  if (_saveCheckoutTimer) clearTimeout(_saveCheckoutTimer);
+  _saveCheckoutTimer = setTimeout(saveCheckoutFormData, 250);
+}
 
-  if (!localUser) {
-    console.log('⚠️ [autoFillUserInfo] No user found, skipping auto-fill');
-    return false;
-  }
+// Auto-fill user info from database or local storage (works for both logged in users and guests)
+async function autoFillUserInfo() {
+  console.log('🔍 [autoFillUserInfo] Starting auto-fill...');
 
-  // Check if user has at least email or phone (basic info)
-  if (!localUser.email && !localUser.phone) {
-    console.log('⚠️ [autoFillUserInfo] User found but no email or phone, skipping auto-fill');
-    return false;
-  }
-
-  console.log('✅ User logged in, fetching user info...', { email: localUser.email, phone: localUser.phone });
-
-  // Get input fields
   const firstNameInput = document.getElementById('customerFirstName');
   const lastNameInput = document.getElementById('customerLastName');
   const emailInput = document.getElementById('customerEmail');
@@ -868,178 +784,112 @@ async function autoFillUserInfo() {
   const cityInput = document.getElementById('deliveryCity');
   const noteInput = document.getElementById('deliveryNote');
 
-  // Check if inputs exist
-  if (!firstNameInput || !lastNameInput || !emailInput || !phoneInput) {
-    console.log('⚠️ [autoFillUserInfo] Form fields not found:', {
-      firstNameInput: !!firstNameInput,
-      lastNameInput: !!lastNameInput,
-      emailInput: !!emailInput,
-      phoneInput: !!phoneInput
-    });
+  if (!firstNameInput && !lastNameInput && !emailInput && !phoneInput) {
+    console.log('⚠️ [autoFillUserInfo] Form fields not found on this page');
     return false;
   }
 
-  console.log('✅ [autoFillUserInfo] All form fields found');
-
-  // Use localStorage data directly (faster and more reliable)
-  // Only fetch from API if we have a token and want fresh data
-  let user = {
-    firstName: localUser.firstName || '',
-    lastName: localUser.lastName || '',
-    email: localUser.email || '',
-    phone: localUser.phone || '',
-    street: localUser.street || '',
-    postal: localUser.postal || '',
-    city: localUser.city || '',
-    note: localUser.note || ''
-  };
-
-  // Try to fetch fresh data from API if available (optional)
+  // Priority 1: Logged-in user
+  let userData = null;
   try {
-    if (localUser.token && window.api && window.api.auth && window.api.auth.getCurrentUser) {
-      console.log('🔄 [autoFillUserInfo] Fetching fresh data from API...');
-      const result = await window.api.auth.getCurrentUser();
-      if (result && result.success && result.user) {
-        user = {
-          firstName: result.user.firstName || user.firstName || '',
-          lastName: result.user.lastName || user.lastName || '',
-          email: result.user.email || user.email || '',
-          phone: result.user.phone || user.phone || '',
-          street: result.user.street || user.street || '',
-          postal: result.user.postal || user.postal || '',
-          city: result.user.city || user.city || '',
-          note: result.user.note || user.note || ''
-        };
-        // Update localStorage
-        localStorage.setItem('leo_user', JSON.stringify({ ...localUser, ...user }));
-        console.log('✅ [autoFillUserInfo] Updated user data from API');
+    const userStr = localStorage.getItem('leo_user');
+    if (userStr) userData = JSON.parse(userStr);
+  } catch (e) {}
+
+  // Priority 2: Auto-saved draft from typing / previous reload
+  let savedDraft = null;
+  try {
+    const draftStr = localStorage.getItem('leo_checkout_customer');
+    if (draftStr) savedDraft = JSON.parse(draftStr);
+  } catch (e) {}
+
+  // Priority 3: Last placed order customer info
+  let lastOrderInfo = null;
+  try {
+    const lastStr = localStorage.getItem('leo_last_customer_info');
+    if (lastStr) lastOrderInfo = JSON.parse(lastStr);
+  } catch (e) {}
+
+  // Priority 4: Saved customers dictionary
+  let lastSavedCustomer = null;
+  try {
+    const custStr = localStorage.getItem('leoCustomers');
+    if (custStr) {
+      const custs = JSON.parse(custStr);
+      const keys = Object.keys(custs);
+      if (keys.length > 0) {
+        lastSavedCustomer = custs[keys[keys.length - 1]];
       }
     }
-  } catch (error) {
-    console.log('⚠️ [autoFillUserInfo] API fetch failed, using localStorage data:', error);
-    // Continue with localStorage data
-  }
+  } catch (e) {}
 
-  // Fill fields with user info (auto-fill when user is logged in)
-  // Always fill if user is logged in, but allow manual editing after
-  console.log('📝 Starting to fill form fields with user data:', {
-    firstName: user.firstName,
-    lastName: user.lastName,
-    email: user.email,
-    phone: user.phone,
-    street: user.street,
-    postal: user.postal,
-    city: user.city
-  });
+  // Merge data sources (higher priority overwrites lower if non-empty)
+  const merged = {
+    firstName: userData?.firstName || savedDraft?.firstName || lastOrderInfo?.firstName || lastSavedCustomer?.firstName || '',
+    lastName: userData?.lastName || savedDraft?.lastName || lastOrderInfo?.lastName || lastSavedCustomer?.lastName || '',
+    email: userData?.email || savedDraft?.email || lastOrderInfo?.email || lastSavedCustomer?.email || '',
+    phone: userData?.phone || savedDraft?.phone || lastOrderInfo?.phone || lastSavedCustomer?.phone || '',
+    street: userData?.street || savedDraft?.street || lastOrderInfo?.street || lastSavedCustomer?.street || '',
+    postal: userData?.postal || savedDraft?.postal || lastOrderInfo?.postal || lastSavedCustomer?.postal || '',
+    city: userData?.city || savedDraft?.city || lastOrderInfo?.city || lastSavedCustomer?.city || '',
+    note: userData?.note || savedDraft?.note || lastOrderInfo?.note || lastSavedCustomer?.note || ''
+  };
+
+  // If logged in and has token, try fetching fresh profile from API
+  try {
+    if (userData && userData.token && window.api?.auth?.getCurrentUser) {
+      const result = await window.api.auth.getCurrentUser();
+      if (result?.success && result?.user) {
+        Object.assign(merged, {
+          firstName: result.user.firstName || merged.firstName,
+          lastName: result.user.lastName || merged.lastName,
+          email: result.user.email || merged.email,
+          phone: result.user.phone || merged.phone,
+          street: result.user.street || merged.street,
+          postal: result.user.postal || merged.postal,
+          city: result.user.city || merged.city,
+          note: result.user.note || merged.note
+        });
+      }
+    }
+  } catch (e) {}
 
   let filledAny = false;
-  if (firstNameInput && user.firstName) {
-    firstNameInput.value = user.firstName;
-    filledAny = true;
-    console.log('✅ Filled firstName:', user.firstName);
-  }
-  if (lastNameInput && user.lastName) {
-    lastNameInput.value = user.lastName;
-    filledAny = true;
-    console.log('✅ Filled lastName:', user.lastName);
-  }
-  if (emailInput && user.email) {
-    emailInput.value = user.email;
-    filledAny = true;
-    console.log('✅ Filled email:', user.email);
-  }
-  if (phoneInput && user.phone) {
-    phoneInput.value = user.phone;
-    filledAny = true;
-    console.log('✅ Filled phone:', user.phone);
-  }
-  if (streetInput && user.street) {
-    streetInput.value = user.street;
-    filledAny = true;
-    console.log('✅ Filled street:', user.street);
-  }
-  if (postalInput && user.postal) {
-    postalInput.value = user.postal;
-    filledAny = true;
-    console.log('✅ Filled postal:', user.postal);
-  }
-  if (cityInput && user.city) {
-    cityInput.value = user.city;
-    filledAny = true;
-    console.log('✅ Filled city:', user.city);
-  }
-  if (noteInput && user.note) {
-    noteInput.value = user.note;
-    filledAny = true;
-    console.log('✅ Filled note:', user.note);
-  }
+  if (firstNameInput && !firstNameInput.value && merged.firstName) { firstNameInput.value = merged.firstName; filledAny = true; }
+  if (lastNameInput && !lastNameInput.value && merged.lastName) { lastNameInput.value = merged.lastName; filledAny = true; }
+  if (emailInput && !emailInput.value && merged.email) { emailInput.value = merged.email; filledAny = true; }
+  if (phoneInput && !phoneInput.value && merged.phone) { phoneInput.value = merged.phone; filledAny = true; }
+  if (streetInput && !streetInput.value && merged.street) { streetInput.value = merged.street; filledAny = true; }
+  if (postalInput && !postalInput.value && merged.postal) { postalInput.value = merged.postal; filledAny = true; }
+  if (cityInput && !cityInput.value && merged.city) { cityInput.value = merged.city; filledAny = true; }
+  if (noteInput && !noteInput.value && merged.note) { noteInput.value = merged.note; filledAny = true; }
 
-  if (!filledAny) {
-    console.log('⚠️ [autoFillUserInfo] No data to fill - user object:', user);
-    return false;
-  } else {
-    console.log('✅ [autoFillUserInfo] Successfully filled', filledAny, 'field(s)');
-  }
-
-  // Trigger events to notify any listeners
-  [firstNameInput, lastNameInput, emailInput, phoneInput, streetInput, postalInput, cityInput, noteInput].forEach(input => {
-    if (input && input.value) {
-      input.dispatchEvent(new Event('input', { bubbles: true }));
-      input.dispatchEvent(new Event('change', { bubbles: true }));
+  // Trigger change and input events
+  [firstNameInput, lastNameInput, emailInput, phoneInput, streetInput, postalInput, cityInput, noteInput].forEach(inp => {
+    if (inp && inp.value) {
+      inp.dispatchEvent(new Event('input', { bubbles: true }));
+      inp.dispatchEvent(new Event('change', { bubbles: true }));
     }
   });
 
-  // Trigger delivery range check if address is filled
-  if (streetInput && postalInput && cityInput && streetInput.value && postalInput.value && cityInput.value) {
-    const rangeCheck = await checkDeliveryRange(streetInput.value, postalInput.value, cityInput.value);
-    const messageDiv = document.getElementById('deliveryRangeMessage');
-    if (messageDiv) {
-      messageDiv.style.display = 'block';
-      messageDiv.textContent = rangeCheck.message;
-      messageDiv.style.background = rangeCheck.withinRange ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)';
-      messageDiv.style.border = rangeCheck.withinRange ? '1px solid rgba(16, 185, 129, 0.3)' : '1px solid rgba(239, 68, 68, 0.3)';
-      messageDiv.style.color = rangeCheck.withinRange ? '#10b981' : '#ef4444';
+  // Trigger delivery check
+  if (streetInput && postalInput && cityInput && streetInput.value && postalInput.value) {
+    if (typeof checkAndUpdateDeliveryStatus === 'function') {
+      checkAndUpdateDeliveryStatus();
     }
   }
 
-  console.log('✅ [autoFillUserInfo] Auto-filled user info:', {
-    firstName: user.firstName,
-    lastName: user.lastName,
-    email: user.email,
-    phone: user.phone,
-    street: user.street,
-    postal: user.postal,
-    city: user.city
-  });
-
-  // Trigger events to notify any listeners
-  [firstNameInput, lastNameInput, emailInput, phoneInput, streetInput, postalInput, cityInput, noteInput].forEach(input => {
-    if (input && input.value) {
-      input.dispatchEvent(new Event('input', { bubbles: true }));
-      input.dispatchEvent(new Event('change', { bubbles: true }));
-    }
-  });
-
-  // Trigger delivery range check if address is filled
-  if (streetInput && postalInput && cityInput && streetInput.value && postalInput.value && cityInput.value) {
-    const rangeCheck = await checkDeliveryRange(streetInput.value, postalInput.value, cityInput.value);
-    const messageDiv = document.getElementById('deliveryRangeMessage');
-    if (messageDiv) {
-      messageDiv.style.display = 'block';
-      messageDiv.textContent = rangeCheck.message;
-      messageDiv.style.background = rangeCheck.withinRange ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)';
-      messageDiv.style.border = rangeCheck.withinRange ? '1px solid rgba(16, 185, 129, 0.3)' : '1px solid rgba(239, 68, 68, 0.3)';
-      messageDiv.style.color = rangeCheck.withinRange ? '#10b981' : '#ef4444';
-    }
-  }
-
-  return true;
+  console.log('✅ [autoFillUserInfo] Restored customer data into checkout form:', merged);
+  return filledAny;
 }
 
 // Select service type
 function selectServiceType(type) {
   console.log('🚚 Selecting service type:', type);
   window.selectedServiceType = type;
+  const storedType = type === 'dinein' ? 'dine-in' : type;
+  localStorage.setItem('selected_service_type', storedType);
+  localStorage.setItem('leo_service_type', storedType);
 
   // Update UI buttons
   document.querySelectorAll('.service-type-btn').forEach(btn => {
@@ -1111,14 +961,14 @@ function selectServiceType(type) {
 // This function is kept for backward compatibility but will be overridden by payment.js
 
 // Select tip percentage
-function selectTip(percent) {
+function selectTip(percent, selectedButton) {
   // Remove active class from all tip buttons
   document.querySelectorAll('.tip-btn').forEach(btn => {
     btn.classList.remove('active');
   });
 
   // Add active class to selected button
-  const selectedBtn = event.target.closest('.tip-btn');
+  const selectedBtn = selectedButton || (window.event && window.event.target ? window.event.target.closest('.tip-btn') : null);
   if (selectedBtn) {
     selectedBtn.classList.add('active');
   }
@@ -1144,11 +994,12 @@ function selectTip(percent) {
 }
 
 // Open custom tip input
-function openCustomTip() {
+function openCustomTip(selectedButton) {
   // Remove active class from all tip buttons
   document.querySelectorAll('.tip-btn').forEach(btn => {
     btn.classList.remove('active');
   });
+  if (selectedButton) selectedButton.classList.add('active');
 
   // Show custom tip input
   const customTipContainer = document.getElementById('customTipContainer');
@@ -1424,6 +1275,16 @@ async function updateOrderSummary() {
   const totalEl = document.getElementById('summaryTotal');
   if (totalEl) totalEl.textContent = formatPrice(total);
 
+  const stripePayAmount = document.getElementById('stripePayAmount');
+  if (stripePayAmount) stripePayAmount.textContent = formatPrice(total);
+
+  if (window.selectedPaymentMethod === 'stripe' && typeof initStripePaymentElement === 'function') {
+    if (window._lastStripeTotal !== total && total > 0) {
+      window._lastStripeTotal = total;
+      initStripePaymentElement();
+    }
+  }
+
   // Check minimum order amount for delivery (Check BEFORE discounts as requested)
   const minOrderWarning = document.getElementById('minOrderWarning');
   const confirmBtn = document.getElementById('confirmCheckoutBtn');
@@ -1478,6 +1339,9 @@ function debounceAddressSearch() {
 }
 
 function clearAddressInput() {
+  selectedAddressCoords = null;
+  window.selectedAddressCoords = null;
+  window.selectedDeliveryDistanceKm = null;
   const input = document.getElementById('addressSearchInput');
   if (input) input.value = '';
   const resultsDiv = document.getElementById('addressSearchResults');
@@ -1499,7 +1363,7 @@ function clearAddressInput() {
 
   // Lock Checkout (because delivery info cleared)
   const confirmBtn = document.getElementById('confirmCheckoutBtn');
-  if (confirmBtn && window.currentOrderType === 'delivery') {
+  if (confirmBtn && window.selectedServiceType === 'delivery') {
     confirmBtn.disabled = true;
   }
 }
@@ -1833,7 +1697,7 @@ async function confirmCheckout() {
   // Check if delivery address is within 5km range (Only for Delivery)
   if (selectedServiceType === 'delivery') {
     // OPTIMIZATION: Pass coordinates if available to make it instant
-    const rangeCheck = await checkDeliveryRange(street, postal, city, window.selectedAddressCoords);
+    const rangeCheck = await checkDeliveryRange(street, postal, city, selectedAddressCoords || window.selectedAddressCoords);
     if (!rangeCheck.withinRange) {
       if (window.addNotification && window.NOTIFICATION_TYPES) {
         window.addNotification(
@@ -1871,6 +1735,25 @@ async function confirmCheckout() {
       window.location.href = 'menu.html';
     }, 1500);
     return;
+  }
+
+  if (window.LEO_IS_NATIVE_APP === true) {
+    const cartBranchId = localStorage.getItem('leoCartBranchId') ||
+      (cart.find(item => item && item.branchId)?.branchId || '');
+    const containsWrongBranch = cart.some(item => item && item.branchId && item.branchId !== branch.id);
+    if (!cartBranchId || cartBranchId !== branch.id || containsWrongBranch) {
+      if (window.addNotification && window.NOTIFICATION_TYPES) {
+        window.addNotification(
+          window.NOTIFICATION_TYPES.ORDER_SUCCESS,
+          '❌ Warenkorb passt nicht zur Filiale',
+          'Bitte wähle die Filiale erneut und füge die Gerichte aus der passenden Speisekarte hinzu.',
+          { error: true }
+        );
+      } else {
+        alert('Der Warenkorb gehört nicht zur ausgewählten Filiale. Bitte wähle die Filiale erneut.');
+      }
+      return;
+    }
   }
 
   // Calculate totals
@@ -1926,7 +1809,8 @@ async function confirmCheckout() {
     const minTime = (serviceType === 'delivery') ? '12:30' : '12:00';
 
     // Only check if date is today or somehow earlier (though picker should prevent)
-    const today = new Date().toISOString().split('T')[0];
+    const now = new Date();
+    const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
     if (scheduledDateValue2 === today && scheduledTimeValue2 < minTime) {
       if (window.addNotification && window.NOTIFICATION_TYPES) {
         window.addNotification(
@@ -2048,6 +1932,7 @@ async function confirmCheckout() {
         deliveryFee: deliveryFee > 0 ? deliveryFee.toFixed(2) + ' €' : null,
         vat: vatAmount > 0 ? vatAmount.toFixed(2) + ' €' : null,
         scheduled_delivery_time: scheduledDeliveryTime || null,
+        delivery_distance_km: isDelivery ? (window.selectedDeliveryDistanceKm || null) : null,
         branch: getSelectedBranch()
       };
 
@@ -2062,6 +1947,10 @@ async function confirmCheckout() {
         // Update the temporary ID in our local data objects if needed
         apiOrderData.order_id = orderId;
         orderData.order_id = orderId;
+
+        if (typeof window.rememberLeoOrder === 'function') {
+          window.rememberLeoOrder({ ...apiOrderData, status: 'pending' }, orderId);
+        }
 
         // Save customer info to localStorage for profile page
         try {
@@ -2081,6 +1970,8 @@ async function confirmCheckout() {
           const savedCustomers = JSON.parse(localStorage.getItem('leoCustomers') || '{}');
           savedCustomers[customerKey] = customerInfo;
           localStorage.setItem('leoCustomers', JSON.stringify(savedCustomers));
+          localStorage.setItem('leo_last_customer_info', JSON.stringify(customerInfo));
+          localStorage.setItem('leo_checkout_customer', JSON.stringify(customerInfo));
 
           if (customerInfo.customerCode) {
             localStorage.setItem('leo_customer_code', customerInfo.customerCode);
@@ -2108,8 +1999,22 @@ async function confirmCheckout() {
           console.log('🎟️ Flyer discount marked as used');
         }
 
-        // Clear cart
-        localStorage.removeItem('leoCart');
+        // Clear cart thoroughly across all keys
+        try {
+          localStorage.removeItem('leoCart');
+          localStorage.removeItem('cart');
+          localStorage.setItem('leoCart', '[]');
+          localStorage.setItem('cart', '[]');
+          localStorage.removeItem('leo_applied_voucher');
+          localStorage.removeItem('applied_discount');
+          if (typeof window.cart !== 'undefined') window.cart = [];
+          if (typeof window.clearAppCart === 'function') window.clearAppCart();
+          if (typeof window.clearCart === 'function') window.clearCart();
+          window.dispatchEvent(new Event('cartUpdated'));
+          window.dispatchEvent(new Event('cart:updated'));
+        } catch (e) {
+          console.error('Error clearing cart on order success:', e);
+        }
 
         // Add notification
         if (window.addNotification && window.NOTIFICATION_TYPES) {
@@ -2122,9 +2027,16 @@ async function confirmCheckout() {
           );
         }
 
+        // Check app mode for redirect
+        const isAppMode = document.body.classList.contains('is-capacitor-app') ||
+          window.location.search.includes('app=true') ||
+          sessionStorage.getItem('leo_app_preview') === 'true';
+
         // Redirect IMMEDIATELY (Only short delay for notification to trigger)
         setTimeout(() => {
-          window.location.href = 'menu.html?status=success&id=' + orderId;
+          window.location.href = isAppMode
+            ? `menu.html?status=success&id=${orderId}&app=true`
+            : `menu.html?status=success&id=${orderId}`;
         }, 100);
       } else {
         // Restore button state

@@ -4,6 +4,20 @@
  */
 date_default_timezone_set('Europe/Berlin');
 
+// Prevent PHP notices/warnings from polluting JSON responses
+ini_set('display_errors', '0');
+ini_set('display_startup_errors', '0');
+ini_set('log_errors', '1');
+error_reporting(E_ALL & ~E_NOTICE & ~E_WARNING & ~E_DEPRECATED);
+
+// Security Headers (Clickjacking, MIME-sniffing, XSS protection)
+if (!headers_sent()) {
+    header('X-Content-Type-Options: nosniff');
+    header('X-Frame-Options: SAMEORIGIN');
+    header('X-XSS-Protection: 1; mode=block');
+    header('Referrer-Policy: strict-origin-when-cross-origin');
+}
+
 // Detect if running on localhost
 $isLocalhost = (
     $_SERVER['HTTP_HOST'] === 'localhost' ||
@@ -70,5 +84,11 @@ define('SHIPPER_PASSCODE', 'Leo0301.');
 define('OWNER_PASSWORD', 'Leo0301.'); // Có thể đổi khác admin nếu muốn tách biệt hoàn toàn
 
 
+// Stripe Configuration
+define('STRIPE_PUBLISHABLE_KEY', getenv('STRIPE_PUBLISHABLE_KEY') ?: 'pk_live_51U4LumD62AOvzFwzgvQfwbAZAAbXXeWK5zu5yWYbMl5qLrIo9DY5pWdPuVXM8AWX98XXvHzNci1P2duYmWI1eWD100MPWiUQUs');
+define('STRIPE_SECRET_KEY', getenv('STRIPE_SECRET_KEY') ?: '');
+define('STRIPE_CURRENCY', 'eur');
+
 // Resend API key (optional - leave empty if not used, using SMTP instead)
 define('RESEND_API_KEY', ''); // Set your Resend API key here if needed
+

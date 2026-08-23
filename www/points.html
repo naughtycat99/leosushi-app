@@ -1,6 +1,16 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-868WTJTFBM"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-868WTJTFBM');
+    </script>
+
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Meine Punkte - LEO SUSHI</title>
@@ -8,6 +18,8 @@
     <link rel="icon" href="assets/logo.png">
     <link rel="apple-touch-icon" href="assets/logo.png">
     <link rel="stylesheet" href="styles.css?v=20260408">
+    <link rel="stylesheet" href="css/mobile-app.css?v=20260824_v54">
+    <script src="js/app-mode-gate.js?v=20260824_v51"></script>
     <style>
         body {
             background: linear-gradient(180deg, #09090a, #0b0b0c 30%, #0b0b0c 70%, #0a0a0b);
@@ -227,15 +239,15 @@
         <!-- Sidebar Navigation -->
         <aside class="points-sidebar">
             <nav class="points-nav">
-                <a href="account" class="points-nav-item">
+                <a href="profile.html" class="points-nav-item">
                     <span>👤</span>
                     <span>Mein Profil</span>
                 </a>
-                <a href="orders" class="points-nav-item">
+                <a href="my-orders.html" class="points-nav-item">
                     <span>📦</span>
                     <span>Meine Bestellungen</span>
                 </a>
-                <a href="rewards" class="points-nav-item active">
+                <a href="points.html" class="points-nav-item active" aria-current="page">
                     <span>⭐</span>
                     <span>Meine Punkte</span>
                 </a>
@@ -289,42 +301,55 @@
     <script src="js/notifications.js"></script>
     <script src="script.js?v=20260408"></script>
     <script>
-        // Load header and footer
         document.addEventListener('DOMContentLoaded', () => {
-            loadHeader();
-            loadFooter();
             loadPointsData();
         });
 
         async function loadPointsData() {
             try {
-                const user = getCurrentUser();
+                const user = typeof getCurrentUser === 'function' ? getCurrentUser() : null;
                 if (!user || !user.id) {
-                    window.location.href = '/';
+                    document.getElementById('pointsBalance').textContent = '0';
+                    document.getElementById('redemptionRules').innerHTML = `
+                        <div style="text-align: center; padding: 24px; background: rgba(255,255,255,0.02); border-radius: 12px; border: 1px solid rgba(229,207,142,0.2);">
+                            <p style="color: rgba(255,255,255,0.8); font-size: 14px; margin-bottom: 16px;">Melden Sie sich an, um Ihre Punkte zu verwalten und Prämien einzulösen.</p>
+                            <a href="profile.html" style="display: inline-block; padding: 10px 24px; background: var(--gold); color: #0b0b0d; text-decoration: none; font-weight: 700; border-radius: 10px; font-size: 13px;">Jetzt Anmelden</a>
+                        </div>
+                    `;
+                    document.getElementById('transactionsList').innerHTML = '<p style="color:rgba(255,255,255,0.5); font-size: 13px; text-align: center; padding: 16px;">Bitte melden Sie sich an, um Transaktionen zu sehen.</p>';
                     return;
                 }
 
                 // Load points balance
                 if (window.api && window.api.points) {
                     const pointsResult = await window.api.points.getPoints(user.id);
+                    const currentPoints = pointsResult && pointsResult.success ? (pointsResult.points || 0) : 0;
                     if (pointsResult && pointsResult.success) {
-                        document.getElementById('pointsBalance').textContent = pointsResult.points || 0;
+                        document.getElementById('pointsBalance').textContent = currentPoints;
                     }
 
                     // Load redemption rules
                     const rulesResult = await window.api.points.getRedemptionRules();
                     if (rulesResult && rulesResult.success) {
-                        renderRedemptionRules(rulesResult.rules, pointsResult.points || 0);
+                        renderRedemptionRules(rulesResult.rules, currentPoints);
+                    } else {
+                        renderRedemptionRules([], currentPoints);
                     }
 
                     // Load transactions
                     const transResult = await window.api.points.getTransactions(user.id);
                     if (transResult && transResult.success) {
                         renderTransactions(transResult.transactions);
+                    } else {
+                        renderTransactions([]);
                     }
+                } else {
+                    throw new Error('Punkte-Service ist derzeit nicht verfügbar.');
                 }
             } catch (error) {
                 console.error('Error loading points data:', error);
+                document.getElementById('redemptionRules').innerHTML = '<div class="empty-state">Punkte konnten nicht geladen werden. Bitte versuchen Sie es später erneut.</div>';
+                document.getElementById('transactionsList').innerHTML = '<div class="empty-state">Transaktionen konnten nicht geladen werden.</div>';
                 if (window.addNotification) {
                     window.addNotification('error', 'Fehler', 'Fehler beim Laden der Punkte-Daten');
                 }
@@ -356,7 +381,7 @@
                         </p>
                         <button 
                             class="redeem-btn" 
-                            onclick="redeemPoints('${rule.rule_id}', ${rule.points_required})"
+                            onclick="redeemPoints('${rule.rule_id}', ${rule.points_required}, this)"
                             ${canRedeem ? '' : 'disabled'}
                         >
                             ${canRedeem ? 'Einlösen' : 'Nicht genug Punkte'}
@@ -397,15 +422,20 @@
             }).join('');
         }
 
-        async function redeemPoints(ruleId, pointsRequired) {
+        async function redeemPoints(ruleId, pointsRequired, button) {
             if (!confirm(`Möchten Sie ${pointsRequired} Punkte einlösen?`)) {
                 return;
+            }
+
+            if (button) {
+                button.disabled = true;
+                button.textContent = 'Wird eingelöst…';
             }
 
             try {
                 const user = getCurrentUser();
                 if (!user || !user.id) {
-                    window.location.href = '/';
+                    window.location.href = 'profile.html';
                     return;
                 }
 
@@ -413,12 +443,18 @@
                     const result = await window.api.points.redeemPoints(user.id, ruleId);
                     
                     if (result && result.success) {
+                        if (result.promotion_code) {
+                            localStorage.setItem('discountCode', result.promotion_code);
+                            localStorage.setItem('leo_applied_coupon', result.promotion_code);
+                        }
                         if (window.addNotification) {
                             window.addNotification(
                                 'success',
                                 'Erfolgreich eingelöst',
-                                `Mã khuyến mãi: ${result.promotion_code}`
+                                `Gutscheincode: ${result.promotion_code}`
                             );
+                        } else {
+                            alert(`Erfolgreich eingelöst. Gutscheincode: ${result.promotion_code}`);
                         }
                         
                         // Reload data
@@ -426,17 +462,29 @@
                     } else {
                         if (window.addNotification) {
                             window.addNotification('error', 'Fehler', result.message || 'Fehler beim Einlösen');
+                        } else {
+                            alert(result && result.message ? result.message : 'Fehler beim Einlösen');
                         }
                     }
+                } else {
+                    throw new Error('Punkte-Service ist derzeit nicht verfügbar.');
                 }
             } catch (error) {
                 console.error('Error redeeming points:', error);
                 if (window.addNotification) {
                     window.addNotification('error', 'Fehler', 'Fehler beim Einlösen der Punkte');
+                } else {
+                    alert('Fehler beim Einlösen der Punkte. Bitte versuchen Sie es erneut.');
+                }
+            } finally {
+                if (button && document.body.contains(button)) {
+                    button.disabled = false;
+                    button.textContent = 'Einlösen';
                 }
             }
         }
     </script>
+    <script src="js/mobile-app.js?v=20260824_v54"></script>
 </body>
 </html>
 

@@ -1,15 +1,18 @@
 {
     "appId": "com.leosushi.berlin",
-    "appName": "LEO Shipper",
+    "appName": "LEO SUSHI",
     "webDir": "www",
     "server": {
-        "url": "https://www.leo-sushi-berlin.de/delivery.html",
+        "url": "https://www.leo-sushi-berlin.de/",
         "cleartext": false,
         "allowNavigation": [
             "https://www.leo-sushi-berlin.de/*",
-            "https://leo-sushi-berlin.de/*"
+            "https://leo-sushi-berlin.de/*",
+            "https://*.stripe.com/*",
+            "https://*.paypal.com/*"
         ]
     },
+    "appendUserAgent": "LeoSushiApp Capacitor",
     "android": {
         "backgroundColor": "#0b0b0c",
         "webContentsDebuggingEnabled": true,
@@ -26,7 +29,7 @@
     },
     "plugins": {
         "SplashScreen": {
-            "launchShowDuration": 8000,
+            "launchShowDuration": 3000,
             "launchAutoHide": true,
             "backgroundColor": "#0b0b0c",
             "showSpinner": false

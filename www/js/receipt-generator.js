@@ -193,59 +193,15 @@ const ReceiptGenerator = (() => {
             data.push(...leftRight('Bereits bezahlt:', formatPrice(summary.total || 0)));
             data.push(...CMD.BOLD_ON, ...CMD.DOUBLE_ON, ...leftRight('Zu zahlen:', formatPrice(0), 24), ...CMD.DOUBLE_OFF, ...CMD.BOLD_OFF);
         }
-        data.push(...dashes());
-
-        data.push(...CMD.ALIGN_CENTER, ...line('Zahlung: ' + payMethod), ...CMD.LINE, ...line('Vielen Dank!'), ...line('www.leo-sushi-berlin.de'));
-        
-        // --- GOOGLE REVIEW QR CODE ---
-        const reviewLinks = {
-            'branch_flora': 'https://search.google.com/local/writereview?placeid=ChIJq7i33h9RqEcR-w5n_G_k6o4',
-            'branch_haupt': 'https://search.google.com/local/writereview?placeid=ChIJx0O6mJ1RqEcRk2714nO5w2Y'
-        };
-        const branchId = summary.branch ? summary.branch.id : 'branch_flora';
-        const reviewUrl = reviewLinks[branchId] || reviewLinks['branch_flora'];
-
-        data.push(...CMD.LINE, ...CMD.ALIGN_CENTER, ...line('Bewerten Sie uns auf Google:'));
-        
-        // ESC/POS QR Code generation
-        const urlBytes = encodeText(reviewUrl);
-        const pL = (urlBytes.length + 3) & 0xFF;
-        const pH = ((urlBytes.length + 3) >> 8) & 0xFF;
-
-        // 1. Set QR model 2
-        data.push(GS, 0x28, 0x6B, 0x04, 0x00, 0x31, 0x41, 0x32, 0x00);
-        // 2. Set QR size (3 to 6 is good)
-        data.push(GS, 0x28, 0x6B, 0x03, 0x00, 0x31, 0x43, 0x04);
-        // 3. Set Error correction level L (0x30), M (0x31), Q (0x32), H (0x33)
-        data.push(GS, 0x28, 0x6B, 0x03, 0x00, 0x31, 0x45, 0x31);
-        // 4. Store data in symbol storage area
-        data.push(GS, 0x28, 0x6B, pL, pH, 0x31, 0x50, 0x30, ...urlBytes);
-        // 5. Print the symbol data
-        data.push(GS, 0x28, 0x6B, 0x03, 0x00, 0x31, 0x51, 0x30);
-        
-        data.push(...CMD.LINE);
-
-        // --- DELIVERY APP QR CODE ---
+        data.push(...CMD.ALIGN_CENTER, ...line('Zahlung: ' + payMethod), ...CMD.LINE, ...line('Vielen Dank für Ihre Bestellung!'), ...line('www.leo-sushi-berlin.de'), ...CMD.LINE);
+        data.push(...CMD.ALIGN_CENTER, ...CMD.BOLD_ON, ...line('10% RABATT FUER DIE NAECHSTE BESTELLUNG:'), ...CMD.BOLD_OFF, ...line('Leo Sushi App laden & Code APP10 nutzen!'), ...line('leo-sushi-berlin.de/download-app'), ...CMD.LINE);
+        // --- GOOGLE MAPS NAVIGATION QR CODE ---
         if (orderData.service_type === 'delivery') {
-            // Use current domain dynamically
-            const currentDomain = window.location.origin;
-            const deliveryQRUrl = `${currentDomain}/delivery.html?scan=${orderId}`;
-            data.push(...CMD.LINE, ...CMD.ALIGN_CENTER, ...CMD.DOUBLE_HEIGHT, ...CMD.BOLD_ON, ...line('SHIPPER: SCAN TO DELIVER'), ...CMD.BOLD_OFF, ...CMD.DOUBLE_OFF);
+            const street = deliveryAddress.street || '';
+            const houseNum = deliveryAddress.houseNumber || deliveryAddress.house_number || deliveryAddress.housenumber || '';
+            const streetLine = (houseNum && !street.includes(houseNum)) ? `${street} ${houseNum}` : street;
+            const addressString = `${streetLine}, ${deliveryAddress.postal || ''} ${deliveryAddress.city || ''}`.trim();
             
-            const delUrlBytes = encodeText(deliveryQRUrl);
-            const delPL = (delUrlBytes.length + 3) & 0xFF;
-            const delPH = ((delUrlBytes.length + 3) >> 8) & 0xFF;
-
-            data.push(GS, 0x28, 0x6B, 0x04, 0x00, 0x31, 0x41, 0x32, 0x00);
-            data.push(GS, 0x28, 0x6B, 0x03, 0x00, 0x31, 0x43, 0x07); // Size 7 (Larger for easier scanning)
-            data.push(GS, 0x28, 0x6B, 0x03, 0x00, 0x31, 0x45, 0x31);
-            data.push(GS, 0x28, 0x6B, delPL, delPH, 0x31, 0x50, 0x30, ...delUrlBytes);
-            data.push(GS, 0x28, 0x6B, 0x03, 0x00, 0x31, 0x51, 0x30);
-            
-            data.push(...CMD.LINE, ...CMD.LINE);
-
-            // --- GOOGLE MAPS NAVIGATION QR CODE ---
-            const addressString = `${deliveryAddress.street || ''}, ${deliveryAddress.postal || ''} ${deliveryAddress.city || ''}`.trim();
             if (addressString.length > 5) {
                 const mapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(addressString)}`;
                 data.push(...CMD.ALIGN_CENTER, ...line('MAPS NAVIGATION: SCAN TO ROUTE'));
@@ -289,7 +245,7 @@ const ReceiptGenerator = (() => {
         if (orderData.service_type === 'delivery') {
             const street = deliveryAddress.street || '';
             const houseNum = deliveryAddress.houseNumber || deliveryAddress.house_number || deliveryAddress.housenumber || '';
-            const streetLine = [street, houseNum].filter(Boolean).join(' ');
+            const streetLine = (houseNum && !street.includes(houseNum)) ? `${street} ${houseNum}` : street;
             const cityLine = [deliveryAddress.postal, deliveryAddress.city].filter(Boolean).join(' ');
             const addr = [streetLine, cityLine].filter(Boolean).join(', ');
             data.push(...line('Adr: ' + addr));

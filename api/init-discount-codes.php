@@ -142,6 +142,50 @@ try {
     }
     
     echo "\n";
+    // Mã 3: APP10 - 10% off cho người dùng App Leo Sushi
+    $code3 = 'APP10';
+    $promotionId3 = 'PROMO-APP10';
+    
+    $checkStmt3 = $conn->prepare('SELECT promotion_id FROM promotions WHERE code = ?');
+    $checkStmt3->bind_param('s', $code3);
+    $checkStmt3->execute();
+    
+    if ($checkStmt3->get_result()->num_rows > 0) {
+        echo "⚠️  Mã $code3 đã tồn tại, đang cập nhật...\n";
+        $updateStmt3 = $conn->prepare('UPDATE promotions SET 
+            discount_type = ?, 
+            discount_value = ?, 
+            min_order = ?, 
+            start_date = ?, 
+            end_date = ?, 
+            status = ?
+            WHERE code = ?');
+        $discountType3 = 'percentage';
+        $discountValue3 = 10;
+        $minOrder3 = 0;
+        $startDate3 = date('Y-m-d');
+        $endDate3 = date('Y-m-d', strtotime('+10 years'));
+        $status3 = 'active';
+        $updateStmt3->bind_param('sddsdss', $discountType3, $discountValue3, $minOrder3, $startDate3, $endDate3, $status3, $code3);
+        $updateStmt3->execute();
+        echo "✅ Đã cập nhật mã $code3 thành công!\n";
+    } else {
+        $stmt3 = $conn->prepare('INSERT INTO promotions (
+            promotion_id, code, discount_type, discount_value, min_order, max_discount,
+            start_date, end_date, usage_limit, status
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
+        $discountType3 = 'percentage';
+        $discountValue3 = 10;
+        $minOrder3 = 0;
+        $maxDiscount3 = null;
+        $startDate3 = date('Y-m-d');
+        $endDate3 = date('Y-m-d', strtotime('+10 years'));
+        $usageLimit3 = null;
+        $status3 = 'active';
+        $stmt3->bind_param('sssddsssis', $promotionId3, $code3, $discountType3, $discountValue3, $minOrder3, $maxDiscount3, $startDate3, $endDate3, $usageLimit3, $status3);
+        $stmt3->execute();
+        echo "✅ Đã tạo mã $code3 (10% off cho App) thành công!\n";
+    }
     echo "📊 Tổng kết:\n";
     echo str_repeat("-", 60) . "\n";
     

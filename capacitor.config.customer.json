@@ -12,6 +12,7 @@
             "https://*.paypal.com/*"
         ]
     },
+    "appendUserAgent": "LeoSushiApp Capacitor",
     "android": {
         "backgroundColor": "#0b0b0c",
         "webContentsDebuggingEnabled": true

@@ -38,6 +38,13 @@ const PAYPAL_CONFIG = {
   LOCALE: 'de_DE'
 };
 
+// Stripe Configuration
+const STRIPE_CONFIG = {
+  PUBLISHABLE_KEY: 'pk_live_51U4LumD62AOvzFwzgvQfwbAZAAbXXeWK5zu5yWYbMl5qLrIo9DY5pWdPuVXM8AWX98XXvHzNci1P2duYmWI1eWD100MPWiUQUs',
+  CURRENCY: 'EUR'
+};
+
+
 // Firebase Configuration is now in js/firebase.js
 // const FIREBASE_CONFIG = {
 //   apiKey: "AIzaSyCk5qCcRWgbj7gzh0CQlY47lrQ6t9rvSmk",
@@ -104,6 +111,7 @@ const FALLBACK_REVIEWS = [
 if (typeof window !== 'undefined') {
   window.EMAILJS_CONFIG = EMAILJS_CONFIG;
   window.PAYPAL_CONFIG = PAYPAL_CONFIG;
+  window.STRIPE_CONFIG = STRIPE_CONFIG;
   window.GOOGLE_SHEETS_CONFIG = GOOGLE_SHEETS_CONFIG;
   window.GOOGLE_PLACES_CONFIG = GOOGLE_PLACES_CONFIG;
   window.RESTAURANT_ADDRESS = RESTAURANT_ADDRESS;
