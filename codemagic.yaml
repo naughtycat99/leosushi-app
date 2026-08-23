@@ -42,20 +42,19 @@ workflows:
       - name: Add iOS platform (if needed)
         script: |
           set -e
-          if [ ! -d "ios/App" ]; then
-            echo "iOS App folder not found, adding platform..."
-            # Save signing files if they exist
+          if [ ! -f "ios/App/Podfile" ]; then
+            echo "iOS Podfile not found, creating fresh iOS native project..."
             if [ -d "ios/signing" ]; then
               cp -r ios/signing /tmp/signing_backup
-              rm -rf ios
             fi
+            rm -rf ios
             npx cap add ios
-            # Restore signing files
             if [ -d "/tmp/signing_backup" ]; then
-              cp -r /tmp/signing_backup ios/signing
+              mkdir -p ios/signing
+              cp -r /tmp/signing_backup/* ios/signing/
             fi
           else
-            echo "iOS App folder exists, skipping add platform."
+            echo "iOS App folder and Podfile exist, skipping add platform."
           fi
 
       - name: Capacitor Sync

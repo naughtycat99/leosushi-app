@@ -1067,7 +1067,20 @@
         bar.setAttribute('role', 'button');
         bar.setAttribute('tabindex', '0');
         bar.setAttribute('aria-label', 'Warenkorb öffnen');
-        bar.onclick = window.openAppCartModal;
+        bar.onclick = function (e) {
+            if (e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+            window.openAppCartModal();
+        };
+        bar.addEventListener('click', function (e) {
+            if (e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+            window.openAppCartModal();
+        });
         bar.addEventListener('keydown', event => {
             if (event.key === 'Enter' || event.key === ' ') {
                 event.preventDefault();
@@ -1100,6 +1113,7 @@
 
         if (count > 0) {
             bar.classList.add('active');
+            bar.style.display = 'flex';
             const badgeEl = document.getElementById('appFloatingCartBadge');
             const countEl = document.getElementById('appFloatingCartCountText');
             const totalEl = document.getElementById('appFloatingCartTotalText');
@@ -1109,41 +1123,48 @@
             if (totalEl) totalEl.textContent = formatEuro(subtotal);
         } else {
             bar.classList.remove('active');
+            bar.style.display = 'none';
         }
     }
 
     // 10. In-App Cart Bottom Sheet Modal
     function initAppCartModal() {
-        if (document.getElementById('appCartSheetOverlay')) return;
-        const modal = document.createElement('div');
-        modal.id = 'appCartSheetOverlay';
-        modal.className = 'app-cart-sheet-overlay';
-        modal.innerHTML = `
-            <div class="app-cart-sheet-content" role="dialog" aria-modal="true" aria-labelledby="appCartSheetTitle" onclick="event.stopPropagation()">
-                <div class="app-cart-sheet-header">
-                    <h3 class="app-cart-sheet-title" id="appCartSheetTitle">🛍️ Dein Warenkorb</h3>
-                    <button type="button" class="app-cart-sheet-close" onclick="window.closeAppCartModal()" aria-label="Warenkorb schließen">✕</button>
+        let modal = document.getElementById('appCartSheetOverlay');
+        if (!modal) {
+            modal = document.createElement('div');
+            modal.id = 'appCartSheetOverlay';
+            modal.className = 'app-cart-sheet-overlay';
+            modal.innerHTML = `
+                <div class="app-cart-sheet-content" role="dialog" aria-modal="true" aria-labelledby="appCartSheetTitle" onclick="event.stopPropagation()">
+                    <div class="app-cart-sheet-header">
+                        <h3 class="app-cart-sheet-title" id="appCartSheetTitle">🛍️ Dein Warenkorb</h3>
+                        <button type="button" class="app-cart-sheet-close" onclick="window.closeAppCartModal()" aria-label="Warenkorb schließen">✕</button>
+                    </div>
+                    <div class="app-cart-sheet-body" id="appCartSheetBody">
+                        <!-- Populated dynamically -->
+                    </div>
+                    <div class="app-cart-sheet-footer" id="appCartSheetFooter">
+                        <!-- Total & Checkout CTA -->
+                    </div>
                 </div>
-                <div class="app-cart-sheet-body" id="appCartSheetBody">
-                    <!-- Populated dynamically -->
-                </div>
-                <div class="app-cart-sheet-footer" id="appCartSheetFooter">
-                    <!-- Total & Checkout CTA -->
-                </div>
-            </div>
-        `;
-        modal.addEventListener('click', window.closeAppCartModal);
-        document.body.appendChild(modal);
+            `;
+            modal.addEventListener('click', function(e) {
+                if (e.target === modal) {
+                    window.closeAppCartModal();
+                }
+            });
+            document.body.appendChild(modal);
+        }
+        return modal;
     }
 
     window.openAppCartModal = function () {
         triggerHaptic();
-        initAppCartModal();
+        const modal = initAppCartModal();
         renderAppCartSheetContent();
-        const modal = document.getElementById('appCartSheetOverlay');
         if (modal) {
-            modal.classList.add('active');
             modal.style.display = 'flex';
+            modal.classList.add('active');
             const closeButton = modal.querySelector('.app-cart-sheet-close');
             if (closeButton) closeButton.focus({ preventScroll: true });
         }
@@ -1153,7 +1174,7 @@
         const modal = document.getElementById('appCartSheetOverlay');
         if (modal) {
             modal.classList.remove('active');
-            setTimeout(() => { modal.style.display = 'none'; }, 250);
+            setTimeout(() => { modal.style.display = 'none'; }, 200);
         }
     };
 
