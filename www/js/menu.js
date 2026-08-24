@@ -233,29 +233,85 @@ async function renderMenuTabs() {
 
 // Helper function to get item image based on category
 function getItemImage(categoryId, itemName) {
-  // Map category to default images - using new high-quality images
+  const category = String(categoryId || '').toLowerCase().trim();
+  const normalizedName = String(itemName || '')
+    .normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase();
+
+  // 1. Drinks / Getränke Detection
+  if (category === 'getranke' || category === 'drinks' || category === 'getraenke' || category === 'beverages' || category === 'softdrinks') {
+    if (/wasser|mineral|naturell|sprudel|still/.test(normalizedName)) return 'assets/drink_water.webp';
+    if (/cola|coca|fanta|sprite|spezi|ginger|tonic|soda|schorle|7up|pepsi/.test(normalizedName)) return 'assets/drink_softdrink.webp';
+    if (/apfel|ananas|maracuja|orange|mango|kirsche|banane|saft|juice|guave|lychee|erdbeer/.test(normalizedName) && !/lassi|tea|tee/.test(normalizedName)) return 'assets/drink_juice.webp';
+    if (/kaffee|coffee|cafe|tea|tee|ingwer|jasmin|matcha|espresso|cappuccino|latte/.test(normalizedName)) return 'assets/drink_coffee_tea.webp';
+    if (/bier|beer|tiger|saigon|singha|heineken|pils|weizen|radler|asahi|kirin|sapporo/.test(normalizedName)) return 'assets/drink_beer.webp';
+    if (/wein|wine|sake|pflaumenwein|prosecco|champagner|spritz|hugo|grauburgunder|chardonnay|merlot|riesling/.test(normalizedName)) return 'assets/drink_wine.webp';
+    if (/homemade|lassi|nha dam|limonad|eistee|chanh|cocktail|shake|smoothie|aloe/.test(normalizedName)) return 'assets/drink_homemade.webp';
+    return 'assets/drink_cocktail.webp';
+  }
+
+  // Check if item name is a drink
+  if (/coca|cola|fanta|sprite|limonade|eistee|lassi|mineralwasser|bier|radler|wein|sake|espresso|cappuccino|saft|juice/.test(normalizedName)) {
+    if (/wasser|naturell|sprudel/.test(normalizedName)) return 'assets/drink_water.webp';
+    if (/cola|fanta|sprite|spezi/.test(normalizedName)) return 'assets/drink_softdrink.webp';
+    if (/bier|beer|pils/.test(normalizedName)) return 'assets/drink_beer.webp';
+    if (/wein|wine|sake/.test(normalizedName)) return 'assets/drink_wine.webp';
+    if (/kaffee|coffee|cafe|tea|tee/.test(normalizedName)) return 'assets/drink_coffee_tea.webp';
+    if (/saft|juice/.test(normalizedName)) return 'assets/drink_juice.webp';
+    return 'assets/drink_homemade.webp';
+  }
+
+  // 2. Desserts
+  if (category === 'dessert' || category === 'desserts' || /dessert|mochi|dragon ball|banane|chuoi|sesam|eis|ice cream/.test(normalizedName)) {
+    return 'assets/dessert_mochi.webp';
+  }
+
+  // 3. Soups & Salads
+  if (category === 'suppen' || category === 'soup' || /suppe|soup|miso|ramen/.test(normalizedName)) return 'assets/soup_new_banner.png';
+  if (category === 'salate' || category === 'salad' || /salat|salad/.test(normalizedName)) return 'assets/salad_new_banner.png';
+
+  // 4. Warm Dishes / Teriyaki
+  if (category === 'hauptspeisen' || category === 'teriyaki' || category === 'warm-dishes' || /curry|erdnuss|teriyaki|gebratene|udon|pad thai/.test(normalizedName)) {
+    return 'assets/474747577_583620977982257_5069519367255368765_n.webp';
+  }
+
+  // 5. Starters
+  if (category === 'vorspeisen' || /spring roll|fruhlingsrolle|sommerrolle|summer roll|nem|gyoza|wantan|edamame|yakitori|sate/.test(normalizedName)) {
+    return 'assets/477094040_943569787952278_5086544566261599514_n.webp';
+  }
+
+  // 6. Bowls
+  if (category === 'pokebowl' || category === 'bowls' || /poke|bowl/.test(normalizedName)) return 'assets/sake-poke-bowl-with-rice-or-salad.webp';
+
+  // 7. Sides
+  if (category === 'beilagen' || /duftreis|sushi reis|ingwer|wasabi|sose|sauce|nudeln/.test(normalizedName)) return 'assets/524354655_17842903512542764_6403983830540063508_n11 1.webp';
+
+  // 8. Sushi categories
   const CAT_IMAGES = {
-    vorspeisen: 'assets/477094040_943569787952278_5086544566261599514_n.jpg',
+    vorspeisen: 'assets/477094040_943569787952278_5086544566261599514_n.webp',
     salate: 'assets/salad_new_banner.png',
     suppen: 'assets/soup_new_banner.png',
-    hauptspeisen: 'assets/474747577_583620977982257_5069519367255368765_n.jpg',
-    teriyaki: 'assets/Image_Teriyaki-Tuna-Tataki-Flatbread_Teriyaki-Sauce_RT_SV_BKP_092921-5.jpg',
-    pokebowl: 'assets/sake-poke-bowl-with-rice-or-salad.png',
-    maki: 'assets/banh-mi-shushi.png',
-    nigiri: 'assets/526755952_122145800660617493_8652643431098218812_n.jpg',
-    insideout: 'assets/678a39d1596da842cc63c03c 1.png',
-    sashimi: 'assets/498665275_17863755624399871_7773501872179564451_n 1.png',
-    crunchy: 'assets/10 3498178 1.png',
-    bigrolls: 'assets/bua-tiec-shushi.png',
-    minirolls: 'assets/vegan-crunchiy-california-rolls-with-tofu-08c0ea7eeb121ea89055bbc92a83a9bd 1.png',
-    specialrolls: 'assets/close-up-sushi-served-table 1.png',
-    firenigiri: 'assets/107321305_156996452705031_5135397567937722939_n.jpg',
-    temaki: 'assets/dsc06551_master.jpg',
-    sushimenu: 'assets/bua-tiec-shushi.png',
-    dessert: 'assets/474145891_579480641729624_2668845756094693673_n.jpg',
-    beilagen: 'assets/524354655_17842903512542764_6403983830540063508_n11 1.png'
+    hauptspeisen: 'assets/474747577_583620977982257_5069519367255368765_n.webp',
+    teriyaki: 'assets/474747577_583620977982257_5069519367255368765_n.webp',
+    pokebowl: 'assets/sake-poke-bowl-with-rice-or-salad.webp',
+    maki: 'assets/banh-mi-shushi.webp',
+    nigiri: 'assets/premium_sushi_1.webp',
+    insideout: 'assets/678a39d1596da842cc63c03c 1.webp',
+    sashimi: 'assets/premium_sashimi.webp',
+    crunchy: 'assets/10 3498178 1.webp',
+    bigrolls: 'assets/bua-tiec-shushi.webp',
+    minirolls: 'assets/vegan-crunchiy-california-rolls-with-tofu-08c0ea7eeb121ea89055bbc92a83a9bd 1.webp',
+    specialrolls: 'assets/premium_rolls.webp',
+    firenigiri: 'assets/premium_sushi_1.webp',
+    temaki: 'assets/dsc06551_master.webp',
+    sushimenu: 'assets/sushi-platter-premium.webp',
+    dessert: 'assets/dessert_mochi.webp',
+    beilagen: 'assets/524354655_17842903512542764_6403983830540063508_n11 1.webp',
+    getranke: 'assets/drink_cocktail.webp',
+    drinks: 'assets/drink_cocktail.webp'
   };
-  return CAT_IMAGES[categoryId] || 'assets/close-up-sushi-served-table 1.png';
+  return CAT_IMAGES[category] || 'assets/close-up-sushi-served-table 1.webp';
 }
 
 function createCategory(cat, query, shouldOpen = false) {
@@ -268,25 +324,27 @@ function createCategory(cat, query, shouldOpen = false) {
   if (filtered.length === 0) return null;
 
   const CAT_BG = {
-    vorspeisen: 'assets/477094040_943569787952278_5086544566261599514_n.jpg',
+    vorspeisen: 'assets/477094040_943569787952278_5086544566261599514_n.webp',
     salate: 'assets/salad_new_banner.png',
     suppen: 'assets/soup_new_banner.png',
-    hauptspeisen: 'assets/474747577_583620977982257_5069519367255368765_n.jpg',
-    teriyaki: 'assets/Image_Teriyaki-Tuna-Tataki-Flatbread_Teriyaki-Sauce_RT_SV_BKP_092921-5.jpg',
-    pokebowl: 'assets/sake-poke-bowl-with-rice-or-salad.png',
-    maki: 'assets/banh-mi-shushi.png',
-    nigiri: 'assets/526755952_122145800660617493_8652643431098218812_n.jpg',
-    insideout: 'assets/678a39d1596da842cc63c03c 1.png',
-    sashimi: 'assets/498665275_17863755624399871_7773501872179564451_n 1.png',
-    crunchy: 'assets/10 3498178 1.png',
-    bigrolls: 'assets/bua-tiec-shushi.png',
-    minirolls: 'assets/vegan-crunchiy-california-rolls-with-tofu-08c0ea7eeb121ea89055bbc92a83a9bd 1.png',
-    specialrolls: 'assets/close-up-sushi-served-table 1.png',
-    firenigiri: 'assets/107321305_156996452705031_5135397567937722939_n.jpg',
-    temaki: 'assets/dsc06551_master.jpg',
-    sushimenu: 'assets/bua-tiec-shushi.png',
-    dessert: 'assets/474145891_579480641729624_2668845756094693673_n.jpg',
-    beilagen: 'assets/524354655_17842903512542764_6403983830540063508_n11 1.png'
+    hauptspeisen: 'assets/474747577_583620977982257_5069519367255368765_n.webp',
+    teriyaki: 'assets/474747577_583620977982257_5069519367255368765_n.webp',
+    pokebowl: 'assets/sake-poke-bowl-with-rice-or-salad.webp',
+    maki: 'assets/banh-mi-shushi.webp',
+    nigiri: 'assets/premium_sushi_1.webp',
+    insideout: 'assets/678a39d1596da842cc63c03c 1.webp',
+    sashimi: 'assets/premium_sashimi.webp',
+    crunchy: 'assets/10 3498178 1.webp',
+    bigrolls: 'assets/bua-tiec-shushi.webp',
+    minirolls: 'assets/vegan-crunchiy-california-rolls-with-tofu-08c0ea7eeb121ea89055bbc92a83a9bd 1.webp',
+    specialrolls: 'assets/premium_rolls.webp',
+    firenigiri: 'assets/premium_sushi_1.webp',
+    temaki: 'assets/dsc06551_master.webp',
+    sushimenu: 'assets/sushi-platter-premium.webp',
+    dessert: 'assets/dessert_mochi.webp',
+    beilagen: 'assets/524354655_17842903512542764_6403983830540063508_n11 1.webp',
+    getranke: 'assets/drink_cocktail.webp',
+    drinks: 'assets/drink_cocktail.webp'
   };
   const bg = CAT_BG[cat.id];
   if (bg) {
