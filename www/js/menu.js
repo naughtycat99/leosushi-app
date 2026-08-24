@@ -51,7 +51,7 @@ if (typeof window !== 'undefined') {
 // Load menu from database API
 async function loadMenuFromAPI() {
   try {
-    const isNativeAppView = window.LEO_IS_NATIVE_APP === true;
+    const isNativeAppView = window.LEO_IS_NATIVE_APP === true || (typeof document !== 'undefined' && document.body && document.body.classList.contains('is-capacitor-app'));
     // Get current branch
     let branchId = null;
     try {
@@ -59,21 +59,16 @@ async function loadMenuFromAPI() {
       if (savedBranch) {
         branchId = JSON.parse(savedBranch).id;
       }
+      if (!branchId) {
+        const rawKey = localStorage.getItem('selected_branch');
+        if (rawKey === 'haupt' || rawKey === 'branch_haupt') branchId = 'branch_haupt';
+        else if (rawKey === 'flora' || rawKey === 'branch_flora') branchId = 'branch_flora';
+      }
     } catch(e) {}
-    if (isNativeAppView && localStorage.getItem('leoBranchSelectionConfirmed') !== 'v53') {
-      branchId = null;
-    }
 
-    // Native ordering is locked until the customer explicitly chooses a
-    // branch. Never request the combined catalog in the app.
-    if (isNativeAppView && !branchId) {
-      MENU_DATA_FROM_API = null;
-      window.MENU_DATA_FROM_API = null;
-      window.LEO_MENU_BRANCH_ID = null;
-      return null;
+    if (!branchId || (branchId !== 'branch_flora' && branchId !== 'branch_haupt')) {
+      branchId = 'branch_flora';
     }
-
-    if (isNativeAppView && branchId !== 'branch_flora' && branchId !== 'branch_haupt') return null;
 
     if (window.LEO_MENU_BRANCH_ID && window.LEO_MENU_BRANCH_ID !== branchId) {
       MENU_DATA_FROM_API = null;

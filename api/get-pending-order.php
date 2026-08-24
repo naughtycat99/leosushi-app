@@ -1,18 +1,35 @@
 <?php
+/**
+ * Returns only non-sensitive processing state. Full order/customer data is
+ * never exposed by PaymentIntent id.
+ */
+
 header('Content-Type: application/json; charset=utf-8');
-header('Access-Control-Allow-Origin: *');
+require_once __DIR__ . '/stripe-order-store.php';
 
-$piId = isset($_GET['payment_intent_id']) ? trim($_GET['payment_intent_id']) : '';
-if (empty($piId)) {
-    echo json_encode(['success' => false, 'message' => 'Missing payment_intent_id']);
-    exit;
-}
-
-$pendingFile = __DIR__ . '/stripe_pending/' . basename($piId) . '.json';
-if (file_exists($pendingFile)) {
-    $content = @file_get_contents($pendingFile);
-    $data = json_decode($content, true);
-    echo json_encode(['success' => true, 'order_data' => $data]);
-} else {
-    echo json_encode(['success' => false, 'message' => 'Pending order not found']);
+try {
+    $paymentIntentId = trim((string)($_GET['payment_intent_id'] ?? ''));
+    if (!preg_match('/^pi_[A-Za-z0-9_]+$/', $paymentIntentId)) {
+        throw new InvalidArgumentException('Invalid PaymentIntent id');
+    }
+    $conn = getDbConnection();
+    ensureStripeReliabilitySchema($conn);
+    $draft = getStripeOrderDraft($conn, $paymentIntentId, false);
+    if (!$draft) {
+        http_response_code(404);
+        echo json_encode(['success' => false, 'message' => 'Order draft not found']);
+        exit;
+    }
+    echo json_encode([
+        'success' => true,
+        'status' => $draft['status'],
+        'order_id' => $draft['order_id'] ?: null,
+        'updated_at' => $draft['updated_at']
+    ]);
+} catch (InvalidArgumentException $e) {
+    http_response_code(422);
+    echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+} catch (Throwable $e) {
+    http_response_code(500);
+    echo json_encode(['success' => false, 'message' => 'Order state could not be loaded']);
 }

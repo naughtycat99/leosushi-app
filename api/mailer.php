@@ -116,7 +116,7 @@ function sendOrderConfirmationEmail($to, $variables = []) {
     if (!empty($variables['order_items']) && is_array($variables['order_items'])) {
         foreach ($variables['order_items'] as $item) {
             $itemsHtml .= '<div class="item">';
-            $itemsHtml .= '<span class="item-name">' . htmlspecialchars((string)($item['name'] ?? '')) . ' x' . htmlspecialchars((string)($item['quantity'] ?? 1)) . '</span>';
+            $itemsHtml .= '<span class="item-name">' . htmlspecialchars((string)($item['name'] ?? '')) . ' x' . htmlspecialchars((string)($item['quantity'] ?? $item['qty'] ?? 1)) . '</span>';
             $itemsHtml .= '<span class="item-total">' . htmlspecialchars((string)($item['total'] ?? '0,00 €')) . '</span>';
             $itemsHtml .= '</div>';
         }
@@ -217,10 +217,10 @@ function sendOrderConfirmationWithDiscountCode($to, $name, $orderData, $discount
         'order_time' => date('d.m.Y H:i'),
         'service_type' => $serviceLabel,
         'payment_method' => $payLabel,
-        'delivery_address' => '',
-        'phone' => '',
+        'delivery_address' => $orderData['delivery_address'] ?? '',
+        'phone' => $orderData['phone'] ?? '',
         'order_items' => $itemsHtml,
-        'order_total' => $orderData['total'] ?? '0,00 €',
+        'order_total' => $orderData['total'] ?? $orderData['order_total'] ?? '0,00 €',
         'eta' => $orderData['eta'] ?? 'Schnellstmoeglich',
         'discount_code_section' => $discountSection,
         'year' => date('Y')

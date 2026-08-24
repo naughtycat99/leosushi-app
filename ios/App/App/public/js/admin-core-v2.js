@@ -43,7 +43,8 @@ function checkAutoPrinting(orders) {
         if (typeof summary === 'string') {
             try { summary = JSON.parse(summary); } catch (e) { return; }
         }
-        if (order.status === 'cancelled' || order.status === 'completed') return;
+        // CHỈ IN KHI ĐƠN ĐÃ ĐƯỢC DUYỆT (confirmed)
+        if (order.status !== 'confirmed') return;
 
         if (summary.is_printed) {
             printedSet.add(id);

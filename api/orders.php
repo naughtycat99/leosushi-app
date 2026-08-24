@@ -170,6 +170,47 @@ function createOrder($input)
         }
 
         $orderId = $input['order_id'] ?? ('LEO-' . date('YmdHis'));
+        $stripePaymentId = trim((string)($input['stripe_payment_id'] ?? $input['payment_intent_id'] ?? ''));
+        if ($stripePaymentId !== '' && !preg_match('/^pi_[A-Za-z0-9_]+$/', $stripePaymentId)) {
+            http_response_code(422);
+            echo json_encode(['success' => false, 'message' => 'Ungültige Stripe-Zahlungs-ID']);
+            return;
+        }
+        if ($stripePaymentId === '') $stripePaymentId = null;
+
+        // Compatibility for an older cached app bundle: route every Stripe
+        // save through the same durable, idempotent finaliser as the webhook.
+        // This prevents a cached client and the webhook from creating two
+        // different orders for one payment.
+        if ($stripePaymentId !== null) {
+            require_once __DIR__ . '/stripe-order-store.php';
+            $paymentIntent = stripeRetrievePaymentIntent($stripePaymentId);
+            $stripeStatus = (string)($paymentIntent['status'] ?? '');
+            if ($stripeStatus === 'processing') {
+                http_response_code(202);
+                echo json_encode(['success' => false, 'processing' => true, 'message' => 'Zahlung wird noch verarbeitet']);
+                return;
+            }
+            if ($stripeStatus !== 'succeeded') {
+                http_response_code(409);
+                echo json_encode(['success' => false, 'message' => 'Stripe-Zahlung ist nicht abgeschlossen']);
+                return;
+            }
+            $amountCents = (int)($paymentIntent['amount_received'] ?? $paymentIntent['amount'] ?? 0);
+            $clientOrderId = trim((string)($input['order_id'] ?? ($paymentIntent['metadata']['order_id'] ?? '')));
+            if ($clientOrderId === '') $clientOrderId = 'LEO-' . date('YmdHis');
+            $conn = getDbConnection();
+            saveStripeOrderDraft($conn, $stripePaymentId, $clientOrderId, $amountCents, (string)($paymentIntent['currency'] ?? 'eur'), $input);
+            $stripeResult = finalizePaidStripeOrder($paymentIntent, 'legacy_browser_fallback');
+            echo json_encode([
+                'success' => true,
+                'message' => 'Bestellung erstellt',
+                'order_id' => $stripeResult['order_id'],
+                'status' => 'pending',
+                'service_type' => normalizeStripeServiceType($input['service_type'] ?? 'delivery')
+            ]);
+            return;
+        }
         $items = $input['items'] ?? [];
         $orderItems = [];
         foreach ($items as $item) {
@@ -237,6 +278,9 @@ function createOrder($input)
             'delivery_distance_km' => isset($input['delivery_distance_km']) ? floatval($input['delivery_distance_km']) : null,
             'branch' => $input['branch'] ?? null
         ];
+        if ($stripePaymentId !== null) {
+            $summary['stripe_payment_id'] = $stripePaymentId;
+        }
 
         // Determine service type
         $serviceType = $input['service_type'] ?? 'delivery';
@@ -330,8 +374,8 @@ function createOrder($input)
         $stmt = $conn->prepare('
             INSERT INTO orders (
                 order_id, customer_id, status, service_type, items, delivery_address,
-                summary, customer_code, promotion_id, payment_method, payment_status, date, branch_id
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                summary, customer_code, promotion_id, payment_method, payment_status, stripe_payment_id, date, branch_id
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ON DUPLICATE KEY UPDATE
                 status = VALUES(status),
                 items = VALUES(items),
@@ -340,6 +384,7 @@ function createOrder($input)
                 promotion_id = VALUES(promotion_id),
                 payment_method = VALUES(payment_method),
                 payment_status = VALUES(payment_status),
+                stripe_payment_id = COALESCE(VALUES(stripe_payment_id), stripe_payment_id),
                 branch_id = VALUES(branch_id),
                 updated_at = CURRENT_TIMESTAMP
         ');
@@ -350,7 +395,7 @@ function createOrder($input)
         $customerCode = $input['customer_code'] ?? $input['discount'] ?? null;
 
         $branchId = $input['branch_id'] ?? ($input['branch']['id'] ?? 'branch_flora');
-        $stmt->bind_param('sssssssssssss',
+        $stmt->bind_param('ssssssssssssss',
             $orderId,
             $customerId,
             $status,
@@ -362,11 +407,22 @@ function createOrder($input)
             $promotionId,
             $paymentMethod,
             $paymentStatus,
+            $stripePaymentId,
             $orderDate,
             $branchId
         );
 
         $stmt->execute();
+
+        // A webhook or another browser request may have inserted the same
+        // PaymentIntent concurrently. Always return the canonical DB order id.
+        if ($stripePaymentId !== null) {
+            $canonicalStmt = $conn->prepare('SELECT order_id FROM orders WHERE stripe_payment_id = ? LIMIT 1');
+            $canonicalStmt->bind_param('s', $stripePaymentId);
+            $canonicalStmt->execute();
+            $canonicalRow = $canonicalStmt->get_result()->fetch_assoc();
+            if ($canonicalRow && !empty($canonicalRow['order_id'])) $orderId = $canonicalRow['order_id'];
+        }
 
         // Check if order was saved
         if ($stmt->affected_rows === 0 && $stmt->errno !== 0) {

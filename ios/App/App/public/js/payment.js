@@ -1080,6 +1080,85 @@ let _currentStripeClientSecret = null;
 let _isStripeInitializing = false;
 let _mountedStripeTotal = 0;
 
+function getStripeCartSnapshot() {
+  if (typeof window.getCart === 'function') return window.getCart() || [];
+  if (Array.isArray(window.cart)) return window.cart;
+  try { return JSON.parse(localStorage.getItem('leoCart') || '[]'); } catch (e) { return []; }
+}
+
+function getExplicitStripeBranch() {
+  const rawBranch = localStorage.getItem('leoSelectedBranch');
+  const legacyBranch = localStorage.getItem('selected_branch');
+  if (!rawBranch && !['flora', 'haupt'].includes(legacyBranch)) return null;
+  const branch = typeof window.getSelectedBranch === 'function' ? window.getSelectedBranch() : null;
+  if (!branch || !['branch_flora', 'branch_haupt'].includes(branch.id)) return null;
+  return branch;
+}
+
+function buildStripeOrderDraft(orderId, paymentIntentId = null) {
+  const addr = getDeliveryAddress();
+  const cartItems = getStripeCartSnapshot();
+  const branch = getExplicitStripeBranch();
+  const svcType = window.selectedServiceType || (typeof selectedServiceType !== 'undefined' ? selectedServiceType : '') || 'delivery';
+  const total = getCheckoutTotalAmount();
+  const subtotal = typeof window.getTotal === 'function' ? window.getTotal() : total;
+
+  if (!branch) throw new Error('Bitte wählen Sie zuerst eine Filiale aus.');
+  if (!Array.isArray(cartItems) || cartItems.length === 0) throw new Error('Ihr Warenkorb ist leer.');
+  const cartBranchId = localStorage.getItem('leoCartBranchId') || cartItems.find(item => item.branchId)?.branchId || branch.id;
+  if (cartBranchId !== branch.id || cartItems.some(item => item.branchId && item.branchId !== branch.id)) {
+    throw new Error('Der Warenkorb gehört zu einer anderen Filiale. Bitte wählen Sie die Gerichte für die aktuelle Filiale erneut aus.');
+  }
+
+  let autoDiscount = subtotal > 15 ? (subtotal * 10 / 100) : 0;
+  let discountCode = null;
+  if (window.appliedDiscount) discountCode = window.appliedDiscount.code || null;
+  let tipAmount = window.selectedTip ? (window.selectedTip.amount || 0) : 0;
+
+  return {
+    order_id: orderId,
+    branch,
+    branch_id: branch.id,
+    cart_branch_id: cartBranchId,
+    items: cartItems.map(item => ({
+      item_id: item.item_id || item.menuItemId || item.id || null,
+      name: item.name,
+      quantity: item.qty || item.quantity || 1,
+      branch_id: item.branchId || branch.id,
+      total: item.total || (((item.price || 0) * (item.qty || item.quantity || 1)).toFixed(2) + ' €')
+    })),
+    service_type: svcType === 'pickup' ? 'pickup' : (svcType === 'dinein' ? 'dinein' : 'delivery'),
+    payment_method: 'Stripe (Apple Pay/Karte/Klarna)',
+    payment_status: 'pending',
+    order_total: total.toFixed(2) + ' €',
+    subtotal,
+    customer: {
+      firstName: addr.firstName || '',
+      lastName: addr.lastName || '',
+      email: addr.email || '',
+      phone: addr.phone || '',
+      street: addr.street || '',
+      houseNumber: addr.houseNumber || '',
+      postal: addr.postal || '',
+      city: addr.city || '',
+      note: addr.note || ''
+    },
+    discount_code: discountCode,
+    promotion_id: window.appliedDiscount ? window.appliedDiscount.promotion_id : null,
+    automatic_discount: autoDiscount > 0 ? { percentage: 10, amount: autoDiscount.toFixed(2) + ' €' } : null,
+    tip: tipAmount > 0 ? tipAmount.toFixed(2) + ' €' : null,
+    scheduled_delivery_time: (window.getScheduledDeliveryTime && window.getScheduledDeliveryTime()) || null,
+    delivery_distance_km: svcType === 'delivery' ? (window.selectedDeliveryDistanceKm || null) : null,
+    payment_intent_id: paymentIntentId
+  };
+}
+
+function cleanStripeReturnUrl() {
+  const url = new URL(window.location.href);
+  ['payment_intent', 'payment_intent_client_secret', 'redirect_status'].forEach(key => url.searchParams.delete(key));
+  return url.toString();
+}
+
 async function initStripePaymentElement() {
   console.log('💳 [Stripe] Initializing Payment Element...');
   const container = document.getElementById('stripePaymentContainer');
@@ -1153,6 +1232,8 @@ async function initStripePaymentElement() {
     }
 
     const addr = getDeliveryAddress();
+    const draftOrderId = 'LEO-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8);
+    const initialOrderDraft = buildStripeOrderDraft(draftOrderId, null);
     const apiUrl = (window.API_BASE_URL || '/api') + '/create-payment-intent.php';
 
     const response = await fetch(apiUrl, {
@@ -1162,7 +1243,11 @@ async function initStripePaymentElement() {
         amount: total,
         customer_email: addr.email || '',
         customer_name: `${addr.firstName} ${addr.lastName}`.trim(),
-        order_id: 'LEO-' + Date.now()
+        customer_phone: addr.phone || '',
+        order_id: draftOrderId,
+        branch_id: initialOrderDraft.branch_id,
+        service_type: initialOrderDraft.service_type,
+        order_data: initialOrderDraft
       })
     });
 
@@ -1173,6 +1258,7 @@ async function initStripePaymentElement() {
 
     _currentStripeClientSecret = data.clientSecret;
     window._currentStripePaymentIntentId = data.paymentIntentId;
+    window._currentStripeDraftOrderId = data.orderId || draftOrderId;
 
     _stripeElements = _stripeObj.elements({
       clientSecret: _currentStripeClientSecret,
@@ -1232,6 +1318,11 @@ async function initStripePaymentElement() {
   } catch (err) {
     console.error('❌ [Stripe] Error initializing:', err);
     elementDiv.innerHTML = `<p style="color: #ef4444; padding: 15px; text-align: center;">Fehler: ${err.message || 'Verbindung zu Stripe fehlgeschlagen.'}</p>`;
+    if (payBtn) {
+      payBtn.disabled = true;
+      payBtn.style.opacity = '0.5';
+      payBtn.style.cursor = 'not-allowed';
+    }
   } finally {
     _isStripeInitializing = false;
   }
@@ -1251,7 +1342,7 @@ async function handleStripePaymentSubmit() {
   if (!addr.lastName) missing.push('Nachname');
   if (!addr.phone) missing.push('Telefonnummer');
 
-  const svcType = window.selectedServiceType || selectedServiceType || 'delivery';
+  const svcType = window.selectedServiceType || (typeof selectedServiceType !== 'undefined' ? selectedServiceType : 'delivery');
   if (svcType === 'delivery') {
     if (!addr.street) missing.push('Straße');
     if (!addr.postal) missing.push('PLZ');
@@ -1282,11 +1373,78 @@ async function handleStripePaymentSubmit() {
     payBtn.innerHTML = '⏳ Zahlung wird sicher verarbeitet...';
   }
 
+  const total = getCheckoutTotalAmount();
+  const cartSnapshot = getStripeCartSnapshot();
+  let prebuiltOrderData;
+  try {
+    prebuiltOrderData = buildStripeOrderDraft(
+      window._currentStripeDraftOrderId || ('LEO-' + Date.now()),
+      window._currentStripePaymentIntentId || null
+    );
+  } catch (draftError) {
+    if (errorDiv) {
+      errorDiv.style.display = 'block';
+      errorDiv.textContent = draftError.message;
+    }
+    if (payBtn) {
+      payBtn.disabled = false;
+      payBtn.innerHTML = '💳 Jetzt bezahlen (' + (document.getElementById('stripePayAmount')?.textContent || '€0,00') + ')';
+    }
+    return;
+  }
+
+  // Log to server activity.log
+  if (typeof window.logActivity === 'function') {
+    window.logActivity('stripe_submit', 'Khách xác nhận thanh toán Stripe/Klarna/Thẻ', {
+      name: `${addr.firstName} ${addr.lastName}`.trim(),
+      phone: addr.phone || 'N/A',
+      email: addr.email || 'N/A'
+    }, total.toFixed(2) + ' €', 'stripe', cartSnapshot);
+  }
+
+  // 1. Save to localStorage and sessionStorage before potential redirect
+  try {
+    const serialized = JSON.stringify(prebuiltOrderData);
+    localStorage.setItem('leo_pending_stripe_order', serialized);
+    sessionStorage.setItem('leo_pending_stripe_order', serialized);
+  } catch (e) {
+    console.warn('Could not store pending stripe order to storage:', e);
+  }
+
+  // 2. Persist the final snapshot and WAIT for server acknowledgement before
+  // Stripe is allowed to redirect to Klarna/3D Secure.
+  try {
+    if (!window._currentStripePaymentIntentId) throw new Error('PaymentIntent fehlt.');
+    const draftResponse = await fetch((window.API_BASE_URL || '/api') + '/create-payment-intent.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        payment_intent_id: window._currentStripePaymentIntentId,
+        order_data: prebuiltOrderData
+      })
+    });
+    const draftResult = await draftResponse.json();
+    if (!draftResponse.ok || !draftResult.success || !draftResult.updated) {
+      throw new Error(draftResult.message || 'Die Bestellung konnte nicht sicher gespeichert werden.');
+    }
+  } catch (draftSaveError) {
+    console.error('❌ [Stripe] Durable draft save failed:', draftSaveError);
+    if (errorDiv) {
+      errorDiv.style.display = 'block';
+      errorDiv.textContent = 'Die Bestellung konnte nicht sicher gespeichert werden. Es wurde nichts abgebucht. Bitte versuchen Sie es erneut.';
+    }
+    if (payBtn) {
+      payBtn.disabled = false;
+      payBtn.innerHTML = '💳 Jetzt bezahlen (' + (document.getElementById('stripePayAmount')?.textContent || '€0,00') + ')';
+    }
+    return;
+  }
+
   try {
     const { error, paymentIntent } = await _stripeObj.confirmPayment({
       elements: _stripeElements,
       confirmParams: {
-        return_url: window.location.href,
+        return_url: cleanStripeReturnUrl(),
         receipt_email: addr.email || undefined
       },
       redirect: 'if_required'
@@ -1321,7 +1479,7 @@ async function handleStripePaymentSubmit() {
       `;
       document.body.appendChild(loadingDiv);
 
-      await processSuccessfulStripeOrder(paymentIntent);
+      await processSuccessfulStripeOrder(paymentIntent, prebuiltOrderData);
     }
   } catch (err) {
     console.error('❌ [Stripe] Exception during payment:', err);
@@ -1336,11 +1494,18 @@ async function handleStripePaymentSubmit() {
   }
 }
 
-async function processSuccessfulStripeOrder(paymentIntent) {
+async function processSuccessfulStripeOrder(paymentIntent, injectedOrderData = null) {
   try {
-    const deliveryAddress = getDeliveryAddress();
-    let orderId = 'LEO-' + Date.now();
-    const orderTimestamp = new Date().toISOString();
+    let restoredData = injectedOrderData;
+    if (!restoredData) {
+      try {
+        const cached = localStorage.getItem('leo_pending_stripe_order') || sessionStorage.getItem('leo_pending_stripe_order');
+        if (cached) restoredData = JSON.parse(cached);
+      } catch (e) {}
+    }
+
+    const deliveryAddress = restoredData?.customer || getDeliveryAddress();
+    let orderId = restoredData?.order_id || ('LEO-' + Date.now());
 
     let customerCode = null;
     let user = null;
@@ -1349,14 +1514,14 @@ async function processSuccessfulStripeOrder(paymentIntent) {
       if (user) customerCode = user.customerCode || null;
     }
 
-    const total = getCheckoutTotalAmount();
-    const cart = (typeof window.getCart === 'function' ? window.getCart() : (typeof cart !== 'undefined' ? cart : JSON.parse(localStorage.getItem('leoCart') || '[]')));
-    const branch = typeof window.getSelectedBranch === 'function' ? window.getSelectedBranch() : null;
+    const total = restoredData?.order_total ? parseFloat(restoredData.order_total.replace('€', '').replace(',', '.').trim()) : getCheckoutTotalAmount();
+    const cart = restoredData?.items ? restoredData.items : getStripeCartSnapshot();
+    const branch = restoredData?.branch || (typeof window.getSelectedBranch === 'function' ? window.getSelectedBranch() : null);
 
-    const subtotal = typeof window.getTotal === 'function' ? window.getTotal() : total;
+    const subtotal = restoredData?.subtotal || (typeof window.getTotal === 'function' ? window.getTotal() : total);
     let autoDiscount = subtotal > 15 ? (subtotal * 10 / 100) : 0;
     let couponDiscount = 0;
-    let discountCode = null;
+    let discountCode = restoredData?.discount_code || null;
     if (window.appliedDiscount) {
       const afterAuto = subtotal - autoDiscount;
       couponDiscount = window.appliedDiscount.percentage > 0 ? (afterAuto * window.appliedDiscount.percentage / 100) : (window.appliedDiscount.discount || 0);
@@ -1366,65 +1531,52 @@ async function processSuccessfulStripeOrder(paymentIntent) {
     let tipAmount = 0;
     if (window.selectedTip) tipAmount = window.selectedTip.amount || 0;
 
-    const svcType = window.selectedServiceType || (typeof selectedServiceType !== 'undefined' ? selectedServiceType : 'delivery');
+    const svcType = restoredData?.service_type || window.selectedServiceType || (typeof selectedServiceType !== 'undefined' ? selectedServiceType : 'delivery');
 
-    const apiOrderData = {
-      order_id: orderId,
-      branch: branch,
-      branch_id: branch ? branch.id : 'branch_flora',
-      items: cart.map(item => ({
-        name: item.name,
-        quantity: item.qty || item.quantity || 1,
-        total: ((item.price || 0) * (item.qty || item.quantity || 1)).toFixed(2) + ' €'
-      })),
-      service_type: (svcType === 'pickup') ? 'Abholung' : ((svcType === 'dinein') ? 'Vor Ort' : 'Lieferung'),
-      payment_method: 'Stripe (Apple Pay/Karte)',
-      payment_status: 'paid',
-      order_total: total.toFixed(2) + ' €',
-      customer: {
-        firstName: deliveryAddress.firstName || '',
-        lastName: deliveryAddress.lastName || '',
-        email: deliveryAddress.email || '',
-        phone: deliveryAddress.phone || '',
-        street: deliveryAddress.street || '',
-        houseNumber: deliveryAddress.houseNumber || '',
-        postal: deliveryAddress.postal || '',
-        city: deliveryAddress.city || '',
-        note: deliveryAddress.note || ''
-      },
-      discount_code: discountCode,
-      promotion_id: window.appliedDiscount ? window.appliedDiscount.promotion_id : null,
-      automatic_discount: autoDiscount > 0 ? { percentage: 10, amount: autoDiscount.toFixed(2) + ' €' } : null,
-      tip: tipAmount > 0 ? tipAmount.toFixed(2) + ' €' : null,
-      scheduled_delivery_time: (window.getScheduledDeliveryTime && window.getScheduledDeliveryTime()) || null,
-      delivery_distance_km: window.selectedServiceType === 'delivery' ? (window.selectedDeliveryDistanceKm || null) : null,
-      stripe_payment_id: paymentIntent.id
-    };
+    const formattedItems = cart.map(item => ({
+      name: item.name,
+      quantity: item.qty || item.quantity || 1,
+      total: item.total || (((item.price || 0) * (item.qty || item.quantity || 1)).toFixed(2) + ' €')
+    }));
 
-    let apiResult = null;
-    if (window.api && window.api.orders && window.api.orders.saveOrder) {
-      console.log('📦 Sending Stripe order to API:', apiOrderData);
-      apiResult = await window.api.orders.saveOrder(apiOrderData);
-      console.log('📦 API Result:', apiResult);
-      if (apiResult && apiResult.order_id) {
-        orderId = apiResult.order_id;
-      }
+    // Finalise server-side. The server independently retrieves the
+    // PaymentIntent from Stripe and returns the canonical database order id.
+    const finalizeResponse = await fetch((window.API_BASE_URL || '/api') + '/finalize-stripe-order.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ payment_intent_id: paymentIntent.id })
+    });
+    const apiResult = await finalizeResponse.json();
+    if (finalizeResponse.status === 202 && apiResult.processing) {
+      if (document.getElementById('stripeProcessingOverlay')) document.getElementById('stripeProcessingOverlay').remove();
+      alert('Ihre Zahlung wird noch von Stripe verarbeitet. Bitte bezahlen Sie nicht erneut. Sobald sie bestätigt ist, wird Ihre Bestellung automatisch an das Restaurant gesendet.');
+      return false;
+    }
+    if (!finalizeResponse.ok || !apiResult.success || !apiResult.order_id) {
+      throw new Error(apiResult.message || 'Die bezahlte Bestellung konnte noch nicht bestätigt werden.');
+    }
+    orderId = apiResult.order_id;
+
+    if (typeof window.rememberLeoOrder === 'function') {
+      window.rememberLeoOrder({ ...(restoredData || {}), items: formattedItems, payment_status: 'paid', status: 'pending' }, orderId);
     }
 
-    if (apiResult?.success && typeof window.rememberLeoOrder === 'function') {
-      window.rememberLeoOrder({ ...apiOrderData, status: 'pending' }, orderId);
-    }
+    // Clean up stored pending order
+    try {
+      localStorage.removeItem('leo_pending_stripe_order');
+      sessionStorage.removeItem('leo_pending_stripe_order');
+    } catch (e) {}
 
     // Save customer info to localStorage
     try {
       const customerKey = (deliveryAddress.email || '').toLowerCase().trim();
       const customerInfo = {
-        firstName: deliveryAddress.firstName || '',
-        lastName: deliveryAddress.lastName || '',
+        firstName: deliveryAddress.firstName || deliveryAddress.first_name || '',
+        lastName: deliveryAddress.lastName || deliveryAddress.last_name || '',
         email: deliveryAddress.email || '',
         phone: deliveryAddress.phone || '',
         street: deliveryAddress.street || '',
-        houseNumber: deliveryAddress.houseNumber || '',
+        houseNumber: deliveryAddress.houseNumber || deliveryAddress.house_number || '',
         postal: deliveryAddress.postal || '',
         city: deliveryAddress.city || '',
         note: deliveryAddress.note || '',
@@ -1470,8 +1622,8 @@ async function processSuccessfulStripeOrder(paymentIntent) {
 
     const orderData = {
       summary: {
-        item_count: cart.reduce((sum, item) => sum + (item.qty || item.quantity || 1), 0),
-        total: total.toFixed(2)
+        item_count: formattedItems.reduce((sum, item) => sum + (item.qty || item.quantity || 1), 0),
+        total: typeof total === 'number' ? total.toFixed(2) : total
       }
     };
 
@@ -1481,18 +1633,20 @@ async function processSuccessfulStripeOrder(paymentIntent) {
     if (document.getElementById('stripeProcessingOverlay')) {
       document.getElementById('stripeProcessingOverlay').remove();
     }
-    alert('Zahlung war erfolgreich! Ihre Bestellung wurde erfasst.');
+    const paymentId = paymentIntent && paymentIntent.id ? paymentIntent.id : '';
+    alert('Die Zahlung war erfolgreich, aber die Bestellbestätigung ist noch nicht abgeschlossen. Bitte NICHT erneut bezahlen. Das Restaurant prüft die Zahlung automatisch.' + (paymentId ? '\n\nZahlungs-ID: ' + paymentId : ''));
+    return false;
   }
 }
 
-// Auto-check for 3D secure return on page load
+// Auto-check for 3D secure / Klarna redirect return on page load
 async function checkStripeRedirectResult() {
   const urlParams = new URLSearchParams(window.location.search);
   const clientSecret = urlParams.get('payment_intent_client_secret');
   const redirectStatus = urlParams.get('redirect_status');
 
   if (clientSecret && (redirectStatus === 'succeeded' || redirectStatus === 'processing')) {
-    console.log('🔄 [Stripe] Detected 3D Secure return URL!');
+    console.log('🔄 [Stripe] Detected redirect payment return URL!');
     const publishableKey = (window.STRIPE_CONFIG && window.STRIPE_CONFIG.PUBLISHABLE_KEY) || 'pk_live_51U4LumD62AOvzFwzgvQfwbAZAAbXXeWK5zu5yWYbMl5qLrIo9DY5pWdPuVXM8AWX98XXvHzNci1P2duYmWI1eWD100MPWiUQUs';
     if (!_stripeObj && typeof Stripe !== 'undefined') {
       _stripeObj = Stripe(publishableKey);
@@ -1501,11 +1655,13 @@ async function checkStripeRedirectResult() {
       try {
         const { paymentIntent } = await _stripeObj.retrievePaymentIntent(clientSecret);
         if (paymentIntent && (paymentIntent.status === 'succeeded' || paymentIntent.status === 'processing')) {
-          window.history.replaceState({}, document.title, window.location.pathname);
+          const cleanUrl = new URL(window.location.href);
+          ['payment_intent', 'payment_intent_client_secret', 'redirect_status'].forEach(key => cleanUrl.searchParams.delete(key));
+          window.history.replaceState({}, document.title, cleanUrl.pathname + cleanUrl.search + cleanUrl.hash);
           await processSuccessfulStripeOrder(paymentIntent);
         }
       } catch (err) {
-        console.error('Error retrieving 3D Secure payment intent:', err);
+        console.error('Error retrieving redirect payment intent:', err);
       }
     }
   }

@@ -75,11 +75,19 @@
 
     // Add class to document and body immediately
     document.documentElement.classList.add('is-capacitor-app');
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    if (isIOS) {
+        document.documentElement.classList.add('is-ios');
+    }
     if (document.body) {
         document.body.classList.add('is-capacitor-app');
+        if (isIOS) document.body.classList.add('is-ios');
     } else {
         document.addEventListener('DOMContentLoaded', () => {
-            if (document.body) document.body.classList.add('is-capacitor-app');
+            if (document.body) {
+                document.body.classList.add('is-capacitor-app');
+                if (isIOS) document.body.classList.add('is-ios');
+            }
         });
     }
 
@@ -239,7 +247,27 @@
 
     function getExactAppBranchMenu() {
         const branch = ensureAppBranchSelection();
-        if (!branch || window.LEO_MENU_BRANCH_ID !== branch.id) return [];
+        const branchId = (branch && branch.id) ? branch.id : 'branch_flora';
+        if (Array.isArray(window.MENU_DATA_FROM_API) && window.MENU_DATA_FROM_API.length > 0 && window.LEO_MENU_BRANCH_ID === branchId) {
+            return window.MENU_DATA_FROM_API;
+        }
+        // Fallback to cache for instant rendering
+        try {
+            const cached = localStorage.getItem(`leo_menu_cache_${branchId}`) || localStorage.getItem('leo_menu_cache_branch_flora');
+            if (cached) {
+                const parsed = JSON.parse(cached);
+                if (Array.isArray(parsed) && parsed.length > 0) {
+                    window.MENU_DATA_FROM_API = parsed;
+                    window.LEO_MENU_BRANCH_ID = branchId;
+                    return parsed;
+                }
+            }
+        } catch (e) {}
+
+        if (typeof window.loadMenuFromAPI === 'function' && !appBranchMenuLoadPromise) {
+            loadExactAppBranchMenu();
+        }
+
         return Array.isArray(window.MENU_DATA_FROM_API) ? window.MENU_DATA_FROM_API : [];
     }
 

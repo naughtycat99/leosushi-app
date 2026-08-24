@@ -74,8 +74,8 @@ body.is-capacitor-app .site-header {
     left: 0;
     right: 0;
     width: 100%;
-    height: calc(var(--app-bottom-bar-height) + env(safe-area-inset-bottom, 0px));
-    padding-bottom: env(safe-area-inset-bottom, 0px);
+    height: calc(var(--app-bottom-bar-height) + max(env(safe-area-inset-bottom, 0px), 12px));
+    padding-bottom: max(env(safe-area-inset-bottom, 0px), 12px);
     background: rgba(11, 11, 13, 0.94);
     backdrop-filter: blur(25px);
     -webkit-backdrop-filter: blur(25px);
@@ -473,11 +473,21 @@ body.is-capacitor-app #appNativeDashboard {
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     margin: 0 -16px 16px -16px;
-    padding: calc(env(safe-area-inset-top, 12px) + 10px) 16px 12px 16px;
+    padding: max(calc(env(safe-area-inset-top, 0px) + 12px), 48px) 16px 12px 16px;
     display: flex;
     align-items: center;
     justify-content: space-between;
     border-bottom: 1px solid rgba(229, 207, 142, 0.12);
+}
+
+body.is-ios .app-topbar,
+html.is-ios .app-topbar {
+    padding-top: max(calc(env(safe-area-inset-top, 0px) + 12px), 50px) !important;
+}
+
+body.is-ios .app-subpage-topbar,
+html.is-ios .app-subpage-topbar {
+    padding-top: max(calc(env(safe-area-inset-top, 0px) + 12px), 50px) !important;
 }
 
 .app-location-pill {
