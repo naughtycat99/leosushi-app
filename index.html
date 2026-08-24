@@ -1530,6 +1530,201 @@
                                 <strong>Filiale 1:</strong> Florastraße 10A, 13187 Berlin<br>
                                 📞 Tel: <a href="tel:03071055810" style="color: inherit; text-decoration: none;">030 71055810</a>
                             </span>
+                                    senden Ihnen an Ihrem Geburtstag einen besonderen Gutschein!</small>
+                            </div>
+                            <div class="auth-form-group">
+                                <label>Straße</label>
+                                <input type="text" id="registerStreet" placeholder="Straße und Hausnummer">
+                            </div>
+                            <div class="auth-form-row">
+                                <div class="auth-form-group">
+                                    <label>PLZ</label>
+                                    <input type="text" id="registerPostal" placeholder="13187">
+                                </div>
+                                <div class="auth-form-group">
+                                    <label>Stadt</label>
+                                    <input type="text" id="registerCity" placeholder="Berlin">
+                                </div>
+                            </div>
+                            <button type="submit" class="auth-btn-primary" id="registerModalBtn">
+                                Registrieren
+                            </button>
+                        </form>
+                        <div class="auth-discount-badge hidden" id="registerDiscountBadge">
+                            <div class="auth-discount-title">📧 E-Mail-Bestätigung gesendet!</div>
+                            <div class="auth-discount-text">Bitte überprüfen Sie Ihr E-Mail-Postfach.</div>
+                        </div>
+
+                        <div class="auth-verify-section hidden" id="registerVerifySection">
+                            <div class="auth-verify-header">
+                                <div class="auth-verify-title">E-Mail bestätigen</div>
+                                <div class="auth-verify-subtitle">Geben Sie den Code aus der E-Mail ein, um Ihre
+                                    Registrierung abzuschließen.</div>
+                            </div>
+                            <div class="auth-verify-email" id="registerVerifyEmail"></div>
+                            <div class="auth-form-group auth-verify-group">
+                                <label>Verifizierungscode</label>
+                                <input type="text" id="registerVerifyCode" placeholder="Code aus der E-Mail">
+                            </div>
+                            <div class="auth-verify-actions">
+                                <button type="button" class="auth-btn-secondary" id="registerVerifyBtn">
+                                    Code bestätigen
+                                </button>
+                                <button type="button" class="auth-link-button" id="registerVerifyLaterBtn">
+                                    Später bestätigen
+                                </button>
+                            </div>
+                            <div class="auth-error-message" id="verifyErrorMessage"></div>
+                            <div class="auth-success-message" id="verifySuccessMessage"></div>
+                        </div>
+
+                        <div class="auth-switch-link">
+                            Bereits registriert? <a href="#"
+                                onclick="event.preventDefault(); switchAuthForm('login');">Jetzt anmelden</a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Forgot Password Form -->
+                <div class="auth-form-wrapper" id="forgotFormWrapper">
+                    <div class="auth-modal-body">
+                        <div class="auth-error-message" id="forgotErrorMessage"></div>
+                        <div class="auth-success-message" id="forgotSuccessMessage"></div>
+                        <form id="forgotPasswordForm">
+                            <div class="auth-form-group">
+                                <label>E-Mail <span class="auth-required">*</span></label>
+                                <input type="text" id="forgotIdentifier" required
+                                    placeholder="E-Mail oder Telefonnummer">
+                            </div>
+                            <button type="submit" class="auth-btn-primary" id="forgotPasswordBtn">
+                                Reset-Link senden
+                            </button>
+                        </form>
+                        <div class="auth-switch-link">
+                            <a href="#" onclick="event.preventDefault(); switchAuthForm('login');">Zurück zur
+                                Anmeldung</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Holiday Schedule Notification Modal -->
+    <div class="holiday-modal" id="holidayModal">
+        <div class="holiday-modal-content">
+            <button class="holiday-modal-close" id="holidayModalClose" aria-label="Schließen">×</button>
+            <div class="holiday-modal-background">
+                <div class="holiday-moon"></div>
+                <div class="holiday-stars">
+                    <span class="star"></span>
+                    <span class="star"></span>
+                    <span class="star"></span>
+                    <span class="star"></span>
+                    <span class="star"></span>
+                    <span class="star"></span>
+                    <span class="star"></span>
+                    <span class="star"></span>
+                    <span class="star"></span>
+                    <span class="star"></span>
+                </div>
+            </div>
+            <div class="holiday-modal-body">
+                <h2 class="holiday-title">Feiertags-Öffnungszeiten</h2>
+                <div class="holiday-schedule">
+                    <div class="holiday-item">
+                        <span class="holiday-date">24.12</span>
+                        <span class="holiday-time">Geschlossen</span>
+                    </div>
+                    <div class="holiday-item">
+                        <span class="holiday-date">25.12</span>
+                        <span class="holiday-time">11:30 - 22:00</span>
+                    </div>
+                    <div class="holiday-item">
+                        <span class="holiday-date">26.12</span>
+                        <span class="holiday-time">11:30 - 22:00</span>
+                    </div>
+                    <div class="holiday-item">
+                        <span class="holiday-date">31.12</span>
+                        <span class="holiday-time">Geschlossen</span>
+                    </div>
+                    <div class="holiday-item">
+                        <span class="holiday-date">01.01.26</span>
+                        <span class="holiday-time">15:30 - 22:00</span>
+                    </div>
+                </div>
+            </div>
+            <div class="holiday-decorations">
+                <div class="holiday-santa">
+                    <svg viewBox="0 0 200 100" xmlns="http://www.w3.org/2000/svg">
+                        <!-- Sleigh base -->
+                        <path d="M15 85 Q25 65, 45 75 T75 80 T105 75 T135 80 T165 75 T185 85" stroke="#654321"
+                            stroke-width="2.5" fill="none" stroke-linecap="round" />
+                        <!-- Reindeer silhouettes -->
+                        <ellipse cx="30" cy="50" rx="10" ry="8" fill="#8B4513" opacity="0.8" />
+                        <ellipse cx="60" cy="55" rx="8" ry="6" fill="#8B4513" opacity="0.8" />
+                        <ellipse cx="90" cy="50" rx="9" ry="7" fill="#8B4513" opacity="0.8" />
+                        <ellipse cx="120" cy="55" rx="8" ry="6" fill="#8B4513" opacity="0.8" />
+                        <ellipse cx="150" cy="50" rx="9" ry="7" fill="#8B4513" opacity="0.8" />
+                        <ellipse cx="180" cy="55" rx="8" ry="6" fill="#8B4513" opacity="0.8" />
+                        <!-- Antlers (simple) -->
+                        <path d="M25 45 L22 40 M25 45 L28 40" stroke="#654321" stroke-width="1.5"
+                            stroke-linecap="round" />
+                        <path d="M55 50 L52 45 M55 50 L58 45" stroke="#654321" stroke-width="1.5"
+                            stroke-linecap="round" />
+                        <path d="M85 45 L82 40 M85 45 L88 40" stroke="#654321" stroke-width="1.5"
+                            stroke-linecap="round" />
+                    </svg>
+                </div>
+                <div class="holiday-logo">
+                    <img src="assets/logo.png" alt="LEO SUSHI" class="holiday-logo-img" loading="lazy" width="256"
+                        height="256">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lightbox for Gallery -->
+    <div class="lightbox" id="lightbox" aria-hidden="true">
+        <button class="lightbox-close" id="lightboxClose" aria-label="Schließen">×</button>
+        <button class="lightbox-nav prev" id="lightboxPrev" aria-label="Vorheriges">‹</button>
+        <img class="lightbox-img" id="lightImg" src="" alt="" loading="lazy">
+        <button class="lightbox-nav next" id="lightboxNext" aria-label="Nächstes">›</button>
+    </div>
+
+    <footer class="site-footer">
+        <div class="footer-top">
+            <div class="container footer-inner">
+                <div class="footer-brand">
+                    <div class="brand-mini">
+                        <img src="assets/logo.png" alt="LEO SUSHI" loading="lazy" decoding="async" width="256"
+                            height="256">
+                        <div class="brand-text">
+                            <span class="brand-name">LEO SUSHI</span>
+                            <span class="brand-tagline">Moderne vietnamesische Küche</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="footer-content">
+                    <nav class="footer-nav">
+                        <div class="footer-nav-section">
+                            <h4>Navigation</h4>
+                            <a href="#home">Home</a>
+                            <a href="menu.html">Menü</a>
+                            <a href="#gallery">Gallery</a>
+                            <a href="#about">Über uns</a>
+                            <a href="#reviews">Bewertungen</a>
+                            <a href="#contact">Kontakt</a>
+                        </div>
+                    </nav>
+                    <div class="footer-contact">
+                        <h4>Kontakt</h4>
+                        <div class="footer-contact-item" style="margin-bottom: 12px;">
+                            <span class="footer-icon">📍</span>
+                            <span style="font-size: 13px;">
+                                <strong>Filiale 1:</strong> Florastraße 10A, 13187 Berlin<br>
+                                📞 Tel: <a href="tel:03071055810" style="color: inherit; text-decoration: none;">030 71055810</a>
+                            </span>
                         </div>
                         <div class="footer-contact-item" style="margin-bottom: 12px;">
                             <span class="footer-icon">📍</span>
@@ -1586,86 +1781,35 @@
                     <div class="legal">© <span id="year"></span> LEO SUSHI · Alle Rechte vorbehalten · <a
                             href="datenschutz.html" style="color: var(--gold); text-decoration: none;">Datenschutz</a>
                     </div>
-                    <div class="footer-social">
-                        <a href="#" class="social-link" aria-label="Facebook">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                                <path
-                                    d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
-                            </svg>
-                        </a>
-                        <a href="#" class="social-link" aria-label="Instagram">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                                <path
-                                    d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" />
-                            </svg>
-                        </a>
-                        <a href="https://www.openstreetmap.org/?mlat=52.5505&mlon=13.4304&zoom=16" target="_blank"
-                            class="social-link" aria-label="OpenStreetMap">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                                <path
-                                    d="M12 0C8.74 0 5.97 1.47 4 3.74c2.26 2.26 4.26 4.26 8 8 3.74-3.74 5.74-5.74 8-8C18.03 1.47 15.26 0 12 0zm0 2c5.51 0 10 4.49 10 10s-4.49 10-10 10S2 17.51 2 12 6.49 2 12 2zm0 3c-3.87 0-7 3.13-7 7s3.13 7 7 7 7-3.13 7-7-3.13-7-7-7zm0 3c2.21 0 4 1.79 4 4s-1.79 4-4 4-4-1.79-4-4 1.79-4 4-4z" />
-                            </svg>
-                        </a>
-                    </div>
                 </div>
             </div>
         </div>
     </footer>
 
-    <!-- GloriaFood Widget Code - Paste here from your dashboard -->
-    <!-- Example widget code will look like this:
-    <script>
-      (function() {
-        var gloriafood = document.createElement('script');
-        gloriafood.src = 'https://www.gloriafood.com/...';
-        gloriafood.async = true;
-        document.head.appendChild(gloriafood);
-      })();
-    </script>
-    <div id="gloriafood-widget"></div>
-    -->
-
-    <!-- Capacitor Core (sẽ được inject tự động trong app) -->
-    <script>
-        // Load Capacitor init script when running in native app
-        // Capacitor core is automatically injected by Capacitor
-        document.addEventListener('DOMContentLoaded', function () {
-            // Check if running in Capacitor app
-            if (window.Capacitor && window.Capacitor.isNativePlatform()) {
-                const script = document.createElement('script');
-                script.src = 'js/capacitor-init.js';
-                script.async = true;
-                document.head.appendChild(script);
-            }
-        });
-    </script>
-
     <!-- Load modules theo thứ tự dependency (QUAN TRỌNG - không thay đổi thứ tự!) -->
-    <!-- Backup: Nếu có lỗi, comment các dòng dưới và uncomment dòng: <script src="script.js?v=20260408"></script> -->
-    <script src="js/config.js?v=20260824_v50"></script>
-    <script src="js/menu-data.js?v=20260824_v50"></script>
-    <script src="js/capacitor-navigation.js?v=20260824_v50"></script>
-    <script src="js/mobile-app.js?v=20260824_v54"></script>
-    <script src="js/api.js?v=20260824_v50"></script>
-    <script src="js/auth-mysql.js?v=20260824_v50"></script>
-    <script src="js/auth-modal.js?v=20260824_v50"></script>
-    <script src="js/header-auth.js?v=20260824_v50"></script>
-    <script src="js/database-helpers.js?v=20260824_v50"></script>
-    <script src="js/utils.js?v=20260824_v50"></script>
-    <script src="js/payment.js?v=20260824_stripe_v15"></script>
-    <script src="js/cart.js?v=20260824_v50"></script>
-    <script src="js/cart-sync.js?v=20260824_v50"></script>
-    <script src="js/mobile-cart-fix.js?v=20260824_v50"></script>
-    <script src="js/menu.js?v=20260824_v54"></script>
-    <script src="js/reservation.js?v=20260824_v50"></script>
-    <script src="js/email.js?v=20260824_v50"></script>
-    <script src="js/customer.js?v=20260824_v50"></script>
-    <script src="js/notifications.js?v=20260824_v50"></script>
-    <script src="js/main.js?v=20260824_v50"></script>
+    <script src="js/config.js?v=20260824_v55"></script>
+    <script src="js/api.js?v=20260824_v55"></script>
+    <script src="js/menu-data.js?v=20260824_v55"></script>
+    <script src="js/menu.js?v=20260824_v55"></script>
+    <script src="js/capacitor-navigation.js?v=20260824_v55"></script>
+    <script src="js/mobile-app.js?v=20260824_v55"></script>
+    <script src="js/auth-mysql.js?v=20260824_v55"></script>
+    <script src="js/auth-modal.js?v=20260824_v55"></script>
+    <script src="js/header-auth.js?v=20260824_v55"></script>
+    <script src="js/database-helpers.js?v=20260824_v55"></script>
+    <script src="js/utils.js?v=20260824_v55"></script>
+    <script src="js/payment.js?v=20260824_stripe_v16"></script>
+    <script src="js/cart.js?v=20260824_v55"></script>
+    <script src="js/cart-sync.js?v=20260824_v55"></script>
+    <script src="js/mobile-cart-fix.js?v=20260824_v55"></script>
+    <script src="js/reservation.js?v=20260824_v55"></script>
+    <script src="js/email.js?v=20260824_v55"></script>
+    <script src="js/customer.js?v=20260824_v55"></script>
+    <script src="js/notifications.js?v=20260824_v55"></script>
+    <script src="js/main.js?v=20260824_v55"></script>
     <!-- Leaflet JS for OpenStreetMap -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="js/order-tracking.js"></script>
-    <!-- <script src="script.js?v=20260408"></script> --> <!-- Backup: Uncomment nếu cần rollback -->
 
     <script>
         document.getElementById('year').textContent = new Date().getFullYear();
@@ -1674,11 +1818,9 @@
         document.addEventListener('DOMContentLoaded', function () {
             const mapContainer = document.getElementById('restaurantMap');
             if (mapContainer && typeof L !== 'undefined') {
-                // Restaurant coordinates
                 const restaurantLat = 52.5505;
                 const restaurantLng = 13.4304;
 
-                // Initialize map
                 const map = L.map('restaurantMap', {
                     zoomControl: true,
                     scrollWheelZoom: false,
@@ -1687,13 +1829,11 @@
                     doubleClickZoom: true
                 }).setView([restaurantLat, restaurantLng], 16);
 
-                // Add OpenStreetMap tile layer
                 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                     attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
                     maxZoom: 19
                 }).addTo(map);
 
-                // Add restaurant marker
                 const restaurantIcon = L.divIcon({
                     className: 'restaurant-marker',
                     html: '<div style="background: #e5cf8e; width: 40px; height: 40px; border-radius: 50%; border: 4px solid white; box-shadow: 0 4px 12px rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; font-size: 22px;">🍣</div>',

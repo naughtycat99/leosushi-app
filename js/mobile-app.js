@@ -268,7 +268,16 @@
             loadExactAppBranchMenu();
         }
 
-        return Array.isArray(window.MENU_DATA_FROM_API) ? window.MENU_DATA_FROM_API : [];
+        if (Array.isArray(window.MENU_DATA_FROM_API) && window.MENU_DATA_FROM_API.length > 0) {
+            return window.MENU_DATA_FROM_API;
+        }
+
+        // Instant static fallback: NEVER leave the screen empty or stuck loading
+        if (typeof MENU_DATA !== 'undefined' && Array.isArray(MENU_DATA) && MENU_DATA.length > 0) {
+            return MENU_DATA;
+        }
+
+        return [];
     }
 
     function normalizeBestsellerDishName(name) {
@@ -430,8 +439,13 @@
 
         const allDishes = getOrBuildAppDishes();
         if (allDishes.length === 0) {
+            if (typeof window.loadMenuFromAPI === 'function') {
+                window.loadMenuFromAPI().then(() => {
+                    renderAppDishes();
+                }).catch(() => {});
+            }
             grid.innerHTML = '<div class="app-menu-loading">Speisekarte der gewählten Filiale wird geladen…</div>';
-            setTimeout(renderAppDishes, 250);
+            setTimeout(renderAppDishes, 500);
             return;
         }
 
