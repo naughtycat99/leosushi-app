@@ -1333,6 +1333,15 @@ async function handleStripePaymentSubmit() {
     payment_intent_id: window._currentStripePaymentIntentId || null
   };
 
+  // Log to server activity.log
+  if (typeof window.logActivity === 'function') {
+    window.logActivity('stripe_submit', 'Khách xác nhận thanh toán Stripe/Klarna/Thẻ', {
+      name: `${addr.firstName} ${addr.lastName}`.trim(),
+      phone: addr.phone || 'N/A',
+      email: addr.email || 'N/A'
+    }, total.toFixed(2) + ' €', 'stripe', cart);
+  }
+
   // 1. Save to localStorage and sessionStorage before potential redirect
   try {
     const serialized = JSON.stringify(prebuiltOrderData);
