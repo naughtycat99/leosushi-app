@@ -2144,6 +2144,7 @@ body.is-capacitor-app .orders-sidebar,
 body.is-capacitor-app .profile-sidebar,
 body.is-capacitor-app .points-sidebar,
 body.is-capacitor-app .back-link,
+body.is-capacitor-app .top-nav-bar,
 body.is-capacitor-app .orders-header .back-link,
 body.is-capacitor-app .profile-header .back-link {
     display: none !important;
@@ -2153,12 +2154,14 @@ body.is-capacitor-app .orders-wrapper,
 body.is-capacitor-app .profile-wrapper,
 body.is-capacitor-app .points-wrapper,
 body.is-capacitor-app .reservation-wrapper,
+body.is-capacitor-app .reservation-page,
 body.is-capacitor-app .checkout-wrapper {
     max-width: 600px !important;
     margin: 0 auto !important;
     padding: 14px 16px calc(env(safe-area-inset-bottom, 20px) + 90px) 16px !important;
     grid-template-columns: 1fr !important;
     display: block !important;
+    min-height: auto !important;
 }
 
 body.is-capacitor-app .orders-main,

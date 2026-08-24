@@ -1744,7 +1744,7 @@
             ` : `<div style="width: 44px; height: 44px;"></div>`}
         `;
 
-        const targetInsert = document.querySelector('.orders-wrapper, .profile-wrapper, .points-wrapper, .reservation-wrapper, .checkout-container, .checkout-wrapper, main') || document.body.firstElementChild;
+        const targetInsert = document.querySelector('.orders-wrapper, .profile-wrapper, .points-wrapper, .reservation-wrapper, .reservation-page, .reservation-container, .checkout-container, .checkout-wrapper, main') || document.body.firstElementChild;
         if (targetInsert && targetInsert.parentNode) {
             targetInsert.parentNode.insertBefore(topbar, targetInsert);
         } else {
