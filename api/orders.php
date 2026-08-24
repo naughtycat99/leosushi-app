@@ -1030,8 +1030,67 @@ function updateOrderStatus($input)
                     $pushEtaMsg = $isScheduledString ? "um $finalEta bereit" : "in $finalEta fertig";
                     notifyCustomer($customerEmail, 'Bestellung bestätigt!', "Ihre Bestellung wurde bestätigt und wird $pushEtaMsg sein.", ['order_id' => $orderId, 'type' => 'status_update']);
                 }
-                elseif ($status === 'in_delivery') {
-                    notifyCustomer($customerEmail, 'Bestellung unterwegs!', 'Unser Shipper ist auf dem Weg zu Ihnen.', ['order_id' => $orderId, 'type' => 'status_update']);
+                elseif ($status === 'in_delivery' || $status === 'shipping' || $status === 'delivering') {
+                    $svcType = $orderData['service_type'] ?? 'delivery';
+                    $summary = json_decode($orderData['summary'] ?? '{}', true);
+                    $deliveryAddr = $deliveryAddress;
+                    $formattedAddress = isset($deliveryAddr['street']) ? trim(($deliveryAddr['street'] ?? '') . ' ' . ($deliveryAddr['houseNumber'] ?? $deliveryAddr['house_number'] ?? '') . ', ' . ($deliveryAddr['postal'] ?? '') . ' ' . ($deliveryAddr['city'] ?? '')) : '';
+
+                    $statusEmailData = [
+                        'order_id' => $orderId,
+                        'service_type' => $svcType,
+                        'payment_method' => $orderData['payment_method'] ?? $summary['payment_method'] ?? 'cash',
+                        'delivery_address' => $formattedAddress,
+                        'total' => $summary['total'] ?? '0,00 €',
+                        'branch' => $summary['branch'] ?? null
+                    ];
+
+                    if ($svcType === 'pickup') {
+                        try {
+                            sendOrderReadyForPickupEmail($customerEmail, trim($customerName), $statusEmailData);
+                        } catch (Exception $e) {
+                            error_log("Failed to send pickup email: " . $e->getMessage());
+                        }
+                        notifyCustomer($customerEmail, 'Bestellung abholbereit!', 'Ihre Bestellung ist fertig zubereitet und abholbereit.', ['order_id' => $orderId, 'type' => 'status_update']);
+                    } else {
+                        try {
+                            sendOrderOutForDeliveryEmail($customerEmail, trim($customerName), $statusEmailData);
+                        } catch (Exception $e) {
+                            error_log("Failed to send delivery email: " . $e->getMessage());
+                        }
+                        notifyCustomer($customerEmail, 'Bestellung unterwegs!', 'Unser Shipper ist auf dem Weg zu Ihnen.', ['order_id' => $orderId, 'type' => 'status_update']);
+                    }
+                }
+                elseif ($status === 'ready') {
+                    $svcType = $orderData['service_type'] ?? 'pickup';
+                    $summary = json_decode($orderData['summary'] ?? '{}', true);
+                    $deliveryAddr = $deliveryAddress;
+                    $formattedAddress = isset($deliveryAddr['street']) ? trim(($deliveryAddr['street'] ?? '') . ' ' . ($deliveryAddr['houseNumber'] ?? $deliveryAddr['house_number'] ?? '') . ', ' . ($deliveryAddr['postal'] ?? '') . ' ' . ($deliveryAddr['city'] ?? '')) : '';
+
+                    $statusEmailData = [
+                        'order_id' => $orderId,
+                        'service_type' => $svcType,
+                        'payment_method' => $orderData['payment_method'] ?? $summary['payment_method'] ?? 'cash',
+                        'delivery_address' => $formattedAddress,
+                        'total' => $summary['total'] ?? '0,00 €',
+                        'branch' => $summary['branch'] ?? null
+                    ];
+
+                    if ($svcType === 'pickup') {
+                        try {
+                            sendOrderReadyForPickupEmail($customerEmail, trim($customerName), $statusEmailData);
+                        } catch (Exception $e) {
+                            error_log("Failed to send pickup email: " . $e->getMessage());
+                        }
+                        notifyCustomer($customerEmail, 'Bestellung abholbereit!', 'Ihre Bestellung ist fertig zubereitet und abholbereit.', ['order_id' => $orderId, 'type' => 'status_update']);
+                    } else {
+                        try {
+                            sendOrderOutForDeliveryEmail($customerEmail, trim($customerName), $statusEmailData);
+                        } catch (Exception $e) {
+                            error_log("Failed to send delivery email: " . $e->getMessage());
+                        }
+                        notifyCustomer($customerEmail, 'Bestellung bereit zur Lieferung!', 'Ihre Bestellung ist fertig und wird gleich geliefert.', ['order_id' => $orderId, 'type' => 'status_update']);
+                    }
                 }
                 elseif ($status === 'completed') {
                     notifyCustomer($customerEmail, 'Erfolgreich geliefert!', 'Vielen Dank für Ihre Bestellung bei Leo Sushi. Guten Appetit!', ['order_id' => $orderId, 'type' => 'status_update']);

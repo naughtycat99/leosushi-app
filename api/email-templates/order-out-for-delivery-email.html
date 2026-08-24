@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ihre Bestellung ist auf dem Weg! - LEO SUSHI</title>
+  <style>
+    body { font-family: 'Inter', Arial, sans-serif; background: #0b0b0c; color: #f1f1f1; margin: 0; padding: 0; }
+    .wrapper { max-width: 600px; margin: 0 auto; padding: 32px 16px; }
+    .card { background: linear-gradient(145deg, #111113, #0c0c0d); border: 1px solid rgba(212,175,55,0.4); border-radius: 20px; padding: 32px; box-shadow: 0 20px 60px rgba(0,0,0,0.45); }
+    .logo { text-align: center; font-family: 'Playfair Display', serif; font-size: 28px; color: #d4af37; letter-spacing: 4px; margin-bottom: 20px; }
+    .badge { display: inline-block; background: #22c55e; color: #000; padding: 6px 16px; border-radius: 20px; font-size: 13px; font-weight: 700; text-transform: uppercase; margin-bottom: 16px; }
+    .title { font-size: 22px; font-weight: 700; margin-bottom: 12px; color: #fff; text-align: center; }
+    .text { font-size: 15px; line-height: 1.6; color: rgba(255,255,255,0.85); margin-bottom: 20px; }
+    .highlight-box { background: rgba(34, 197, 94, 0.1); border: 1px dashed rgba(34, 197, 94, 0.4); border-radius: 16px; padding: 18px 20px; margin-bottom: 24px; text-align: center; }
+    .info-box { background: rgba(255,255,255,0.04); border: 1px solid rgba(212,175,55,0.3); border-radius: 16px; padding: 18px 20px; margin-bottom: 24px; }
+    .info-row { display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 8px; color: rgba(255,255,255,0.85); }
+    .footer { margin-top: 32px; text-align: center; font-size: 12px; color: rgba(255,255,255,0.4); line-height: 1.6; }
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+    <div class="card">
+      <div class="logo">LEO SUSHI</div>
+      <div style="text-align: center;"><span class="badge">🛵 Unterwegs zu Ihnen</span></div>
+      <div class="title">Ihre Bestellung ist auf dem Weg!</div>
+      <p class="text">
+        Hallo <strong>{{NAME}}</strong>,<br><br>
+        Gute Neuigkeiten! Ihre Bestellung <strong>#{{ORDER_ID}}</strong> wurde soeben frisch zubereitet und an unseren Fahrer übergeben. Unser Fahrer ist jetzt direkt auf dem Weg zu Ihrer Lieferadresse!
+      </p>
+
+      <div class="highlight-box">
+        <div style="font-size: 18px; font-weight: bold; color: #22c55e; margin-bottom: 4px;">🛵 Fahrer ist unterwegs!</div>
+        <div style="font-size: 14px; color: rgba(255,255,255,0.8);">Bitte halten Sie sich bereit, um die frische Lieferung entgegenzunehmen.</div>
+      </div>
+
+      <div class="info-box">
+        <div class="info-row"><span>Bestellnummer:</span><strong>#{{ORDER_ID}}</strong></div>
+        <div class="info-row"><span>Lieferadresse:</span><strong>{{DELIVERY_ADDRESS}}</strong></div>
+        <div class="info-row"><span>Gesamtbetrag:</span><strong style="color: #d4af37;">{{ORDER_TOTAL}}</strong></div>
+        <div class="info-row"><span>Zahlungsstatus:</span><strong>{{PAYMENT_STATUS}}</strong></div>
+      </div>
+
+      <p class="text" style="font-size: 14px; color: rgba(255,255,255,0.7); text-align: center;">
+        Bei Fragen oder besonderen Hinweisen für den Fahrer erreichen Sie unser Restaurant unter:<br>
+        📞 <strong style="color: #d4af37;">{{BRANCH_PHONE}}</strong>
+      </p>
+
+      <div class="footer">
+        © {{YEAR}} LEO SUSHI • {{BRANCH_ADDRESS}}<br>
+        Guten Appetit und vielen Dank für Ihr Vertrauen!
+      </div>
+    </div>
+  </div>
+</body>
+</html>

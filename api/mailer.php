@@ -384,6 +384,65 @@ function sendReservationCancellationEmail($to, $name, $reservationData, $reason 
 }
 
 /**
+ * Gửi email khi tài xế bắt đầu đi giao hàng (Lieferung)
+ */
+function sendOrderOutForDeliveryEmail($to, $name, $orderData) {
+    $orderId = $orderData['order_id'] ?? date('YmdHis');
+    $shortId = preg_replace('/^(ORD-|LEO-)/', '', $orderId);
+    $template = __DIR__ . '/email-templates/order-out-for-delivery-email.html';
+
+    $branch = $orderData['branch'] ?? [];
+    $branchAddress = $branch['address'] ?? 'Florastraße 10A, 13187 Berlin';
+    $branchPhone = $branch['phone'] ?? '030 71055810';
+
+    $pm = strtolower((string)($orderData['payment_method'] ?? 'cash'));
+    $payStatus = (strpos($pm, 'paid') !== false || strpos($pm, 'paypal') !== false || strpos($pm, 'stripe') !== false || strpos($pm, 'karte') !== false) ? 'Bereits online bezahlt' : 'Barzahlung bei Lieferung';
+
+    $variables = [
+        'NAME' => $name ?: 'Gast',
+        'ORDER_ID' => $orderId,
+        'DELIVERY_ADDRESS' => $orderData['delivery_address'] ?? 'Ihre angegebene Adresse',
+        'ORDER_TOTAL' => $orderData['total'] ?? '0,00 €',
+        'PAYMENT_STATUS' => $payStatus,
+        'BRANCH_PHONE' => $branchPhone,
+        'BRANCH_ADDRESS' => $branchAddress,
+        'YEAR' => date('Y')
+    ];
+
+    $subject = '🛵 Ihre Bestellung #' . $shortId . ' ist auf dem Weg zu Ihnen! - LEO SUSHI';
+    return sendTemplatedEmail($to, $subject, $template, $variables);
+}
+
+/**
+ * Gửi email khi món đã làm xong, sẵn sàng để khách đến lấy (Abholung)
+ */
+function sendOrderReadyForPickupEmail($to, $name, $orderData) {
+    $orderId = $orderData['order_id'] ?? date('YmdHis');
+    $shortId = preg_replace('/^(ORD-|LEO-)/', '', $orderId);
+    $template = __DIR__ . '/email-templates/order-ready-for-pickup-email.html';
+
+    $branch = $orderData['branch'] ?? [];
+    $branchAddress = $branch['address'] ?? 'Florastraße 10A, 13187 Berlin';
+    $branchPhone = $branch['phone'] ?? '030 71055810';
+
+    $pm = strtolower((string)($orderData['payment_method'] ?? 'cash'));
+    $payStatus = (strpos($pm, 'paid') !== false || strpos($pm, 'paypal') !== false || strpos($pm, 'stripe') !== false || strpos($pm, 'karte') !== false) ? 'Bereits online bezahlt' : 'Barzahlung bei Abholung';
+
+    $variables = [
+        'NAME' => $name ?: 'Gast',
+        'ORDER_ID' => $orderId,
+        'ORDER_TOTAL' => $orderData['total'] ?? '0,00 €',
+        'PAYMENT_STATUS' => $payStatus,
+        'BRANCH_PHONE' => $branchPhone,
+        'BRANCH_ADDRESS' => $branchAddress,
+        'YEAR' => date('Y')
+    ];
+
+    $subject = '🥡 Ihre Bestellung #' . $shortId . ' ist abholbereit! - LEO SUSHI';
+    return sendTemplatedEmail($to, $subject, $template, $variables);
+}
+
+/**
  * Gửi hóa đơn (bill) PDF cho khách khi đơn được xác nhận.
  * Tạo PDF thật bằng PdfReceipt (thuần PHP, không cần thư viện ngoài)
  * và attach vào email.
