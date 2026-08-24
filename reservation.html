@@ -21,29 +21,44 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
-        href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=Inter:wght@300;400;600&display=swap"
-        rel="stylesheet">
-    <link rel="stylesheet" href="styles.css?v=20260408">
-    <link rel="stylesheet" href="styles-luxe.css?v=20260408">
-    <link rel="stylesheet" href="menu-order.css?v=20260408">
-    <link rel="stylesheet" href="css/mobile-app.css?v=20260824_v54">
+        href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,700;1,400&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css?v=20260824_v56">
+    <link rel="stylesheet" href="styles-luxe.css?v=20260824_v56">
+    <link rel="stylesheet" href="menu-order.css?v=20260824_v56">
+    <link rel="stylesheet" href="css/mobile-app.css?v=20260824_v56">
     <script src="js/app-mode-gate.js?v=20260824_v51"></script>
     <style>
         :root {
             --gold: #e5cf8e;
             --gold-2: #c2a355;
+            --gold-gradient: linear-gradient(135deg, #e5cf8e 0%, #c2a355 100%);
             --dark-bg: #0b0b0c;
-            --panel-bg: rgba(255, 255, 255, 0.03);
-            --border-color: rgba(229, 207, 142, 0.2);
+            --panel-bg: rgba(255, 255, 255, 0.04);
+            --border-color: rgba(229, 207, 142, 0.22);
+        }
+
+        * {
+            box-sizing: border-box;
         }
 
         body {
             background: var(--dark-bg);
             color: #fff;
-            font-family: 'Inter', sans-serif;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
             margin: 0;
             padding: 0;
             overflow-x: hidden;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .reservation-bg {
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+            background: 
+                radial-gradient(circle at 15% 15%, rgba(229, 207, 142, 0.08) 0%, transparent 45%),
+                radial-gradient(circle at 85% 85%, rgba(194, 163, 85, 0.08) 0%, transparent 45%),
+                linear-gradient(180deg, #0b0b0c 0%, #121215 100%);
         }
 
         .reservation-page {
@@ -51,24 +66,22 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
-            padding: 60px 20px;
+            padding: max(calc(env(safe-area-inset-top, 0px) + 20px), 25px) 16px max(calc(env(safe-area-inset-bottom, 0px) + 40px), 40px);
             position: relative;
             z-index: 1;
         }
 
-        /* Ambient Background */
-        .reservation-bg {
-            position: fixed;
-            inset: 0;
-            z-index: -1;
-            background: radial-gradient(circle at 20% 20%, rgba(229, 207, 142, 0.05) 0%, transparent 40%),
-                        radial-gradient(circle at 80% 80%, rgba(194,163,85, 0.05) 0%, transparent 40%);
-        }
-
         .reservation-container {
             width: 100%;
-            max-width: 700px;
+            max-width: 680px;
+            margin: 0 auto;
+        }
+
+        .top-nav-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 25px;
         }
 
         .back-link {
@@ -78,142 +91,301 @@
             color: var(--gold);
             text-decoration: none;
             font-size: 14px;
-            font-weight: 500;
-            margin-bottom: 30px;
-            transition: all 0.3s ease;
-            opacity: 0.8;
+            font-weight: 600;
+            padding: 8px 14px;
+            background: rgba(229, 207, 142, 0.08);
+            border: 1px solid rgba(229, 207, 142, 0.2);
+            border-radius: 20px;
+            transition: all 0.25s ease;
         }
 
         .back-link:hover {
-            opacity: 1;
-            transform: translateX(-4px);
+            background: rgba(229, 207, 142, 0.16);
+            transform: translateX(-3px);
         }
 
         .reservation-header {
             text-align: center;
-            margin-bottom: 40px;
+            margin-bottom: 30px;
+        }
+
+        .reservation-header .badge-tag {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 30px;
+            background: rgba(229, 207, 142, 0.12);
+            border: 1px solid rgba(229, 207, 142, 0.3);
+            color: var(--gold);
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            margin-bottom: 12px;
         }
 
         .reservation-header h1 {
-            font-family: 'Playfair Display', serif;
-            font-size: clamp(32px, 5vw, 48px);
-            margin: 0 0 12px;
-            background: linear-gradient(135deg, #fff 0%, var(--gold) 100%);
+            font-family: 'Playfair Display', Georgia, serif;
+            font-size: clamp(28px, 6vw, 42px);
+            margin: 0 0 10px;
+            background: linear-gradient(135deg, #ffffff 0%, var(--gold) 100%);
             -webkit-background-clip: text;
             background-clip: text;
             -webkit-text-fill-color: transparent;
-            text-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            text-shadow: 0 4px 20px rgba(0,0,0,0.5);
         }
 
         .reservation-header p {
-            font-size: 16px;
-            color: rgba(255, 255, 255, 0.6);
+            font-size: 15px;
+            color: rgba(255, 255, 255, 0.7);
             margin: 0;
-            letter-spacing: 0.02em;
+            line-height: 1.5;
         }
 
         .reservation-card {
-            background: linear-gradient(145deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%);
+            background: rgba(18, 18, 22, 0.85);
             border: 1px solid var(--border-color);
-            border-radius: 24px;
-            padding: 40px;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-            backdrop-filter: blur(20px);
+            border-radius: 22px;
+            padding: 32px 24px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255,255,255,0.06);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
         }
 
         @media (max-width: 580px) {
             .reservation-card {
-                padding: 25px;
+                padding: 22px 16px;
+                border-radius: 18px;
             }
         }
 
         .form-section {
-            margin-bottom: 35px;
-        }
-
-        .form-section:last-of-type {
-            margin-bottom: 10px;
+            margin-bottom: 28px;
         }
 
         .section-title {
             font-size: 13px;
             text-transform: uppercase;
-            letter-spacing: 0.2em;
+            letter-spacing: 0.15em;
             color: var(--gold);
-            margin: 0 0 24px;
-            font-weight: 600;
+            margin: 0 0 16px;
+            font-weight: 700;
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 10px;
         }
 
         .section-title::after {
             content: '';
             flex: 1;
             height: 1px;
-            background: linear-gradient(90deg, rgba(229, 207, 142, 0.2), transparent);
+            background: linear-gradient(90deg, rgba(229, 207, 142, 0.25), transparent);
         }
 
-        .form-grid {
+        /* Branch Selector Cards */
+        .branch-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 20px;
+            gap: 12px;
         }
 
-        @media (max-width: 580px) {
-            .form-grid {
+        @media (max-width: 560px) {
+            .branch-grid {
                 grid-template-columns: 1fr;
             }
         }
 
-        .form-group {
-            margin-bottom: 20px;
+        .branch-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1.5px solid rgba(255, 255, 255, 0.1);
+            border-radius: 14px;
+            padding: 16px;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            position: relative;
             display: flex;
             flex-direction: column;
+            gap: 6px;
+        }
+
+        .branch-card:hover {
+            border-color: rgba(229, 207, 142, 0.4);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .branch-card.active {
+            border-color: var(--gold);
+            background: rgba(229, 207, 142, 0.08);
+            box-shadow: 0 0 16px rgba(229, 207, 142, 0.15);
+        }
+
+        .branch-card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .branch-card-title {
+            font-weight: 700;
+            font-size: 15px;
+            color: #fff;
+        }
+
+        .branch-card.active .branch-card-title {
+            color: var(--gold);
+        }
+
+        .branch-card-check {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: 1.5px solid rgba(255, 255, 255, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            color: transparent;
+            transition: all 0.2s ease;
+        }
+
+        .branch-card.active .branch-card-check {
+            background: var(--gold);
+            border-color: var(--gold);
+            color: #0b0b0c;
+            font-weight: bold;
+        }
+
+        .branch-card-address {
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.65);
+            line-height: 1.4;
+        }
+
+        .branch-card-phone {
+            font-size: 12px;
+            color: var(--gold);
+            opacity: 0.9;
+            margin-top: 4px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        /* Guest Pills */
+        .guest-pills-wrap {
+            display: flex;
+            flex-wrap: wrap;
             gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .guest-pill {
+            flex: 1 1 calc(16.666% - 8px);
+            min-width: 44px;
+            height: 42px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 10px;
+            color: #fff;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            user-select: none;
+        }
+
+        @media (max-width: 480px) {
+            .guest-pill {
+                flex: 1 1 calc(20% - 8px);
+                height: 38px;
+                font-size: 13px;
+            }
+        }
+
+        .guest-pill:hover {
+            border-color: rgba(229, 207, 142, 0.4);
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .guest-pill.active {
+            background: var(--gold-gradient);
+            color: #0b0b0c;
+            border-color: var(--gold);
+            font-weight: 700;
+            box-shadow: 0 4px 12px rgba(229, 207, 142, 0.25);
+        }
+
+        /* Inputs */
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        @media (max-width: 540px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+                gap: 14px;
+            }
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin-bottom: 14px;
+        }
+
+        .form-group:last-child {
+            margin-bottom: 0;
         }
 
         .form-group label {
-            font-size: 14px;
-            font-weight: 500;
-            color: rgba(255, 255, 255, 0.8);
+            font-size: 13px;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.85);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
         }
 
         .form-group label .required {
-            color: #ff4d4d;
-            margin-left: 2px;
+            color: #ff5252;
+            font-weight: bold;
         }
 
-        /* Re-using payment-input style for premium look */
         .premium-input {
             background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.12);
             border-radius: 12px;
-            padding: 14px 18px;
+            padding: 13px 15px;
             color: #fff;
             font-size: 15px;
             font-family: inherit;
-            transition: all 0.3s ease;
+            transition: all 0.25s ease;
+            width: 100%;
         }
 
         .premium-input:focus {
             outline: none;
             border-color: var(--gold);
             background: rgba(255, 255, 255, 0.08);
-            box-shadow: 0 0 0 4px rgba(229, 207, 142, 0.1);
+            box-shadow: 0 0 0 3px rgba(229, 207, 142, 0.12);
         }
 
         .premium-input::placeholder {
-            color: rgba(255, 255, 255, 0.3);
+            color: rgba(255, 255, 255, 0.35);
         }
 
         select.premium-input {
             appearance: none;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23e5cf8e' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%23e5cf8e' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
             background-repeat: no-repeat;
             background-position: right 14px center;
-            background-size: 18px;
-            padding-right: 45px;
+            background-size: 16px;
+            padding-right: 40px;
         }
 
         .premium-input option {
@@ -223,43 +395,186 @@
         }
 
         textarea.premium-input {
-            min-height: 100px;
+            min-height: 80px;
             resize: vertical;
+        }
+
+        /* Pre-ordered Food Box */
+        .preorder-box {
+            background: rgba(229, 207, 142, 0.04);
+            border: 1px dashed rgba(229, 207, 142, 0.3);
+            border-radius: 14px;
+            padding: 14px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .preorder-box.has-items {
+            display: block;
+        }
+
+        .preorder-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--gold);
+            margin-bottom: 10px;
+        }
+
+        .preorder-items-list {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            max-height: 180px;
+            overflow-y: auto;
+        }
+
+        .preorder-item-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 13px;
+            padding: 6px 8px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 6px;
         }
 
         .submit-btn {
             width: 100%;
-            padding: 18px;
+            padding: 16px;
             border: none;
             border-radius: 14px;
-            background: linear-gradient(135deg, var(--gold) 0%, var(--gold-2) 100%);
+            background: var(--gold-gradient);
             color: #0b0b0c;
             font-size: 16px;
             font-weight: 700;
             text-transform: uppercase;
-            letter-spacing: 0.1em;
+            letter-spacing: 0.06em;
             cursor: pointer;
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            transition: all 0.3s ease;
             margin-top: 10px;
-            box-shadow: 0 10px 25px -5px rgba(229, 207, 142, 0.4);
+            box-shadow: 0 10px 25px -5px rgba(229, 207, 142, 0.35);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
         }
 
         .submit-btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 15px 30px -5px rgba(229, 207, 142, 0.5);
-            filter: brightness(1.1);
+            transform: translateY(-2px);
+            box-shadow: 0 14px 28px -5px rgba(229, 207, 142, 0.45);
+            filter: brightness(1.08);
         }
 
-        .submit-btn:active {
-            transform: translateY(0);
+        .submit-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
         }
 
         .form-footer-info {
             text-align: center;
-            margin-top: 25px;
-            font-size: 13px;
-            color: rgba(255, 255, 255, 0.4);
+            margin-top: 20px;
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.45);
             line-height: 1.6;
+        }
+
+        /* Confirmation Success Modal */
+        .res-success-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            z-index: 99999;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .res-success-modal {
+            background: #141418;
+            border: 1px solid var(--gold);
+            border-radius: 24px;
+            max-width: 480px;
+            width: 100%;
+            padding: 32px 24px;
+            text-align: center;
+            box-shadow: 0 25px 60px rgba(0,0,0,0.8);
+            animation: modalPopIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes modalPopIn {
+            0% { transform: scale(0.9); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .res-success-icon {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            background: rgba(16, 185, 129, 0.15);
+            border: 2px solid #10b981;
+            color: #10b981;
+            font-size: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 16px;
+        }
+
+        .res-success-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 24px;
+            color: #fff;
+            margin: 0 0 8px;
+        }
+
+        .res-success-subtitle {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.7);
+            margin: 0 0 20px;
+            line-height: 1.5;
+        }
+
+        .res-summary-card {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(229, 207, 142, 0.2);
+            border-radius: 14px;
+            padding: 16px;
+            margin-bottom: 24px;
+            text-align: left;
+            font-size: 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .res-summary-row {
+            display: flex;
+            justify-content: space-between;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .res-summary-row strong {
+            color: var(--gold);
+        }
+
+        .res-success-btn {
+            width: 100%;
+            padding: 14px;
+            border-radius: 12px;
+            border: none;
+            background: var(--gold-gradient);
+            color: #0b0b0c;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease;
         }
     </style>
 </head>
@@ -269,113 +584,162 @@
 
     <div class="reservation-page">
         <div class="reservation-container">
-            <a href="index.html" class="back-link">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
-                Zurück zur Startseite
-            </a>
+            <div class="top-nav-bar">
+                <a href="index.html" class="back-link">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+                    Zur Startseite
+                </a>
+                <span style="font-size: 13px; color: rgba(255,255,255,0.5);">Täglich 12:00 – 22:00 Uhr</span>
+            </div>
 
             <div class="reservation-header">
+                <div class="badge-tag">Online Reservierung</div>
                 <h1>Tisch Reservieren</h1>
-                <p>Genießen Sie erstklassige vietnamesische Küche</p>
+                <p>Genießen Sie authentische vietnamesische Köstlichkeiten & frisches Sushi in entspannter Atmosphäre.</p>
             </div>
 
             <div class="reservation-card">
                 <form id="reservationForm" onsubmit="handleReservation(event); return false;">
-                    <!-- Branch Selection -->
+                    
+                    <!-- 1. Branch Selection -->
                     <div class="form-section">
-                        <h3 class="section-title">Filiale</h3>
-                        <div class="form-group">
-                            <label for="reserveBranch">Bitte wählen Sie eine Filiale <span class="required">*</span></label>
-                            <select id="reserveBranch" class="premium-input" required onchange="updateReservationBranch()">
-                                <option value="" disabled selected>Filiale wählen</option>
-                                <option value="branch_flora">Leo Sushi - Florastraße (13187 Berlin)</option>
-                                <option value="branch_haupt">Leo Sushi - Hauptstraße (13158 Berlin)</option>
-                            </select>
+                        <h3 class="section-title">1. Filiale wählen</h3>
+                        <div class="branch-grid">
+                            <div class="branch-card active" id="branchCardFlora" onclick="selectBranchCard('branch_flora')">
+                                <div class="branch-card-header">
+                                    <span class="branch-card-title">Filiale Florastraße</span>
+                                    <div class="branch-card-check">✓</div>
+                                </div>
+                                <div class="branch-card-address">Florastraße 10A<br>13187 Berlin (Pankow)</div>
+                                <div class="branch-card-phone">📞 030 71055810</div>
+                            </div>
+                            <div class="branch-card" id="branchCardHaupt" onclick="selectBranchCard('branch_haupt')">
+                                <div class="branch-card-header">
+                                    <span class="branch-card-title">Filiale Hauptstraße</span>
+                                    <div class="branch-card-check">✓</div>
+                                </div>
+                                <div class="branch-card-address">Hauptstraße 29a<br>13158 Berlin (Wilhelmsruh)</div>
+                                <div class="branch-card-phone">📞 030 91422788</div>
+                            </div>
+                        </div>
+                        <input type="hidden" id="reserveBranch" value="branch_flora">
+                    </div>
+
+                    <!-- 2. Date, Time & Guests -->
+                    <div class="form-section">
+                        <h3 class="section-title">2. Wann & Wie viele Gäste?</h3>
+                        
+                        <div class="form-group" style="margin-bottom: 14px;">
+                            <label>Anzahl Personen <span class="required">*</span></label>
+                            <div class="guest-pills-wrap" id="guestPillsWrap">
+                                <div class="guest-pill" onclick="selectGuests(1)">1</div>
+                                <div class="guest-pill active" onclick="selectGuests(2)">2</div>
+                                <div class="guest-pill" onclick="selectGuests(3)">3</div>
+                                <div class="guest-pill" onclick="selectGuests(4)">4</div>
+                                <div class="guest-pill" onclick="selectGuests(5)">5</div>
+                                <div class="guest-pill" onclick="selectGuests(6)">6</div>
+                                <div class="guest-pill" onclick="selectGuests(7)">7</div>
+                                <div class="guest-pill" onclick="selectGuests(8)">8</div>
+                                <div class="guest-pill" onclick="selectGuests(10)">10</div>
+                                <div class="guest-pill" onclick="selectGuests(12)">12</div>
+                                <div class="guest-pill" onclick="selectGuests(15)">15+</div>
+                            </div>
+                            <input type="hidden" id="reserveGuests" value="2">
+                        </div>
+
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="reserveDate">Datum <span class="required">*</span></label>
+                                <input type="date" id="reserveDate" class="premium-input" required onchange="setupReservationTimeOptions()">
+                            </div>
+                            <div class="form-group">
+                                <label for="reserveTime">Uhrzeit <span class="required">*</span></label>
+                                <select id="reserveTime" class="premium-input" required>
+                                    <option value="" disabled selected>Uhrzeit wählen</option>
+                                </select>
+                            </div>
                         </div>
                     </div>
 
-                    <!-- Customer Information -->
+                    <!-- 3. Customer Info -->
                     <div class="form-section">
-                        <h3 class="section-title">Ihre Kontaktdaten</h3>
+                        <h3 class="section-title">3. Ihre Kontaktdaten</h3>
                         <div class="form-grid">
                             <div class="form-group">
                                 <label for="reserveFirstName">Vorname <span class="required">*</span></label>
-                                <input type="text" id="reserveFirstName" class="premium-input" placeholder="z.B. Max" required>
+                                <input type="text" id="reserveFirstName" class="premium-input" placeholder="z. B. Max" required>
                             </div>
                             <div class="form-group">
                                 <label for="reserveLastName">Nachname <span class="required">*</span></label>
-                                <input type="text" id="reserveLastName" class="premium-input" placeholder="z.B. Mustermann" required>
+                                <input type="text" id="reserveLastName" class="premium-input" placeholder="z. B. Mustermann" required>
                             </div>
                         </div>
-                        <div class="form-grid" style="margin-top: 20px;">
+                        <div class="form-grid" style="margin-top: 14px;">
                             <div class="form-group">
                                 <label for="reserveEmail">E-Mail-Adresse <span class="required">*</span></label>
-                                <input type="email" id="reserveEmail" class="premium-input" placeholder="max@example.com" required>
+                                <input type="email" id="reserveEmail" class="premium-input" placeholder="ihre@email.de" required>
                             </div>
                             <div class="form-group">
                                 <label for="reservePhone">Telefonnummer <span class="required">*</span></label>
                                 <input type="tel" id="reservePhone" class="premium-input" placeholder="0176 12345678" required>
                             </div>
                         </div>
+                        <div class="form-group" style="margin-top: 14px;">
+                            <label for="reserveNote">Besondere Wünsche / Hinweise (optional)</label>
+                            <textarea id="reserveNote" class="premium-input" placeholder="z. B. Fensterplatz, Geburtstag, Kinderstuhl, Allergien..."></textarea>
+                        </div>
+                        <input type="hidden" id="reservationCustomerCode" value="">
                     </div>
 
-                    <!-- Reservation Details -->
-                    <div class="form-section">
-                        <h3 class="section-title">Reservierungsdetails</h3>
-                        <div class="form-grid">
-                            <div class="form-group">
-                                <label for="reserveDate">Datum <span class="required">*</span></label>
-                                <input type="date" id="reserveDate" class="premium-input" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="reserveTime">Uhrzeit <span class="required">*</span></label>
-                                <select id="reserveTime" class="premium-input" required>
-                                    <option value="" disabled selected>Zeit wählen</option>
-                                    <!-- Options will be generated by setupReservationTimeOptions() -->
-                                </select>
-                            </div>
+                    <!-- 4. Pre-ordered dishes (if any) -->
+                    <div class="preorder-box" id="preorderBox">
+                        <div class="preorder-header">
+                            <span>🍱 Vorbestellte Speisen (<span id="preorderCount">0</span>)</span>
+                            <span id="preorderTotal" style="color: #fff;">0,00 €</span>
                         </div>
-                        <div class="form-grid" style="margin-top: 20px;">
-                            <div class="form-group">
-                                <label for="reserveGuests">Anzahl Personen <span class="required">*</span></label>
-                                <select id="reserveGuests" class="premium-input" required>
-                                    <option value="1">1 Person</option>
-                                    <option value="2" selected>2 Personen</option>
-                                    <option value="3">3 Personen</option>
-                                    <option value="4">4 Personen</option>
-                                    <option value="5">5 Personen</option>
-                                    <option value="6">6 Personen</option>
-                                    <option value="7">7 Personen</option>
-                                    <option value="8">8 Personen</option>
-                                    <option value="9">9 Personen</option>
-                                    <option value="10">10 Personen</option>
-                                    <option value="11">11 Personen</option>
-                                    <option value="12">12 Personen</option>
-                                    <option value="13">13 Personen</option>
-                                    <option value="14">14 Personen</option>
-                                    <option value="15">15 Personen</option>
-                                    <option value="16">16 Personen</option>
-                                    <option value="17">17 Personen</option>
-                                    <option value="18">18 Personen</option>
-                                    <option value="19">19 Personen</option>
-                                    <option value="20">20 Personen</option>
-                                </select>
-                            </div>
-                            <input type="hidden" id="reservationCustomerCode" value="">
-                        </div>
-                        <div class="form-group" style="margin-top: 20px;">
-                            <label for="reserveNote">Besondere Wünsche (optional)</label>
-                            <textarea id="reserveNote" class="premium-input" placeholder="z.B. Fensterplatz, Allergien, Geburtstagsfeier..."></textarea>
-                        </div>
+                        <div class="preorder-items-list" id="reservationCartItems"></div>
                     </div>
 
-                    <button type="submit" class="submit-btn" id="submitBtn">Reservierung abschließen</button>
-                    
+                    <button type="submit" class="submit-btn" id="submitBtn">
+                        <span>Tisch jetzt verbindlich reservieren</span>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                    </button>
+
                     <p class="form-footer-info">
-                        Mit dem Absenden Ihrer Reservierung erklären Sie sich mit unserer <a href="datenschutz.html" style="color: var(--gold);">Datenschutzerklärung</a> einverstanden. Sie erhalten in Kürze eine Bestätigungs-E-Mail.
+                        Mit dem Absenden der Reservierung erhalten Sie umgehend eine Bestätigungs-E-Mail. Keine Vorauszahlung erforderlich.
                     </p>
                 </form>
             </div>
+        </div>
+    </div>
+
+    <!-- Success Feedback Modal -->
+    <div class="res-success-overlay" id="resSuccessModal">
+        <div class="res-success-modal">
+            <div class="res-success-icon">✓</div>
+            <h2 class="res-success-title">Reservierung erfolgreich!</h2>
+            <p class="res-success-subtitle">Wir haben Ihre Tischreservierung erhalten und eine Bestätigung an Ihre E-Mail gesendet.</p>
+            
+            <div class="res-summary-card">
+                <div class="res-summary-row">
+                    <span>Reservierungs-Nr.:</span>
+                    <strong id="resSummaryId">RES-...</strong>
+                </div>
+                <div class="res-summary-row">
+                    <span>Filiale:</span>
+                    <strong id="resSummaryBranch">Florastraße</strong>
+                </div>
+                <div class="res-summary-row">
+                    <span>Datum & Uhrzeit:</span>
+                    <strong id="resSummaryDateTime">Heute, 18:30 Uhr</strong>
+                </div>
+                <div class="res-summary-row">
+                    <span>Gästeanzahl:</span>
+                    <strong id="resSummaryGuests">2 Personen</strong>
+                </div>
+            </div>
+
+            <button type="button" class="res-success-btn" onclick="window.location.href='index.html'">Zur Startseite</button>
         </div>
     </div>
 
@@ -389,8 +753,46 @@
     <script src="js/customer.js"></script>
 
     <script>
+        function selectBranchCard(branchId) {
+            const input = document.getElementById('reserveBranch');
+            if (input) input.value = branchId;
+
+            const cardFlora = document.getElementById('branchCardFlora');
+            const cardHaupt = document.getElementById('branchCardHaupt');
+
+            if (branchId === 'branch_haupt') {
+                if (cardFlora) cardFlora.classList.remove('active');
+                if (cardHaupt) cardHaupt.classList.add('active');
+                const branchInfo = { id: 'branch_haupt', name: 'Leo Sushi - Hauptstraße', address: 'Hauptstraße 29a, 13158 Berlin' };
+                localStorage.setItem('leoSelectedBranch', JSON.stringify(branchInfo));
+            } else {
+                if (cardFlora) cardFlora.classList.add('active');
+                if (cardHaupt) cardHaupt.classList.remove('active');
+                const branchInfo = { id: 'branch_flora', name: 'Leo Sushi - Florastraße', address: 'Florastraße 10A, 13187 Berlin' };
+                localStorage.setItem('leoSelectedBranch', JSON.stringify(branchInfo));
+            }
+        }
+
+        function selectGuests(count) {
+            const input = document.getElementById('reserveGuests');
+            if (input) input.value = count;
+
+            document.querySelectorAll('.guest-pill').forEach(pill => {
+                pill.classList.toggle('active', parseInt(pill.textContent) === count || (count >= 15 && pill.textContent.includes('15')));
+            });
+        }
+
         document.addEventListener('DOMContentLoaded', async () => {
-            console.log('🔄 Reservation page specialized setup starting...');
+            // Restore saved branch
+            try {
+                const savedBranch = localStorage.getItem('leoSelectedBranch');
+                if (savedBranch) {
+                    const parsed = JSON.parse(savedBranch);
+                    if (parsed && parsed.id) {
+                        selectBranchCard(parsed.id);
+                    }
+                }
+            } catch (e) {}
 
             // Set minimum date to today
             const dateInput = document.getElementById('reserveDate');
@@ -402,67 +804,23 @@
                 dateInput.value = today;
             }
 
-            // High-priority: Setup 15-min time slots with rollover logic
             if (typeof initReservationDateTime === 'function') {
                 initReservationDateTime();
             } else if (typeof setupReservationTimeOptions === 'function') {
                 setupReservationTimeOptions();
             }
 
-            // Auto-fill user info if logged in
             if (typeof autoFillReservationInfo === 'function') {
                 await autoFillReservationInfo();
             }
-            
-            // Re-setup time options after auto-fill in case date changed
-            if (typeof setupReservationTimeOptions === 'function') {
-                setupReservationTimeOptions();
+
+            // Check preordered items
+            if (typeof updateReservationCartDisplay === 'function') {
+                updateReservationCartDisplay();
             }
-
-            // Initialize branch selector
-            initReservationBranch();
-
-            console.log('✅ Reservation page setup complete');
         });
-
-        function initReservationBranch() {
-            const branchSelect = document.getElementById('reserveBranch');
-            if (!branchSelect) return;
-            
-            try {
-                const savedBranch = localStorage.getItem('leoSelectedBranch');
-                if (savedBranch) {
-                    const parsed = JSON.parse(savedBranch);
-                    if (parsed && parsed.id) {
-                        branchSelect.value = parsed.id;
-                    }
-                }
-            } catch (e) {
-                console.error('Error parsing branch from localStorage:', e);
-            }
-        }
-
-        function updateReservationBranch() {
-            const branchSelect = document.getElementById('reserveBranch');
-            if (!branchSelect || !branchSelect.value) return;
-            
-            const branchId = branchSelect.value;
-            let branchName = '';
-            let branchAddress = '';
-            
-            if (branchId === 'branch_flora') {
-                branchName = 'Leo Sushi - Florastraße';
-                branchAddress = 'Florastraße 10A, 13187 Berlin';
-            } else if (branchId === 'branch_haupt') {
-                branchName = 'Leo Sushi - Hauptstraße';
-                branchAddress = 'Hauptstraße 29a, 13158 Berlin';
-            }
-            
-            const branchInfo = { id: branchId, name: branchName, address: branchAddress };
-            localStorage.setItem('leoSelectedBranch', JSON.stringify(branchInfo));
-        }
     </script>
-    <script src="js/mobile-app.js?v=20260824_v54"></script>
+    <script src="js/mobile-app.js?v=20260824_v56"></script>
 </body>
 
 </html>

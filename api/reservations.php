@@ -8,25 +8,24 @@ require_once __DIR__ . '/utils.php';
 require_once __DIR__ . '/mailer.php';
 
 function handleReservationRequest($method, $action, $input) {
-    // Normalize action to string
-    $action = (string)$action;
-    $method = (string)$method;
+    $action = strtolower(trim((string)$action));
+    $method = strtoupper(trim((string)$method));
     
-    if ($method === 'GET' && ($action === 'list' || $action === '')) {
+    if ($method === 'GET' && ($action === 'list' || $action === '' || $action === 'index')) {
         requireAdminAuth();
         listReservations($input);
     } elseif ($method === 'GET' && $action === 'get') {
         requireAdminAuth();
         getReservation($input);
-    } elseif ($method === 'POST' && ($action === '' || $action === 'create')) {
+    } elseif ($method === 'POST') {
         createReservation($input);
     } elseif ($method === 'PUT' && $action === 'update') {
         requireAdminAuth();
         updateReservation($input);
-    } elseif ($method === 'PUT' && $action === 'update-status') {
+    } elseif ($method === 'PUT' && ($action === 'update-status' || $action === 'status')) {
         requireAdminAuth();
         updateReservationStatus($input);
-    } elseif ($method === 'DELETE' && $action === 'delete') {
+    } elseif ($method === 'DELETE') {
         requireAdminAuth();
         deleteReservation($input);
     } else {
@@ -214,10 +213,27 @@ function createReservation($input) {
                 'date' => $date,
                 'time' => $time,
                 'guests' => $guests,
-                'note' => $note
+                'note' => $note,
+                'branch_id' => $branchId
             ]);
         } catch (Exception $emailError) {
             error_log('Failed to send admin reservation email: ' . $emailError->getMessage());
+        }
+
+        // Notify Customer (Confirmation of reservation request)
+        if (!empty($email)) {
+            try {
+                $customerName = trim($firstName . ' ' . $lastName);
+                sendReservationConfirmationEmail($email, $customerName, [
+                    'reservation_id' => $reservationId,
+                    'date' => $date,
+                    'time' => $time,
+                    'guests' => $guests,
+                    'branch_id' => $branchId
+                ]);
+            } catch (Exception $custEmailError) {
+                error_log('Failed to send customer reservation email: ' . $custEmailError->getMessage());
+            }
         }
         
         echo json_encode([

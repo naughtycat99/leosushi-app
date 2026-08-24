@@ -145,9 +145,9 @@ function setupReservationTimeOptions() {
   
   const timeOptions = [];
 
-  // Generate time slots every 5 minutes
+  // Generate time slots every 15 minutes (clean restaurant schedule)
   for (let hour = openHour; hour < closeHour; hour++) {
-    for (let minute = 0; minute < 60; minute += 5) {
+    for (let minute = 0; minute < 60; minute += 15) {
       const timeStr = `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
       
       // If date is today, filter out past times (including 30-min buffer)
@@ -659,10 +659,16 @@ function updateReservationCartDisplay() {
     </div>
   `;
 
-  console.log('📝 Setting innerHTML, length:', (htmlContent + totalHtml).length);
-  console.log('📝 HTML preview (first 200 chars):', (htmlContent + totalHtml).substring(0, 200));
-
   try {
+    const preorderBox = document.getElementById('preorderBox');
+    const preorderCount = document.getElementById('preorderCount');
+    const preorderTotal = document.getElementById('preorderTotal');
+    if (preorderBox) {
+      preorderBox.classList.add('has-items');
+    }
+    if (preorderCount) preorderCount.textContent = allItems.length;
+    if (preorderTotal) preorderTotal.textContent = `€${total.toFixed(2)}`;
+
     container.innerHTML = htmlContent + totalHtml;
     console.log('✅ Cart display updated successfully, total:', total.toFixed(2));
     console.log('✅ Container innerHTML length after update:', container.innerHTML.length);
@@ -754,17 +760,16 @@ async function handleReservation(event) {
     return;
   }
 
-  // Verify branch is selected
-  let branchId = null;
+  // Verify branch is selected (fallback to active branch or default)
+  let branchId = document.getElementById('reserveBranch')?.value || null;
   try {
     const savedBranch = localStorage.getItem('leoSelectedBranch');
-    if (!savedBranch) {
-      alert('Bitte wählen Sie eine Filiale aus, bevor Sie reservieren.');
-      if (typeof openBranchSelector === 'function') openBranchSelector(true);
-      return;
+    if (savedBranch) {
+      const parsed = JSON.parse(savedBranch);
+      if (parsed && parsed.id) branchId = parsed.id;
     }
-    branchId = JSON.parse(savedBranch).id;
   } catch(e) {}
+  if (!branchId) branchId = 'branch_flora';
 
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (!emailRegex.test(email)) {
@@ -1024,14 +1029,27 @@ async function handleReservation(event) {
     );
   }
 
-  alert('Vielen Dank! Ihre Reservierung wurde erfolgreich gesendet. Wir senden Ihnen eine Bestätigungs-E-Mail zu.');
+  // Show modern confirmation modal if present on page
+  const successModal = document.getElementById('resSuccessModal');
+  if (successModal) {
+    const summaryId = document.getElementById('resSummaryId');
+    const summaryBranch = document.getElementById('resSummaryBranch');
+    const summaryDateTime = document.getElementById('resSummaryDateTime');
+    const summaryGuests = document.getElementById('resSummaryGuests');
 
-  // If we're on reservation page, redirect to home after success
-  if (window.location.pathname.includes('reservation') || window.location.pathname.includes('book-table')) {
-    // Redirect to home page after showing notification
-    setTimeout(() => {
-      window.location.href = 'index.html';
-    }, 3000);
+    if (summaryId) summaryId.textContent = reservationData.reservationId;
+    if (summaryBranch) summaryBranch.textContent = (reservationData.branch_id === 'branch_haupt') ? 'Hauptstraße 29a' : 'Florastraße 10A';
+    if (summaryDateTime) summaryDateTime.textContent = `${reservationData.date}, ${reservationData.time} Uhr`;
+    if (summaryGuests) summaryGuests.textContent = `${reservationData.guests} ${reservationData.guests > 1 ? 'Personen' : 'Person'}`;
+
+    successModal.style.display = 'flex';
+  } else {
+    alert('Vielen Dank! Ihre Reservierung wurde erfolgreich gesendet. Wir senden Ihnen eine Bestätigungs-E-Mail zu.');
+    if (window.location.pathname.includes('reservation') || window.location.pathname.includes('book-table')) {
+      setTimeout(() => {
+        window.location.href = 'index.html';
+      }, 2500);
+    }
   }
 }
 
