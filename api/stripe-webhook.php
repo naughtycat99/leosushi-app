@@ -273,6 +273,32 @@ if ($event['type'] === 'payment_intent.succeeded' || $event['type'] === 'charge.
         @file_put_contents($logDir . '/stripe_webhook.log', '[' . date('Y-m-d H:i:s') . "] Admin email error: " . $e->getMessage() . PHP_EOL, FILE_APPEND);
     }
     
+    // Send Order Confirmation Email to Customer
+    if (!empty($customerEmail) && filter_var($customerEmail, FILTER_VALIDATE_EMAIL)) {
+        try {
+            $formattedAddress = ($serviceType === 'delivery') 
+                ? trim(($deliveryAddress['street'] ?? '') . ' ' . ($deliveryAddress['house_number'] ?? '') . ', ' . ($deliveryAddress['postal'] ?? '') . ' ' . ($deliveryAddress['city'] ?? ''))
+                : ($branchInfo['address'] ?? 'Florastraße 10A, 13187 Berlin');
+
+            $customerEmailData = [
+                'name' => $customerName ?: 'Gast',
+                'order_id' => $orderId,
+                'order_time' => date('d.m.Y H:i'),
+                'service_type' => ($serviceType === 'delivery' ? 'Lieferung' : ($serviceType === 'pickup' ? 'Abholung' : 'Im Restaurant')),
+                'payment_method' => "Stripe ($paymentMethodType)",
+                'delivery_address' => $formattedAddress,
+                'phone' => $customerPhone,
+                'order_total' => $amountFormatted,
+                'eta' => 'In Bearbeitung (ca. 20-35 Min.)',
+                'items' => $orderItems
+            ];
+            sendOrderConfirmationWithDiscountCode($customerEmail, $customerName ?: 'Gast', $customerEmailData, null);
+            @file_put_contents($logDir . '/stripe_webhook.log', '[' . date('Y-m-d H:i:s') . "] Customer confirmation email sent to: $customerEmail" . PHP_EOL, FILE_APPEND);
+        } catch (Exception $e) {
+            @file_put_contents($logDir . '/stripe_webhook.log', '[' . date('Y-m-d H:i:s') . "] Customer email error: " . $e->getMessage() . PHP_EOL, FILE_APPEND);
+        }
+    }
+    
     // Send Push Notification to Admin
     try {
         notifyAdmin('Neue Bestellung wartet auf Bestätigung!', "Bestellung #$shortId - $amountFormatted (Stripe/Klarna)", ['order_id' => $orderId, 'type' => 'new_order']);

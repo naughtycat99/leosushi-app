@@ -477,10 +477,33 @@ function createOrder($input)
             error_log("CRITICAL: Failed to send admin email: " . $e->getMessage());
         }
 
-        // ==========================================
-        // OTHER BACKGROUND TASKS (Admin Push only on checkout)
-        // Customer Email & Customer Push are deferred until admin confirms the order
-        // ==========================================
+        // Gửi email xác nhận tiếp nhận đơn hàng ngay lập tức cho khách hàng
+        $customerEmail = $deliveryAddress['email'] ?? null;
+        if (!empty($customerEmail) && filter_var($customerEmail, FILTER_VALIDATE_EMAIL)) {
+            try {
+                $custNameFormatted = trim(($deliveryAddress['first_name'] ?? '') . ' ' . ($deliveryAddress['last_name'] ?? '')) ?: 'Gast';
+                $formattedAddress = ($serviceType === 'delivery') 
+                    ? trim(($deliveryAddress['street'] ?? '') . ' ' . ($deliveryAddress['house_number'] ?? '') . ', ' . ($deliveryAddress['postal'] ?? '') . ' ' . ($deliveryAddress['city'] ?? ''))
+                    : ($summary['branch']['address'] ?? 'Florastraße 10A, 13187 Berlin');
+
+                $customerEmailData = [
+                    'name' => $custNameFormatted,
+                    'order_id' => $orderId,
+                    'order_time' => date('d.m.Y H:i'),
+                    'service_type' => ($serviceType === 'delivery' ? 'Lieferung' : ($serviceType === 'pickup' ? 'Abholung' : 'Im Restaurant')),
+                    'payment_method' => $input['payment_method'] ?? $paymentMethod,
+                    'delivery_address' => $formattedAddress,
+                    'phone' => $deliveryAddress['phone'] ?? '',
+                    'order_total' => $input['order_total'] ?? ($summary['total'] ?? '0,00 €'),
+                    'eta' => 'In Bearbeitung (ca. 20-35 Min.)',
+                    'items' => $orderItems
+                ];
+                sendOrderConfirmationWithDiscountCode($customerEmail, $custNameFormatted, $customerEmailData, null);
+                error_log("Order confirmation email sent to customer: " . $customerEmail);
+            } catch (Exception $e) {
+                error_log("Failed to send customer confirmation email: " . $e->getMessage());
+            }
+        }
 
         // 4. Send Push Notifications to Admin
         try {
