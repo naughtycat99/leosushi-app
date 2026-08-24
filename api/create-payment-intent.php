@@ -1,6 +1,7 @@
 <?php
 /**
- * Create Stripe PaymentIntent for LEO SUSHI
+ * Create/Update Stripe PaymentIntent for LEO SUSHI
+ * Pre-saves order details so Webhook can automatically fulfill the order even on redirect drop-offs.
  */
 header('Content-Type: application/json; charset=utf-8');
 header('Access-Control-Allow-Origin: *');
@@ -30,6 +31,17 @@ if (!$data) {
     exit;
 }
 
+// If this is just a pre-save update for an existing payment intent
+if (!empty($data['payment_intent_id']) && !empty($data['order_data'])) {
+    $piId = trim($data['payment_intent_id']);
+    $pendingDir = __DIR__ . '/stripe_pending';
+    if (!is_dir($pendingDir)) @mkdir($pendingDir, 0777, true);
+    @file_put_contents($pendingDir . '/' . $piId . '.json', json_encode($data['order_data'], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT));
+    
+    echo json_encode(['success' => true, 'updated' => true]);
+    exit;
+}
+
 $amount = isset($data['amount']) ? floatval($data['amount']) : 0;
 if ($amount <= 0) {
     http_response_code(400);
@@ -43,6 +55,9 @@ $amountCents = intval(round($amount * 100));
 $orderId = isset($data['order_id']) && !empty($data['order_id']) ? $data['order_id'] : ('LEO-' . date('ymd') . '-' . substr(uniqid(), -4));
 $customerEmail = isset($data['customer_email']) ? trim($data['customer_email']) : '';
 $customerName = isset($data['customer_name']) ? trim($data['customer_name']) : '';
+$customerPhone = isset($data['customer_phone']) ? trim($data['customer_phone']) : '';
+$branchId = isset($data['branch_id']) ? trim($data['branch_id']) : 'branch_flora';
+$serviceType = isset($data['service_type']) ? trim($data['service_type']) : 'delivery';
 
 // Stripe API Call using cURL
 $ch = curl_init('https://api.stripe.com/v1/payment_intents');
@@ -53,11 +68,16 @@ $postFields = [
     'automatic_payment_methods[enabled]' => 'true',
     'description' => "LEO SUSHI Bestellung #{$orderId}",
     'metadata[order_id]' => $orderId,
-    'metadata[restaurant]' => 'LEO SUSHI Berlin'
+    'metadata[restaurant]' => 'LEO SUSHI Berlin',
+    'metadata[branch_id]' => $branchId,
+    'metadata[service_type]' => $serviceType
 ];
 
 if (!empty($customerName)) {
     $postFields['metadata[customer_name]'] = $customerName;
+}
+if (!empty($customerPhone)) {
+    $postFields['metadata[customer_phone]'] = $customerPhone;
 }
 
 if (!empty($customerEmail) && filter_var($customerEmail, FILTER_VALIDATE_EMAIL)) {
@@ -93,10 +113,19 @@ if ($curlError) {
 $result = json_decode($response, true);
 
 if ($httpCode >= 200 && $httpCode < 300 && isset($result['client_secret'])) {
+    $paymentIntentId = $result['id'];
+    
+    // Pre-save pending order data if provided
+    if (!empty($data['order_data'])) {
+        $pendingDir = __DIR__ . '/stripe_pending';
+        if (!is_dir($pendingDir)) @mkdir($pendingDir, 0777, true);
+        @file_put_contents($pendingDir . '/' . $paymentIntentId . '.json', json_encode($data['order_data'], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT));
+    }
+    
     echo json_encode([
         'success' => true,
         'clientSecret' => $result['client_secret'],
-        'paymentIntentId' => $result['id'],
+        'paymentIntentId' => $paymentIntentId,
         'amount' => $amount,
         'orderId' => $orderId
     ]);
