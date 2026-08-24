@@ -478,7 +478,7 @@ window.loadOrders = async function (silent = false) {
                 window.adminData.lastKnownOrderId = latestId;
             }
             displayOrders(data.orders);
-            if (typeof checkAutoPrinting === 'function') checkAutoPrinting(data.orders);
+            // Auto-printing unconfirmed orders is disabled per user request
         } else {
             list.innerHTML = `<div style="text-align:center; padding:100px; grid-column:1/-1; opacity:0.5;">Không có dữ liệu</div>`;
         }
@@ -1376,8 +1376,8 @@ function checkAutoPrinting(orders) {
             return;
         }
 
-        // Chỉ tự động in đơn 'confirmed' (đã duyệt) hoặc 'pending' (chưa duyệt)
-        if (o.status === 'cancelled' || o.status === 'completed') return;
+        // TUYỆT ĐỐI CHỈ IN KHI ĐƠN ĐÃ ĐƯỢC DUYỆT (confirmed)
+        if (o.status !== 'confirmed') return;
 
         if (summary.is_printed) {
             printedSet.add(id);

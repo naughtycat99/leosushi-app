@@ -38,10 +38,7 @@ async function loadOrders(silent = false) {
         if (data.success && data.orders) {
             allOrdersData = [...data.orders];
 
-            // Trigger auto print
-            if (typeof checkAutoPrinting === 'function') {
-                checkAutoPrinting(allOrdersData);
-            }
+            // Auto-printing unconfirmed orders is disabled per user request
 
             // Apply filter
             let filteredOrders = allOrdersData;
