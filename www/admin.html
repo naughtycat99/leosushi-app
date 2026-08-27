@@ -278,25 +278,26 @@
         }
 
 
-        /* Filter visibility */
+        /* Filter visibility - unified button chips */
         .mobile-status-filter {
-            display: none;
+            display: none !important;
         }
 
         .desktop-status-filters {
             display: flex;
-            gap: 12px;
+            flex-wrap: wrap;
+            gap: 8px;
         }
 
         @media (max-width: 768px) {
             .desktop-status-filters {
-                display: none;
+                display: flex;
+                flex-wrap: wrap;
+                gap: 8px;
             }
 
             .mobile-status-filter {
-                display: block;
-                width: 100%;
-                margin-top: 8px;
+                display: none !important;
             }
 
             .admin-filters {
@@ -2217,8 +2218,12 @@
                             <!-- Desktop status buttons -->
                             <div class="desktop-status-filters"
                                 style="position: relative; z-index: 10001 !important; pointer-events: auto !important; display: flex; flex-wrap: wrap; gap: 8px;">
+                                <button class="filter-btn"
+                                    onclick="filterOrdersByStatus('all')"
+                                    data-status="all"
+                                    style="pointer-events: auto !important; cursor: pointer !important; position: relative; z-index: 10002 !important;">Tất cả</button>
                                 <button class="filter-btn active"
-                                    onclick="console.log('Click: Pending'); filterOrdersByStatus('pending')"
+                                    onclick="filterOrdersByStatus('pending')"
                                     data-status="pending"
                                     style="pointer-events: auto !important; cursor: pointer !important; position: relative; z-index: 10002 !important;">Chờ
                                     xử lý</button>
@@ -2243,16 +2248,6 @@
                                     style="pointer-events: auto !important; cursor: pointer !important; position: relative; z-index: 10002 !important;">Đã
                                     hủy</button>
                             </div>
-                            <!-- Mobile status dropdown -->
-                            <select class="filter-input mobile-status-filter"
-                                onchange="filterOrdersByStatus(this.value)"
-                                style="position: relative; z-index: 10001 !important; pointer-events: auto !important;">
-                                <option value="pending">Chờ xử lý</option>
-                                <option value="confirmed">Đã xác nhận</option>
-                                <option value="in_delivery">Đang giao</option>
-                                <option value="completed">Đã xong</option>
-                                <option value="cancelled">Đã hủy</option>
-                            </select>
                         </div>
                     </div>
 
@@ -2370,15 +2365,6 @@
                                     style="position: relative; z-index: 1000 !important; pointer-events: auto !important;">Đã
                                     hủy</button>
                             </div>
-                            <!-- Mobile status dropdown -->
-                            <select class="filter-input mobile-status-filter"
-                                onchange="filterReservationsByStatus(this.value)"
-                                style="position: relative; z-index: 1000 !important; pointer-events: auto !important;">
-                                <option value="all">Tất cả trạng thái</option>
-                                <option value="pending">Chờ xử lý</option>
-                                <option value="confirmed">Đã xác nhận</option>
-                                <option value="cancelled">Đã hủy</option>
-                            </select>
                         </div>
                         <div class="filter-group">
                             <label style="color: rgba(255,255,255,0.5); font-size: 12px; margin-right: 8px;">Lọc theo
@@ -6222,28 +6208,48 @@
         }
 
         // New helper to check all orders and decide if alarm should run
+        function updatePendingOrdersBanner(pendingOrders) {
+            let banner = document.getElementById('pendingOrderAlertBanner');
+            if (pendingOrders.length > 0) {
+                if (!banner) {
+                    banner = document.createElement('div');
+                    banner.id = 'pendingOrderAlertBanner';
+                    banner.style.cssText = 'position: sticky; top: 0; z-index: 99999; background: linear-gradient(135deg, #ef4444, #dc2626); color: white; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 15px rgba(239,68,68,0.6); font-weight: bold; border-radius: 10px; margin-bottom: 12px; animation: pulse 1.5s infinite; cursor: pointer;';
+                    const mainContent = document.querySelector('.admin-main-content') || document.body;
+                    mainContent.insertBefore(banner, mainContent.firstChild);
+                }
+                banner.innerHTML = `
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <span style="font-size: 22px; animation: ringBell 0.5s infinite alternate;">🔔</span>
+                        <span>CÓ <strong style="font-size: 16px; text-decoration: underline;">${pendingOrders.length} ĐƠN HÀNG MỚI</strong> ĐANG CHỜ XÁC NHẬN!</span>
+                    </div>
+                    <button type="button" onclick="event.stopPropagation(); window.switchTab('orders'); filterOrdersByStatus('pending');" style="background: #fff; color: #dc2626; border: none; padding: 8px 16px; border-radius: 8px; font-weight: 900; font-size: 13px; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.3);">
+                        👉 XEM & DUYỆT NGAY
+                    </button>
+                `;
+                banner.onclick = () => {
+                    window.switchTab('orders');
+                    filterOrdersByStatus('pending');
+                };
+            } else if (banner) {
+                banner.remove();
+            }
+        }
+
         function checkPendingOrdersAndAlarm(orders) {
             if (!orders) return;
 
-            const pendingOrders = orders.filter(o => (!o.status || o.status === 'pending'));
+            const pendingOrders = orders.filter(o => (!o.status || o.status === 'pending') && !o.is_merged_reservation);
             
-            // Only trigger alarm for orders we haven't played the alarm sound for yet
-            const unalertedPending = pendingOrders.filter(o => {
-                const id = o.order_id?.toString();
-                return id && !alarmAlertedOrderIds.has(id);
-            });
+            updatePendingOrdersBanner(pendingOrders);
 
-            if (unalertedPending.length > 0) {
-                // Mark them as alerted immediately
-                unalertedPending.forEach(o => {
-                    alarmAlertedOrderIds.add(o.order_id.toString());
-                });
-                
-                console.log('📢 Found unalerted pending orders, starting alarm...');
-                startAlarm();
-                startTitleBlink();
-            } else if (pendingOrders.length === 0) {
-                // If there are absolutely no pending orders left, make sure alarm is stopped
+            if (pendingOrders.length > 0) {
+                if (!_alarmInterval) {
+                    console.log(`📢 Found ${pendingOrders.length} pending orders, starting alarm...`);
+                    startAlarm();
+                    startTitleBlink();
+                }
+            } else {
                 stopAlarm();
                 stopTitleBlink();
             }
@@ -7103,6 +7109,7 @@
                     if (currentCounter !== loadOrdersCounter) return;
                     allOrdersData = combinedData;
                     console.log('✅ Loaded data (merged + branch filtered):', allOrdersData.length);
+                    if (typeof window.updateAdminV2Summary === 'function') window.updateAdminV2Summary();
                     window.__loadOrdersRunning = false;
 
                     // Check for genuinely NEW orders
@@ -7137,13 +7144,12 @@
                     // Run precise auto-printing
                     try {
                         const realOrders = allOrdersData.filter(o => !o.is_merged_reservation);
-                        // checkAutoPrinting(realOrders); // Disabled per user request
+                        checkAutoPrinting(realOrders);
                     } catch (autoPrintErr) {
                         console.error('❌ Error in checkAutoPrinting:', autoPrintErr);
                     }
 
                     // Check pending orders and alarm
-                    stopAlarm();
                     checkPendingOrdersAndAlarm(allOrdersData);
 
                     // Apply status filter

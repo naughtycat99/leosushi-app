@@ -1124,7 +1124,10 @@ function buildStripeOrderDraft(orderId, paymentIntentId = null) {
       item_id: item.item_id || item.menuItemId || item.id || null,
       name: item.name,
       quantity: item.qty || item.quantity || 1,
+      price: item.price || 0,
       branch_id: item.branchId || branch.id,
+      note: (item.note || item.notes || item.options || item.comment || item.special_instructions || '').trim(),
+      description: item.description || item.desc || '',
       total: item.total || (((item.price || 0) * (item.qty || item.quantity || 1)).toFixed(2) + ' €')
     })),
     service_type: svcType === 'pickup' ? 'pickup' : (svcType === 'dinein' ? 'dinein' : 'delivery'),
@@ -3449,6 +3452,9 @@ async function renderPayPalButton() {
             items: cart.map(item => ({
               name: item.name,
               quantity: item.qty || item.quantity || 1,
+              price: item.price || 0,
+              note: (item.note || item.notes || item.options || item.comment || item.special_instructions || '').trim(),
+              description: item.description || item.desc || '',
               total: ((item.price || 0) * (item.qty || item.quantity || 1)).toFixed(2) + ' €'
             })),
             service_type: (selectedServiceType === 'pickup') ? 'Abholung' : (selectedServiceType === 'dinein' ? 'Vor Ort' : 'Lieferung'),

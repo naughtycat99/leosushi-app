@@ -357,7 +357,7 @@ function createOrder($input)
         }
 
         // Idempotency / Double submit safeguard for Cash & offline orders (120 seconds duplicate protection)
-        if ($paypalOrderId === null && $stripePaymentId === null && (!empty($customerEmail) || !empty($input['customer']['phone']))) {
+        if (empty($paypalOrderId) && empty($stripePaymentId) && (!empty($customerEmail) || !empty($input['customer']['phone']))) {
             $checkConn = getDbConnection();
             $emailParam = !empty($customerEmail) ? '%' . $customerEmail . '%' : '';
             $rawPhone = $input['customer']['phone'] ?? '';

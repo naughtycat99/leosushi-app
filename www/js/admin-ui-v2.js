@@ -227,6 +227,7 @@
         setText('adminV2PendingReservations', reservations.filter((reservation) => (reservation.status || 'pending') === 'pending').length);
         setText('adminV2MissingBranches', reservations.filter((reservation) => !reservation.branch_id).length);
     }
+    window.updateAdminV2Summary = updateSummary;
 
     function syncTabUi(tabId) {
         currentTab = TAB_META[tabId] ? tabId : currentTab;
