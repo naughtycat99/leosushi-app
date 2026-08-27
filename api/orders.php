@@ -342,6 +342,31 @@ function createOrder($input)
             }
         }
 
+        // Idempotency / Double submit safeguard for Cash & offline orders (60 seconds duplicate protection)
+        if ($paypalOrderId === null && $stripePaymentId === null && !empty($customerEmail)) {
+            $itemsJsonCheck = json_encode($orderItems, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+            $checkConn = getDbConnection();
+            $checkStmt = $checkConn->prepare("SELECT order_id, status, service_type FROM orders 
+                WHERE created_at >= DATE_SUB(NOW(), INTERVAL 60 SECOND) 
+                  AND delivery_address LIKE ? 
+                  AND items = ? LIMIT 1");
+            $emailParam = '%' . $customerEmail . '%';
+            $checkStmt->bind_param('ss', $emailParam, $itemsJsonCheck);
+            $checkStmt->execute();
+            $existingDuplicate = $checkStmt->get_result()->fetch_assoc();
+            if ($existingDuplicate) {
+                echo json_encode([
+                    'success' => true,
+                    'duplicate' => true,
+                    'message' => 'Bestellung wurde bereits gespeichert',
+                    'order_id' => $existingDuplicate['order_id'],
+                    'status' => $existingDuplicate['status'] ?? 'pending',
+                    'service_type' => $existingDuplicate['service_type'] ?? 'delivery'
+                ]);
+                return;
+            }
+        }
+
         // Get scheduled delivery time if provided
         $scheduledDeliveryTime = null;
         if (isset($input['scheduled_delivery_time']) && !empty($input['scheduled_delivery_time'])) {
