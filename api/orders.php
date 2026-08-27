@@ -44,11 +44,12 @@ function handleOrderRequest($method, $action, $input)
     elseif ($method === 'POST' && ($action === '' || $action === 'create')) {
         createOrder($input);
     }
-    elseif ($method === 'PUT' && $action === 'update') {
-        updateOrder($input);
-    }
-    elseif ($method === 'PUT' && $action === 'update-status') {
-        updateOrderStatus($input);
+    elseif (($method === 'PUT' || $method === 'POST') && ($action === 'update' || $action === 'update-status')) {
+        if (isset($input['status'])) {
+            updateOrderStatus($input);
+        } else {
+            updateOrder($input);
+        }
     }
     elseif ($method === 'POST' && $action === 'register-token') {
         registerDeviceToken($input);

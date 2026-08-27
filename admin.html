@@ -8816,22 +8816,22 @@
         async function confirmOrderWithTime(orderId, estimatedTimeText, totalMinutes) {
             console.log('🔄 confirmOrderWithTime called:', { orderId, estimatedTimeText, totalMinutes });
 
-            if (isConfirmingOrder) {
-                console.warn('⚠️ Already confirming, resetting flag and retrying...');
-                isConfirmingOrder = false;
-                return;
-            }
             if (!orderId) {
                 alert('Lỗi: Không tìm thấy mã đơn!');
                 return;
             }
 
-            isConfirmingOrder = true;
+            if (window._currentConfirmingOrderId === orderId) {
+                console.warn('⚠️ Order is already being confirmed:', orderId);
+                return;
+            }
+            window._currentConfirmingOrderId = orderId;
+            window.isConfirmingOrder = true;
+
             const quickButtons = document.querySelectorAll('.quick-time-btn, .btn-schedule, .btn-cancel-schedule');
             quickButtons.forEach(btn => btn.disabled = true);
 
             try {
-                isConfirmingOrder = true; // Redundant but safe — always inside try now
                 // ── Step 1: Get order details ──
                 let order = null;
                 try {
@@ -8964,7 +8964,8 @@
                 setTimeout(() => { window.__loadOrdersRunning = false; if (typeof loadOrders === 'function') loadOrders(true, true); }, 1500);
 
             } finally {
-                isConfirmingOrder = false;
+                window.isConfirmingOrder = false;
+                window._currentConfirmingOrderId = null;
                 window.__loadOrdersRunning = false; // Ensure loadOrders can run after confirm
                 quickButtons.forEach(btn => btn.disabled = false);
             }
