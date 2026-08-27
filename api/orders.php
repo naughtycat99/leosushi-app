@@ -356,17 +356,23 @@ function createOrder($input)
             }
         }
 
-        // Idempotency / Double submit safeguard for Cash & offline orders (60 seconds duplicate protection)
-        if ($paypalOrderId === null && $stripePaymentId === null && !empty($customerEmail)) {
-            $itemsJsonCheck = json_encode($orderItems, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        // Idempotency / Double submit safeguard for Cash & offline orders (120 seconds duplicate protection)
+        if ($paypalOrderId === null && $stripePaymentId === null && (!empty($customerEmail) || !empty($input['customer']['phone']))) {
             $checkConn = getDbConnection();
+            $emailParam = !empty($customerEmail) ? '%' . $customerEmail . '%' : '';
+            $rawPhone = $input['customer']['phone'] ?? '';
+            $cleanPhone = preg_replace('/[^0-9]/', '', $rawPhone);
+            $phoneParam = !empty($cleanPhone) ? '%' . $cleanPhone . '%' : '';
+            
             $checkStmt = $checkConn->prepare("SELECT order_id, status, service_type FROM orders 
-                WHERE created_at >= DATE_SUB(NOW(), INTERVAL 60 SECOND) 
-                  AND delivery_address LIKE ? 
-                  AND items = ? LIMIT 1");
+                WHERE created_at >= DATE_SUB(NOW(), INTERVAL 120 SECOND) 
+                  AND (
+                    (? != '' AND delivery_address LIKE ?) 
+                    OR (? != '' AND delivery_address LIKE ?)
+                  )
+                ORDER BY created_at DESC LIMIT 1");
             if ($checkStmt) {
-                $emailParam = '%' . $customerEmail . '%';
-                $checkStmt->bind_param('ss', $emailParam, $itemsJsonCheck);
+                $checkStmt->bind_param('ssss', $emailParam, $emailParam, $phoneParam, $phoneParam);
                 $checkStmt->execute();
                 $existingDuplicate = $checkStmt->get_result()->fetch_assoc();
                 $checkStmt->close();
@@ -680,8 +686,38 @@ function createOrder($input)
         }
 
         // ==========================================
+        // SEND SUCCESS RESPONSE TO CLIENT IMMEDIATELY
+        // ==========================================
+        if (ob_get_level()) {
+            ob_clean();
+        }
+        header('Content-Type: application/json; charset=utf-8');
+        
+        $responsePayload = json_encode([
+            'success' => true,
+            'message' => 'Bestellung erstellt',
+            'discount_code' => $discountCode,
+            'order_id' => $orderId,
+            'status' => $autoStatus,
+            'eta' => $confirmEmailEta,
+            'service_type' => $serviceType,
+            'is_scheduled' => $isScheduled
+        ]);
+
+        header('Content-Length: ' . strlen($responsePayload));
+        header('Connection: close');
+        echo $responsePayload;
+
+        if (function_exists('fastcgi_finish_request')) {
+            fastcgi_finish_request();
+        } else {
+            if (ob_get_level()) ob_end_flush();
+            flush();
+        }
+
+        // ==========================================
         // NOTIFICATIONS (Admin Email, Customer Email & Push)
-        // Execute before response to guarantee delivery across all hosting configs
+        // Dispatched in background after response is sent to client
         // ==========================================
         $adminOrderData = [
             'order_id' => $orderId,
@@ -741,28 +777,6 @@ function createOrder($input)
         catch (Exception $e) {
             error_log("Failed to send push notification: " . $e->getMessage());
         }
-
-        // ==========================================
-        // SEND SUCCESS RESPONSE TO CLIENT
-        // ==========================================
-        if (ob_get_level()) {
-            ob_clean();
-        }
-        header('Content-Type: application/json; charset=utf-8');
-        
-        $responsePayload = json_encode([
-            'success' => true,
-            'message' => 'Bestellung erstellt',
-            'discount_code' => $discountCode,
-            'order_id' => $orderId,
-            'status' => $autoStatus,
-            'eta' => $confirmEmailEta,
-            'service_type' => $serviceType,
-            'is_scheduled' => $isScheduled
-        ]);
-
-        header('Content-Length: ' . strlen($responsePayload));
-        echo $responsePayload;
     }
     catch (Exception $e) {
         if ($orderSequenceLock !== null && isset($conn) && $conn instanceof mysqli) {
