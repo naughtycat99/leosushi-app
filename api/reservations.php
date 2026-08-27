@@ -170,6 +170,15 @@ function createReservation($input) {
             echo json_encode(['success' => false, 'message' => $errorMsg]);
             return;
         }
+
+        if (!in_array($branchId, ['branch_flora', 'branch_haupt'], true)) {
+            http_response_code(400);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Bitte wählen Sie eine gültige Filiale aus.'
+            ]);
+            return;
+        }
         
         $conn = getDbConnection();
         

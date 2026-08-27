@@ -95,7 +95,7 @@ const ReceiptGenerator = (() => {
         data.push(...CMD.INIT);
         data.push(...CMD.ALIGN_CENTER, ...CMD.DOUBLE_ON, ...line('Leo Sushi'), ...CMD.DOUBLE_OFF);
         const branchAddr = (summary.branch && summary.branch.address) ? summary.branch.address : 'Florastraße 10A, 13187 Berlin';
-        const branchPhone = (summary.branch && summary.branch.id === 'branch_haupt') ? '03063912199' : '03071055810';
+        const branchPhone = (summary.branch && summary.branch.id === 'branch_haupt') ? '03055617056' : '03037476736';
         data.push(...CMD.FONT_A, ...line(branchAddr), ...line(branchPhone), ...dashes());
 
         let etaDisplay = estimatedTimeText;

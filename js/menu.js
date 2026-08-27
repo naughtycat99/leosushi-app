@@ -67,6 +67,12 @@ async function loadMenuFromAPI() {
     } catch(e) {}
 
     if (!branchId || (branchId !== 'branch_flora' && branchId !== 'branch_haupt')) {
+      if (isNativeAppView) {
+        MENU_DATA_FROM_API = null;
+        window.MENU_DATA_FROM_API = null;
+        window.LEO_MENU_BRANCH_ID = null;
+        return null;
+      }
       branchId = 'branch_flora';
     }
 
@@ -76,9 +82,8 @@ async function loadMenuFromAPI() {
     }
     window.LEO_MENU_BRANCH_ID = branchId;
     
-    // If no branch is selected yet, we might want to wait or use a default, 
-    // but the user wants NO DEFAULT. So we just pass null/undefined or wait.
-    // We will just pass the branch_id to the API if it exists.
+    // Native customers must explicitly choose a branch before any branch menu
+    // is loaded. Browser pages keep the legacy website default.
     const cacheKey = branchId ? `leo_menu_cache_${branchId}` : 'leo_menu_cache';
 
     // 1. Try to load from Cache first for instant display

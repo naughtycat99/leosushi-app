@@ -31,19 +31,30 @@ if (!$input || !isset($input['token'])) {
 }
 
 $token = $input['token'];
-$type = $input['type'] ?? 'admin';
+$type = $input['type'] ?? $input['user_type'] ?? 'admin';
+$deviceInfo = $input['device_info'] ?? ($_SERVER['HTTP_USER_AGENT'] ?? '');
 
 try {
     $conn = getDbConnection();
 
-    // Simple INSERT — only use columns guaranteed to exist: token, user_type
-    $escapedToken = $conn->real_escape_string($token);
-    $escapedType = $conn->real_escape_string($type);
-    $conn->query(
-        "INSERT INTO device_tokens (token, user_type) 
-         VALUES ('$escapedToken', '$escapedType')
-         ON DUPLICATE KEY UPDATE user_type = '$escapedType'"
+    // Update first for compatibility with the legacy table that did not have
+    // a UNIQUE token index; insert only when this device is genuinely new.
+    $stmt = $conn->prepare(
+        "UPDATE device_tokens
+         SET user_type = ?, device_info = ?, created_at = CURRENT_TIMESTAMP
+         WHERE token = ?"
     );
+    $stmt->bind_param('sss', $type, $deviceInfo, $token);
+    $stmt->execute();
+    $existsStmt = $conn->prepare("SELECT 1 FROM device_tokens WHERE token = ? LIMIT 1");
+    $existsStmt->bind_param('s', $token);
+    $existsStmt->execute();
+    $tokenExists = (bool)$existsStmt->get_result()->fetch_row();
+    if (!$tokenExists) {
+        $stmt = $conn->prepare("INSERT INTO device_tokens (token, user_type, device_info) VALUES (?, ?, ?)");
+        $stmt->bind_param('sss', $token, $type, $deviceInfo);
+        $stmt->execute();
+    }
 
     error_log("FCM Token registered: type=$type, token=" . substr($token, 0, 20) . "...");
     echo json_encode(['success' => true, 'message' => 'Token registered']);

@@ -25,8 +25,8 @@
     <link rel="stylesheet" href="styles.css?v=20260824_v56">
     <link rel="stylesheet" href="styles-luxe.css?v=20260824_v56">
     <link rel="stylesheet" href="menu-order.css?v=20260824_v56">
-    <link rel="stylesheet" href="css/mobile-app.css?v=20260824_v56">
-    <script src="js/app-mode-gate.js?v=20260824_v51"></script>
+    <link rel="stylesheet" href="css/mobile-app.css?v=20260825_v59">
+    <script src="js/app-mode-gate.js?v=20260825_v52"></script>
     <style>
         :root {
             --gold: #e5cf8e;
@@ -205,6 +205,16 @@
             display: flex;
             flex-direction: column;
             gap: 6px;
+            width: 100%;
+            color: inherit;
+            font: inherit;
+            text-align: left;
+        }
+
+        .branch-card:focus-visible,
+        .guest-pill:focus-visible {
+            outline: 3px solid rgba(229, 207, 142, 0.45);
+            outline-offset: 2px;
         }
 
         .branch-card:hover {
@@ -294,7 +304,23 @@
             cursor: pointer;
             transition: all 0.2s ease;
             user-select: none;
+            font-family: inherit;
         }
+
+        .guest-more-select {
+            flex: 1 1 calc(33.333% - 8px);
+            min-width: 120px;
+            height: 42px;
+            padding: 0 10px;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.04);
+            color: #fff;
+            font: inherit;
+            cursor: pointer;
+        }
+
+        .guest-more-select option { color: #111; }
 
         @media (max-width: 480px) {
             .guest-pill {
@@ -589,7 +615,7 @@
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
                     Zur Startseite
                 </a>
-                <span style="font-size: 13px; color: rgba(255,255,255,0.5);">Täglich 12:00 – 22:00 Uhr</span>
+                <span id="reservationHoursLabel" style="font-size: 13px; color: rgba(255,255,255,0.5);">Öffnungszeiten nach Filialauswahl</span>
             </div>
 
             <div class="reservation-header">
@@ -605,24 +631,24 @@
                     <div class="form-section">
                         <h3 class="section-title">1. Filiale wählen</h3>
                         <div class="branch-grid">
-                            <div class="branch-card active" id="branchCardFlora" onclick="selectBranchCard('branch_flora')">
+                            <button type="button" class="branch-card" id="branchCardFlora" aria-pressed="false" onclick="selectBranchCard('branch_flora')">
                                 <div class="branch-card-header">
                                     <span class="branch-card-title">Filiale Florastraße</span>
                                     <div class="branch-card-check">✓</div>
                                 </div>
                                 <div class="branch-card-address">Florastraße 10A<br>13187 Berlin (Pankow)</div>
-                                <div class="branch-card-phone">📞 030 71055810</div>
-                            </div>
-                            <div class="branch-card" id="branchCardHaupt" onclick="selectBranchCard('branch_haupt')">
+                                <div class="branch-card-phone">📞 030 37476736</div>
+                            </button>
+                            <button type="button" class="branch-card" id="branchCardHaupt" aria-pressed="false" onclick="selectBranchCard('branch_haupt')">
                                 <div class="branch-card-header">
                                     <span class="branch-card-title">Filiale Hauptstraße</span>
                                     <div class="branch-card-check">✓</div>
                                 </div>
                                 <div class="branch-card-address">Hauptstraße 29a<br>13158 Berlin (Wilhelmsruh)</div>
-                                <div class="branch-card-phone">📞 030 91422788</div>
-                            </div>
+                                <div class="branch-card-phone">📞 030 55617056</div>
+                            </button>
                         </div>
-                        <input type="hidden" id="reserveBranch" value="branch_flora">
+                        <input type="hidden" id="reserveBranch" value="">
                     </div>
 
                     <!-- 2. Date, Time & Guests -->
@@ -632,17 +658,29 @@
                         <div class="form-group" style="margin-bottom: 14px;">
                             <label>Anzahl Personen <span class="required">*</span></label>
                             <div class="guest-pills-wrap" id="guestPillsWrap">
-                                <div class="guest-pill" onclick="selectGuests(1)">1</div>
-                                <div class="guest-pill active" onclick="selectGuests(2)">2</div>
-                                <div class="guest-pill" onclick="selectGuests(3)">3</div>
-                                <div class="guest-pill" onclick="selectGuests(4)">4</div>
-                                <div class="guest-pill" onclick="selectGuests(5)">5</div>
-                                <div class="guest-pill" onclick="selectGuests(6)">6</div>
-                                <div class="guest-pill" onclick="selectGuests(7)">7</div>
-                                <div class="guest-pill" onclick="selectGuests(8)">8</div>
-                                <div class="guest-pill" onclick="selectGuests(10)">10</div>
-                                <div class="guest-pill" onclick="selectGuests(12)">12</div>
-                                <div class="guest-pill" onclick="selectGuests(15)">15+</div>
+                                <button type="button" class="guest-pill" data-guests="1" onclick="selectGuests(1)">1</button>
+                                <button type="button" class="guest-pill active" data-guests="2" onclick="selectGuests(2)">2</button>
+                                <button type="button" class="guest-pill" data-guests="3" onclick="selectGuests(3)">3</button>
+                                <button type="button" class="guest-pill" data-guests="4" onclick="selectGuests(4)">4</button>
+                                <button type="button" class="guest-pill" data-guests="5" onclick="selectGuests(5)">5</button>
+                                <button type="button" class="guest-pill" data-guests="6" onclick="selectGuests(6)">6</button>
+                                <button type="button" class="guest-pill" data-guests="7" onclick="selectGuests(7)">7</button>
+                                <button type="button" class="guest-pill" data-guests="8" onclick="selectGuests(8)">8</button>
+                                <select class="guest-more-select" id="reserveGuestsMore" aria-label="Mehr als 8 Personen" onchange="if(this.value) selectGuests(parseInt(this.value, 10))">
+                                    <option value="">9–20 Personen</option>
+                                    <option value="9">9 Personen</option>
+                                    <option value="10">10 Personen</option>
+                                    <option value="11">11 Personen</option>
+                                    <option value="12">12 Personen</option>
+                                    <option value="13">13 Personen</option>
+                                    <option value="14">14 Personen</option>
+                                    <option value="15">15 Personen</option>
+                                    <option value="16">16 Personen</option>
+                                    <option value="17">17 Personen</option>
+                                    <option value="18">18 Personen</option>
+                                    <option value="19">19 Personen</option>
+                                    <option value="20">20 Personen</option>
+                                </select>
                             </div>
                             <input type="hidden" id="reserveGuests" value="2">
                         </div>
@@ -749,7 +787,7 @@
     <script src="js/auth-mysql.js"></script>
     <script src="js/notifications.js"></script>
     <script src="js/database-helpers.js"></script>
-    <script src="js/reservation.js"></script>
+    <script src="js/reservation.js?v=20260825_v57"></script>
     <script src="js/customer.js"></script>
 
     <script>
@@ -771,6 +809,15 @@
                 const branchInfo = { id: 'branch_flora', name: 'Leo Sushi - Florastraße', address: 'Florastraße 10A, 13187 Berlin' };
                 localStorage.setItem('leoSelectedBranch', JSON.stringify(branchInfo));
             }
+            if (cardFlora) cardFlora.setAttribute('aria-pressed', branchId === 'branch_flora' ? 'true' : 'false');
+            if (cardHaupt) cardHaupt.setAttribute('aria-pressed', branchId === 'branch_haupt' ? 'true' : 'false');
+            const hoursLabel = document.getElementById('reservationHoursLabel');
+            if (hoursLabel) {
+                hoursLabel.textContent = branchId === 'branch_haupt'
+                    ? 'Hauptstraße: täglich 11:30 – 22:00 Uhr'
+                    : 'Florastraße: täglich 12:00 – 22:00 Uhr';
+            }
+            if (typeof setupReservationTimeOptions === 'function') setupReservationTimeOptions();
         }
 
         function selectGuests(count) {
@@ -778,18 +825,32 @@
             if (input) input.value = count;
 
             document.querySelectorAll('.guest-pill').forEach(pill => {
-                pill.classList.toggle('active', parseInt(pill.textContent) === count || (count >= 15 && pill.textContent.includes('15')));
+                pill.classList.toggle('active', parseInt(pill.dataset.guests, 10) === count);
             });
+            const moreSelect = document.getElementById('reserveGuestsMore');
+            if (moreSelect) moreSelect.value = count > 8 ? String(count) : '';
         }
 
         document.addEventListener('DOMContentLoaded', async () => {
-            // Restore saved branch
+            // Google Business Profile can deep-link directly to the matching branch.
+            let branchSelectedFromUrl = false;
             try {
-                const savedBranch = localStorage.getItem('leoSelectedBranch');
-                if (savedBranch) {
-                    const parsed = JSON.parse(savedBranch);
-                    if (parsed && parsed.id) {
-                        selectBranchCard(parsed.id);
+                const requestedBranch = new URLSearchParams(window.location.search).get('branch');
+                if (requestedBranch === 'branch_flora' || requestedBranch === 'branch_haupt') {
+                    selectBranchCard(requestedBranch);
+                    branchSelectedFromUrl = true;
+                }
+            } catch (e) {}
+
+            // Restore the customer's last branch only when the URL did not specify one.
+            try {
+                if (!branchSelectedFromUrl) {
+                    const savedBranch = localStorage.getItem('leoSelectedBranch');
+                    if (savedBranch) {
+                        const parsed = JSON.parse(savedBranch);
+                        if (parsed && parsed.id) {
+                            selectBranchCard(parsed.id);
+                        }
                     }
                 }
             } catch (e) {}
@@ -820,7 +881,8 @@
             }
         });
     </script>
-    <script src="js/mobile-app.js?v=20260824_v56"></script>
+    <script src="js/dish-photos.js?v=20260825_v2"></script>
+    <script src="js/mobile-app.js?v=20260826_v61"></script>
 </body>
 
 </html>

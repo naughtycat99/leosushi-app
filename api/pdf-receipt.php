@@ -87,7 +87,7 @@ class PdfReceipt {
             $branchAddr = ($order['branch']['id'] === 'branch_haupt') ? 'Hauptstrasse 29a, 13158 Berlin' : 'Florastrasse 10A, 13187 Berlin';
         }
         $s .= $this->text($branchAddr, $this->pageWidth / 2, $this->pageHeight - 52, 8.5, 'H', [0.7, 0.7, 0.7], 'center');
-        $branchPhone = ($order['branch']['id'] === 'branch_haupt') ? '030 63912199' : '03071055810';
+        $branchPhone = ($order['branch']['id'] === 'branch_haupt') ? '030 55617056' : '03037476736';
         $s .= $this->text('Tel: ' . $branchPhone, $this->pageWidth / 2, $this->pageHeight - 63, 8.5, 'H', [0.7, 0.7, 0.7], 'center');
         // RECHNUNG badge area
         $s .= $this->rect($this->pageWidth/2 - 40, $this->pageHeight - 84, 80, 16, [0.83, 0.81, 0.52]);

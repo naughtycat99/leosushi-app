@@ -1724,7 +1724,20 @@ html.is-ios .app-subpage-topbar {
     gap: 12px;
 }
 
+.app-cart-item-img-wrap {
+    position: relative;
+    width: 48px;
+    height: 48px;
+    flex: 0 0 48px;
+    overflow: hidden;
+    border-radius: 10px;
+    background: #0b0b0e;
+}
+
 .app-cart-item-img {
+    position: absolute;
+    top: 0;
+    left: 0;
     width: 48px;
     height: 48px;
     border-radius: 10px;
@@ -2496,4 +2509,66 @@ body.is-capacitor-app #restaurantClosedBanner {
     border-radius: 16px !important;
     padding: 18px 16px !important;
     margin-bottom: 18px !important;
+}
+
+/* High-visibility table reservation shortcut on the app home screen. */
+html.is-capacitor-app .app-reservation-shortcut {
+    display: flex !important;
+    align-items: center;
+    gap: 12px;
+    margin: 12px 0 14px;
+    padding: 13px 14px;
+    border: 1px solid rgba(229, 207, 142, 0.34);
+    border-radius: 15px;
+    background: linear-gradient(135deg, rgba(229, 207, 142, 0.16), rgba(229, 207, 142, 0.055));
+    color: #fff;
+    text-decoration: none;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+    -webkit-tap-highlight-color: transparent;
+}
+
+.app-reservation-shortcut-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 42px;
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    background: var(--app-gold);
+    color: #111;
+    font-size: 20px;
+}
+
+.app-reservation-shortcut-copy {
+    display: flex;
+    flex: 1;
+    min-width: 0;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.app-reservation-shortcut-copy strong {
+    color: #fff;
+    font-size: 14px;
+    font-weight: 800;
+}
+
+.app-reservation-shortcut-copy small {
+    overflow: hidden;
+    color: rgba(255, 255, 255, 0.58);
+    font-size: 11px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.app-reservation-shortcut-arrow {
+    color: var(--app-gold);
+    font-size: 28px;
+    line-height: 1;
+}
+
+html.is-capacitor-app .app-reservation-shortcut:active {
+    transform: scale(0.985);
+    background: rgba(229, 207, 142, 0.2);
 }

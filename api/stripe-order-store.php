@@ -199,7 +199,7 @@ function canonicalStripeBranch($branchId)
         'id' => $branchId,
         'name' => $branchId === 'branch_haupt' ? 'Leo Sushi - Hauptstraße' : 'Leo Sushi - Florastraße',
         'address' => $branchId === 'branch_haupt' ? 'Hauptstraße 29a, 13158 Berlin' : 'Florastraße 10A, 13187 Berlin',
-        'phone' => $branchId === 'branch_haupt' ? '030 63912199' : '030 71055810'
+        'phone' => $branchId === 'branch_haupt' ? '030 55617056' : '030 37476736'
     ];
 }
 

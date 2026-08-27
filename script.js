@@ -6099,7 +6099,7 @@ function sendCustomerConfirmationEmail(orderData, deliveryAddress, isAdminConfir
     service_type: orderData.service_type === 'delivery' ? 'Lieferung' : orderData.service_type === 'pickup' ? 'Abholung' : 'Reservierung',
     restaurant_name: 'LEO SUSHI',
     restaurant_address: 'Florastraße 10A, 13187 Berlin',
-    restaurant_phone: '03071055810',
+    restaurant_phone: '03037476736',
     restaurant_email: getEmailjsConfig().OWNER_EMAIL
   };
 
@@ -6236,7 +6236,7 @@ function sendCancellationEmail(orderData) {
     service_type: orderData.service_type === 'delivery' ? 'Lieferung' : orderData.service_type === 'pickup' ? 'Abholung' : 'Reservierung',
     restaurant_name: 'LEO SUSHI',
     restaurant_address: 'Florastraße 10A, 13187 Berlin',
-    restaurant_phone: '03071055810',
+    restaurant_phone: '03037476736',
     restaurant_email: getEmailjsConfig().OWNER_EMAIL
   };
 
@@ -6927,7 +6927,7 @@ function generateCustomerReceipt(orderData, deliveryAddress, orderId, estimatedT
         <div class="restaurant-info">
           Florastraße 10A<br>
           13187 Berlin<br>
-          03071055810
+          03037476736
         </div>
       </div>
       
@@ -7356,7 +7356,7 @@ function sendReservationEmail(reservationData) {
     note: reservationData.note || 'Keine',
     restaurant_name: 'LEO SUSHI',
     restaurant_address: 'Florastraße 10A, 13187 Berlin',
-    restaurant_phone: '03071055810'
+    restaurant_phone: '03037476736'
   };
 
   console.log('⚠️ QUAN TRỌNG: Đảm bảo template trong EmailJS có field "To Email" = {{to_email}}');
@@ -7444,7 +7444,7 @@ function sendReservationConfirmationEmail(reservationData, customEstimatedTime =
     note_display: noteDisplay,
     restaurant_name: 'LEO SUSHI',
     restaurant_address: 'Florastraße 10A, 13187 Berlin',
-    restaurant_phone: '03071055810',
+    restaurant_phone: '03037476736',
     restaurant_email: getEmailjsConfig().OWNER_EMAIL
   };
 
@@ -7492,7 +7492,7 @@ function showReservationConfirmation(reservationData) {
 
 // Generate reservation confirmation HTML
 function generateReservationConfirmation(reservationData, reservationDateTime) {
-  return `<div class="confirmation-page"><div class="confirmation-header"><div class="restaurant-name">Leo Sushi</div><div class="restaurant-info">Florastraße 10A<br>13187 Berlin<br>03071055810</div></div><div class="confirmation-section"><div class="section-title">Reservierungsbestätigung</div><div class="info-row"><span class="info-label">Reservierungsnummer:</span><span>${reservationData.reservationId}</span></div></div><div class="confirmation-section"><div class="section-title">Kundendaten</div><div style="font-size:11px;line-height:1.6">Name: ${reservationData.firstName} ${reservationData.lastName}<br>Telefon: ${reservationData.phone}<br>E-Mail: ${reservationData.email}</div></div><div class="confirmation-section"><div class="section-title">Reservierungsdetails</div><div class="info-row"><span class="info-label">Datum & Uhrzeit:</span><span>${reservationDateTime}</span></div><div class="info-row"><span class="info-label">Anzahl Personen:</span><span>${reservationData.guests}</span></div><div class="info-row"><span class="info-label">Tisch:</span><span>${reservationData.tableNumber || 'Nicht angegeben'}</span></div>${reservationData.note ? `<div style="margin-top:8px;font-size:10px;line-height:1.4"><strong>Hinweis:</strong><br>${reservationData.note}</div>` : ''}</div><div style="text-align:center;margin-top:15px;font-size:9px;color:#666">Wir freuen uns auf Ihren Besuch!</div></div>`;
+  return `<div class="confirmation-page"><div class="confirmation-header"><div class="restaurant-name">Leo Sushi</div><div class="restaurant-info">Florastraße 10A<br>13187 Berlin<br>03037476736</div></div><div class="confirmation-section"><div class="section-title">Reservierungsbestätigung</div><div class="info-row"><span class="info-label">Reservierungsnummer:</span><span>${reservationData.reservationId}</span></div></div><div class="confirmation-section"><div class="section-title">Kundendaten</div><div style="font-size:11px;line-height:1.6">Name: ${reservationData.firstName} ${reservationData.lastName}<br>Telefon: ${reservationData.phone}<br>E-Mail: ${reservationData.email}</div></div><div class="confirmation-section"><div class="section-title">Reservierungsdetails</div><div class="info-row"><span class="info-label">Datum & Uhrzeit:</span><span>${reservationDateTime}</span></div><div class="info-row"><span class="info-label">Anzahl Personen:</span><span>${reservationData.guests}</span></div><div class="info-row"><span class="info-label">Tisch:</span><span>${reservationData.tableNumber || 'Nicht angegeben'}</span></div>${reservationData.note ? `<div style="margin-top:8px;font-size:10px;line-height:1.4"><strong>Hinweis:</strong><br>${reservationData.note}</div>` : ''}</div><div style="text-align:center;margin-top:15px;font-size:9px;color:#666">Wir freuen uns auf Ihren Besuch!</div></div>`;
 }
 
 // Intro Screen Handler

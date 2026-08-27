@@ -10,8 +10,9 @@ error_reporting(E_ALL & ~E_NOTICE & ~E_DEPRECATED);
 ini_set('display_errors', 0); 
 ini_set('log_errors', 1);
 
-// Force clear cache for some hostings (IONOS, etc.)
-if (function_exists('opcache_reset')) { @opcache_reset(); }
+// Do not reset OPcache on every API request. Recompiling the complete PHP
+// application for each checkout can stall mobile requests long enough for the
+// browser to abort a paid order submission.
 
 header('Content-Type: application/json; charset=utf-8');
 header('Access-Control-Allow-Origin: *');

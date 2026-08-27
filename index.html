@@ -28,8 +28,8 @@
     <link rel="stylesheet" href="styles.css?v=20260824_v50">
     <link rel="stylesheet" href="styles-luxe.css?v=20260824_v50">
     <link rel="stylesheet" href="menu-order.css?v=20260824_v50">
-    <link rel="stylesheet" href="css/mobile-app.css?v=20260824_v54">
-    <script src="js/app-mode-gate.js?v=20260824_v51"></script>
+    <link rel="stylesheet" href="css/mobile-app.css?v=20260825_v59">
+    <script src="js/app-mode-gate.js?v=20260825_v52"></script>
     <!-- Leaflet CSS for OpenStreetMap -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <!-- API Configuration -->
@@ -231,6 +231,16 @@
                     <span class="app-tab-time">(ca. 15-20m)</span>
                 </button>
             </div>
+
+            <!-- Prominent reservation entry: visible before the food catalog in the native app -->
+            <a href="reservation.html" class="app-reservation-shortcut" aria-label="Tisch bei LEO SUSHI reservieren">
+                <span class="app-reservation-shortcut-icon">📅</span>
+                <span class="app-reservation-shortcut-copy">
+                    <strong>Tisch reservieren</strong>
+                    <small>Filiale, Datum und Uhrzeit direkt wählen</small>
+                </span>
+                <span class="app-reservation-shortcut-arrow">›</span>
+            </a>
 
             <!-- Search Bar (Collapsible/Expandable) -->
             <div class="app-search-wrap" id="appSearchWrap" style="display: none;">
@@ -792,11 +802,11 @@
                         <div class="info-card-body" style="display: flex; flex-direction: column; gap: 15px; text-align: left;">
                             <div>
                                 <strong style="color: var(--gold); display: block; margin-bottom: 2px;">Filiale 1 (Florastraße):</strong>
-                                <a href="tel:03071055810" class="info-card-main info-link" style="font-size: 15px; font-weight: 600;">030 71055810</a>
+                                <a href="tel:03037476736" class="info-card-main info-link" style="font-size: 15px; font-weight: 600;">030 37476736</a>
                             </div>
                             <div style="border-top: 1px dashed rgba(255,255,255,0.1); padding-top: 10px;">
                                 <strong style="color: var(--gold); display: block; margin-bottom: 2px;">Filiale 2 (Hauptstraße):</strong>
-                                <a href="tel:03063912199" class="info-card-main info-link" style="font-size: 15px; font-weight: 600;">030 63912199</a>
+                                <a href="tel:03055617056" class="info-card-main info-link" style="font-size: 15px; font-weight: 600;">030 55617056</a>
                             </div>
                         </div>
                     </div>
@@ -874,7 +884,7 @@
                 </div>
 
                 <div class="contact-actions-wrapper" style="display: flex; gap: 15px; flex-wrap: wrap; justify-content: center;">
-                    <a href="tel:03071055810" class="contact-btn-primary">
+                    <a href="tel:03037476736" class="contact-btn-primary">
                         <div class="btn-icon-wrapper">
                             <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
                                 <path
@@ -884,10 +894,10 @@
                         </div>
                         <div class="btn-content">
                             <span class="btn-label">Anrufen Florastraße</span>
-                            <span class="btn-value">030 71055810</span>
+                            <span class="btn-value">030 37476736</span>
                         </div>
                     </a>
-                    <a href="tel:03063912199" class="contact-btn-primary">
+                    <a href="tel:03055617056" class="contact-btn-primary">
                         <div class="btn-icon-wrapper">
                             <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
                                 <path
@@ -897,7 +907,7 @@
                         </div>
                         <div class="btn-content">
                             <span class="btn-label">Anrufen Hauptstraße</span>
-                            <span class="btn-value">030 63912199</span>
+                            <span class="btn-value">030 55617056</span>
                         </div>
                     </a>
                 </div>
@@ -1493,7 +1503,7 @@
     <div class="lightbox" id="lightbox" aria-hidden="true">
         <button class="lightbox-close" id="lightboxClose" aria-label="Schließen">×</button>
         <button class="lightbox-nav prev" id="lightboxPrev" aria-label="Vorheriges">‹</button>
-        <img class="lightbox-img" id="lightImg" src="" alt="" loading="lazy">
+        <img class="lightbox-img" id="lightImg" alt="" loading="lazy">
         <button class="lightbox-nav next" id="lightboxNext" aria-label="Nächstes">›</button>
     </div>
 
@@ -1528,209 +1538,14 @@
                             <span class="footer-icon">📍</span>
                             <span style="font-size: 13px;">
                                 <strong>Filiale 1:</strong> Florastraße 10A, 13187 Berlin<br>
-                                📞 Tel: <a href="tel:03071055810" style="color: inherit; text-decoration: none;">030 71055810</a>
-                            </span>
-                                    senden Ihnen an Ihrem Geburtstag einen besonderen Gutschein!</small>
-                            </div>
-                            <div class="auth-form-group">
-                                <label>Straße</label>
-                                <input type="text" id="registerStreet" placeholder="Straße und Hausnummer">
-                            </div>
-                            <div class="auth-form-row">
-                                <div class="auth-form-group">
-                                    <label>PLZ</label>
-                                    <input type="text" id="registerPostal" placeholder="13187">
-                                </div>
-                                <div class="auth-form-group">
-                                    <label>Stadt</label>
-                                    <input type="text" id="registerCity" placeholder="Berlin">
-                                </div>
-                            </div>
-                            <button type="submit" class="auth-btn-primary" id="registerModalBtn">
-                                Registrieren
-                            </button>
-                        </form>
-                        <div class="auth-discount-badge hidden" id="registerDiscountBadge">
-                            <div class="auth-discount-title">📧 E-Mail-Bestätigung gesendet!</div>
-                            <div class="auth-discount-text">Bitte überprüfen Sie Ihr E-Mail-Postfach.</div>
-                        </div>
-
-                        <div class="auth-verify-section hidden" id="registerVerifySection">
-                            <div class="auth-verify-header">
-                                <div class="auth-verify-title">E-Mail bestätigen</div>
-                                <div class="auth-verify-subtitle">Geben Sie den Code aus der E-Mail ein, um Ihre
-                                    Registrierung abzuschließen.</div>
-                            </div>
-                            <div class="auth-verify-email" id="registerVerifyEmail"></div>
-                            <div class="auth-form-group auth-verify-group">
-                                <label>Verifizierungscode</label>
-                                <input type="text" id="registerVerifyCode" placeholder="Code aus der E-Mail">
-                            </div>
-                            <div class="auth-verify-actions">
-                                <button type="button" class="auth-btn-secondary" id="registerVerifyBtn">
-                                    Code bestätigen
-                                </button>
-                                <button type="button" class="auth-link-button" id="registerVerifyLaterBtn">
-                                    Später bestätigen
-                                </button>
-                            </div>
-                            <div class="auth-error-message" id="verifyErrorMessage"></div>
-                            <div class="auth-success-message" id="verifySuccessMessage"></div>
-                        </div>
-
-                        <div class="auth-switch-link">
-                            Bereits registriert? <a href="#"
-                                onclick="event.preventDefault(); switchAuthForm('login');">Jetzt anmelden</a>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Forgot Password Form -->
-                <div class="auth-form-wrapper" id="forgotFormWrapper">
-                    <div class="auth-modal-body">
-                        <div class="auth-error-message" id="forgotErrorMessage"></div>
-                        <div class="auth-success-message" id="forgotSuccessMessage"></div>
-                        <form id="forgotPasswordForm">
-                            <div class="auth-form-group">
-                                <label>E-Mail <span class="auth-required">*</span></label>
-                                <input type="text" id="forgotIdentifier" required
-                                    placeholder="E-Mail oder Telefonnummer">
-                            </div>
-                            <button type="submit" class="auth-btn-primary" id="forgotPasswordBtn">
-                                Reset-Link senden
-                            </button>
-                        </form>
-                        <div class="auth-switch-link">
-                            <a href="#" onclick="event.preventDefault(); switchAuthForm('login');">Zurück zur
-                                Anmeldung</a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Holiday Schedule Notification Modal -->
-    <div class="holiday-modal" id="holidayModal">
-        <div class="holiday-modal-content">
-            <button class="holiday-modal-close" id="holidayModalClose" aria-label="Schließen">×</button>
-            <div class="holiday-modal-background">
-                <div class="holiday-moon"></div>
-                <div class="holiday-stars">
-                    <span class="star"></span>
-                    <span class="star"></span>
-                    <span class="star"></span>
-                    <span class="star"></span>
-                    <span class="star"></span>
-                    <span class="star"></span>
-                    <span class="star"></span>
-                    <span class="star"></span>
-                    <span class="star"></span>
-                    <span class="star"></span>
-                </div>
-            </div>
-            <div class="holiday-modal-body">
-                <h2 class="holiday-title">Feiertags-Öffnungszeiten</h2>
-                <div class="holiday-schedule">
-                    <div class="holiday-item">
-                        <span class="holiday-date">24.12</span>
-                        <span class="holiday-time">Geschlossen</span>
-                    </div>
-                    <div class="holiday-item">
-                        <span class="holiday-date">25.12</span>
-                        <span class="holiday-time">11:30 - 22:00</span>
-                    </div>
-                    <div class="holiday-item">
-                        <span class="holiday-date">26.12</span>
-                        <span class="holiday-time">11:30 - 22:00</span>
-                    </div>
-                    <div class="holiday-item">
-                        <span class="holiday-date">31.12</span>
-                        <span class="holiday-time">Geschlossen</span>
-                    </div>
-                    <div class="holiday-item">
-                        <span class="holiday-date">01.01.26</span>
-                        <span class="holiday-time">15:30 - 22:00</span>
-                    </div>
-                </div>
-            </div>
-            <div class="holiday-decorations">
-                <div class="holiday-santa">
-                    <svg viewBox="0 0 200 100" xmlns="http://www.w3.org/2000/svg">
-                        <!-- Sleigh base -->
-                        <path d="M15 85 Q25 65, 45 75 T75 80 T105 75 T135 80 T165 75 T185 85" stroke="#654321"
-                            stroke-width="2.5" fill="none" stroke-linecap="round" />
-                        <!-- Reindeer silhouettes -->
-                        <ellipse cx="30" cy="50" rx="10" ry="8" fill="#8B4513" opacity="0.8" />
-                        <ellipse cx="60" cy="55" rx="8" ry="6" fill="#8B4513" opacity="0.8" />
-                        <ellipse cx="90" cy="50" rx="9" ry="7" fill="#8B4513" opacity="0.8" />
-                        <ellipse cx="120" cy="55" rx="8" ry="6" fill="#8B4513" opacity="0.8" />
-                        <ellipse cx="150" cy="50" rx="9" ry="7" fill="#8B4513" opacity="0.8" />
-                        <ellipse cx="180" cy="55" rx="8" ry="6" fill="#8B4513" opacity="0.8" />
-                        <!-- Antlers (simple) -->
-                        <path d="M25 45 L22 40 M25 45 L28 40" stroke="#654321" stroke-width="1.5"
-                            stroke-linecap="round" />
-                        <path d="M55 50 L52 45 M55 50 L58 45" stroke="#654321" stroke-width="1.5"
-                            stroke-linecap="round" />
-                        <path d="M85 45 L82 40 M85 45 L88 40" stroke="#654321" stroke-width="1.5"
-                            stroke-linecap="round" />
-                    </svg>
-                </div>
-                <div class="holiday-logo">
-                    <img src="assets/logo.png" alt="LEO SUSHI" class="holiday-logo-img" loading="lazy" width="256"
-                        height="256">
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Lightbox for Gallery -->
-    <div class="lightbox" id="lightbox" aria-hidden="true">
-        <button class="lightbox-close" id="lightboxClose" aria-label="Schließen">×</button>
-        <button class="lightbox-nav prev" id="lightboxPrev" aria-label="Vorheriges">‹</button>
-        <img class="lightbox-img" id="lightImg" src="" alt="" loading="lazy">
-        <button class="lightbox-nav next" id="lightboxNext" aria-label="Nächstes">›</button>
-    </div>
-
-    <footer class="site-footer">
-        <div class="footer-top">
-            <div class="container footer-inner">
-                <div class="footer-brand">
-                    <div class="brand-mini">
-                        <img src="assets/logo.png" alt="LEO SUSHI" loading="lazy" decoding="async" width="256"
-                            height="256">
-                        <div class="brand-text">
-                            <span class="brand-name">LEO SUSHI</span>
-                            <span class="brand-tagline">Moderne vietnamesische Küche</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="footer-content">
-                    <nav class="footer-nav">
-                        <div class="footer-nav-section">
-                            <h4>Navigation</h4>
-                            <a href="#home">Home</a>
-                            <a href="menu.html">Menü</a>
-                            <a href="#gallery">Gallery</a>
-                            <a href="#about">Über uns</a>
-                            <a href="#reviews">Bewertungen</a>
-                            <a href="#contact">Kontakt</a>
-                        </div>
-                    </nav>
-                    <div class="footer-contact">
-                        <h4>Kontakt</h4>
-                        <div class="footer-contact-item" style="margin-bottom: 12px;">
-                            <span class="footer-icon">📍</span>
-                            <span style="font-size: 13px;">
-                                <strong>Filiale 1:</strong> Florastraße 10A, 13187 Berlin<br>
-                                📞 Tel: <a href="tel:03071055810" style="color: inherit; text-decoration: none;">030 71055810</a>
+                                📞 Tel: <a href="tel:03037476736" style="color: inherit; text-decoration: none;">030 37476736</a>
                             </span>
                         </div>
                         <div class="footer-contact-item" style="margin-bottom: 12px;">
                             <span class="footer-icon">📍</span>
                             <span style="font-size: 13px;">
                                 <strong>Filiale 2:</strong> Hauptstraße 29a, 13158 Berlin<br>
-                                📞 Tel: <a href="tel:03063912199" style="color: inherit; text-decoration: none;">030 63912199</a>
+                                📞 Tel: <a href="tel:03055617056" style="color: inherit; text-decoration: none;">030 55617056</a>
                             </span>
                         </div>
                         <div class="footer-contact-item">
@@ -1788,21 +1603,22 @@
 
     <!-- Load modules theo thứ tự dependency (QUAN TRỌNG - không thay đổi thứ tự!) -->
     <script src="js/config.js?v=20260824_v55"></script>
-    <script src="js/api.js?v=20260824_v55"></script>
+    <script src="js/api.js?v=20260825_paypal_v17"></script>
     <script src="js/menu-data.js?v=20260824_v55"></script>
-    <script src="js/menu.js?v=20260824_v55"></script>
+    <script src="js/menu.js?v=20260825_v60"></script>
     <script src="js/capacitor-navigation.js?v=20260824_v55"></script>
-    <script src="js/mobile-app.js?v=20260824_v55"></script>
+    <script src="js/dish-photos.js?v=20260825_v2"></script>
+    <script src="js/mobile-app.js?v=20260826_v61"></script>
     <script src="js/auth-mysql.js?v=20260824_v55"></script>
     <script src="js/auth-modal.js?v=20260824_v55"></script>
     <script src="js/header-auth.js?v=20260824_v55"></script>
     <script src="js/database-helpers.js?v=20260824_v55"></script>
     <script src="js/utils.js?v=20260824_v55"></script>
-    <script src="js/payment.js?v=20260824_stripe_v16"></script>
+    <script src="js/payment.js?v=20260825_paypal_v17"></script>
     <script src="js/cart.js?v=20260824_v55"></script>
     <script src="js/cart-sync.js?v=20260824_v55"></script>
     <script src="js/mobile-cart-fix.js?v=20260824_v55"></script>
-    <script src="js/reservation.js?v=20260824_v55"></script>
+    <script src="js/reservation.js?v=20260825_v57"></script>
     <script src="js/email.js?v=20260824_v55"></script>
     <script src="js/customer.js?v=20260824_v55"></script>
     <script src="js/notifications.js?v=20260824_v55"></script>

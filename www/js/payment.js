@@ -2880,6 +2880,83 @@ function setupPaymentCustomerCodeValidation() {
   setTimeout(validateAndEnableButton, 300);
 }
 
+const PAYPAL_PENDING_ORDER_KEY = 'leo_pending_paypal_order_v1';
+
+function queuePendingPayPalOrder(orderData) {
+  try {
+    localStorage.setItem(PAYPAL_PENDING_ORDER_KEY, JSON.stringify({
+      savedAt: Date.now(),
+      orderData: orderData
+    }));
+  } catch (error) {
+    console.warn('Could not persist pending PayPal order locally:', error);
+  }
+}
+
+function clearPendingPayPalOrder() {
+  try { localStorage.removeItem(PAYPAL_PENDING_ORDER_KEY); } catch (error) {}
+}
+
+function sendPendingPayPalOrderBeacon(orderData) {
+  try {
+    if (!navigator.sendBeacon) return false;
+    const apiBase = window.API_PHP_BASE_URL || `${window.location.origin}/api`;
+    const payload = new Blob([JSON.stringify(orderData)], { type: 'application/json' });
+    return navigator.sendBeacon(`${apiBase}/index.php?route=v1/data/orders/create`, payload);
+  } catch (error) {
+    console.warn('PayPal order recovery beacon failed:', error);
+    return false;
+  }
+}
+
+async function savePayPalOrderReliably(orderData) {
+  queuePendingPayPalOrder(orderData);
+  // Queue the independent delivery immediately. Waiting for two long fetch
+  // timeouts first defeats sendBeacon's purpose when the app/tab is closed.
+  // paypal_capture_id is unique server-side, so this parallel request is safe.
+  sendPendingPayPalOrderBeacon(orderData);
+  let lastError = null;
+
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    try {
+      const result = await window.api.orders.saveOrder(orderData, { timeoutMs: 60000 });
+      if (result && result.success) {
+        clearPendingPayPalOrder();
+        return result;
+      }
+      lastError = new Error(result?.message || 'PayPal order save was declined');
+    } catch (error) {
+      lastError = error;
+    }
+    if (attempt === 0) await new Promise(resolve => setTimeout(resolve, 1500));
+  }
+
+  // Retry the independent delivery once more after ordinary requests fail.
+  sendPendingPayPalOrderBeacon(orderData);
+  throw lastError || new Error('PayPal order could not be saved');
+}
+
+async function retryPendingPayPalOrder() {
+  if (!window.api?.orders?.saveOrder) return;
+  let pending = null;
+  try { pending = JSON.parse(localStorage.getItem(PAYPAL_PENDING_ORDER_KEY) || 'null'); } catch (error) {}
+  if (!pending?.orderData?.paypal_capture_id && !pending?.orderData?.paypal_order_id) return;
+
+  try {
+    const result = await window.api.orders.saveOrder(pending.orderData, { timeoutMs: 60000 });
+    if (result?.success) clearPendingPayPalOrder();
+  } catch (error) {
+    console.warn('Pending PayPal order will be retried later:', error);
+  }
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => setTimeout(retryPendingPayPalOrder, 1500), { once: true });
+} else {
+  setTimeout(retryPendingPayPalOrder, 1500);
+}
+window.addEventListener('online', retryPendingPayPalOrder);
+
 // Render PayPal button
 async function renderPayPalButton() {
   console.log('🔄 [renderPayPalButton] Starting...');
@@ -3047,7 +3124,7 @@ async function renderPayPalButton() {
         shape: 'rect',
         label: 'paypal'
       },
-      createOrder: function (data, actions) {
+      createOrder: async function (data, actions) {
         console.log('🔄 [PayPal createOrder] Creating order with total:', total.toFixed(2));
         console.log('🛒 [PayPal createOrder] Cart items:', cart.length);
 
@@ -3079,7 +3156,47 @@ async function renderPayPalButton() {
           return Promise.reject(new Error('Form validation failed'));
         }
 
-        // Create order on PayPal
+        // Preferred durable flow: persist the complete order on our server
+        // before PayPal is allowed to create anything payable.
+        let legacyClientFlow = false;
+        try {
+          const clientOrderId = window._paypalDraftOrderId ||
+            ('LEO-PP-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8));
+          window._paypalDraftOrderId = clientOrderId;
+          const durableDraft = buildStripeOrderDraft(clientOrderId, null);
+          durableDraft.payment_method = 'PayPal';
+          durableDraft.payment_status = 'pending';
+          delete durableDraft.payment_intent_id;
+
+          const serverResponse = await fetch((window.API_BASE_URL || '/api') + '/paypal-create-order.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ order_data: durableDraft })
+          });
+          let serverResult = {};
+          try { serverResult = await serverResponse.json(); } catch (e) {}
+          if (serverResponse.ok && serverResult.success && serverResult.orderId) {
+            window._paypalServerFlow = true;
+            window._paypalServerOrderId = serverResult.orderId;
+            console.log('✅ [PayPal createOrder] Durable server order created:', serverResult.orderId);
+            return serverResult.orderId;
+          }
+          if (serverResponse.status === 503 && serverResult.server_flow_available === false) {
+            // Temporary compatibility until the existing PayPal app secret is
+            // installed on the server. No silent fallback for other errors.
+            legacyClientFlow = true;
+            window._paypalServerFlow = false;
+          } else {
+            throw new Error(serverResult.message || 'PayPal konnte nicht sicher vorbereitet werden.');
+          }
+        } catch (serverError) {
+          if (!legacyClientFlow) {
+            console.error('❌ [PayPal createOrder] Durable server preparation failed:', serverError);
+            throw serverError;
+          }
+        }
+
+        // Compatibility flow while server credentials are not configured.
         try {
           const orderData = {
             intent: 'CAPTURE',
@@ -3166,11 +3283,32 @@ async function renderPayPalButton() {
         `;
         document.body.appendChild(loadingDiv);
 
-        // Capture the payment first
-        return actions.order.capture().then(async function (details) {
+        // Capture on the server whenever the durable flow created this PayPal
+        // order. The webhook can then finish the order if the app disappears.
+        const capturePromise = (window._paypalServerFlow && window._paypalServerOrderId === data.orderID)
+          ? fetch((window.API_BASE_URL || '/api') + '/paypal-capture-order.php', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ paypal_order_id: data.orderID })
+            }).then(async response => {
+              let result = {};
+              try { result = await response.json(); } catch (e) {}
+              if (!response.ok || !result.success || !result.paypal_details) {
+                throw new Error(result.message || 'PayPal konnte serverseitig nicht bestätigt werden.');
+              }
+              const details = result.paypal_details;
+              details._leo_server_saved = !!result.order_id;
+              details._leo_order_id = result.order_id || null;
+              details._leo_server_processing = !!result.processing;
+              return details;
+            })
+          : actions.order.capture();
+
+        return capturePromise.then(async function (details) {
           console.log('✅ [PayPal onApprove] Payment CAPTURED successfully:', details.id);
           console.log('💰 [PayPal onApprove] Capture status:', details.status);
           console.log('💰 [PayPal onApprove] Amount:', details.purchase_units[0]?.payments?.captures[0]?.amount);
+          const paypalCapture = details.purchase_units?.[0]?.payments?.captures?.[0] || {};
 
           // ✅ Chấp nhận COMPLETED, PENDING, PROCESSING (SEPA/Bank Transfer sẽ trả về PENDING)
           if (!['COMPLETED', 'PENDING', 'PROCESSING'].includes(details.status)) {
@@ -3340,15 +3478,24 @@ async function renderPayPalButton() {
             serviceFee: serviceFee > 0 ? serviceFee.toFixed(2) + ' €' : null,
             scheduled_delivery_time: (window.getScheduledDeliveryTime && window.getScheduledDeliveryTime()) || null,
             delivery_distance_km: window.selectedServiceType === 'delivery' ? (window.selectedDeliveryDistanceKm || null) : null,
-            paypal_payment_id: details.id
+            paypal_payment_id: details.id,
+            paypal_order_id: details.id,
+            paypal_capture_id: paypalCapture.id || null,
+            paypal_capture_status: paypalCapture.status || details.status,
+            paypal_capture_amount: paypalCapture.amount?.value || total.toFixed(2),
+            paypal_capture_currency: paypalCapture.amount?.currency_code || 'EUR'
           };
 
           // Call API to create order
           let apiResult = null;
-          if (window.api && window.api.orders && window.api.orders.saveOrder) {
+          if (details._leo_server_saved && details._leo_order_id) {
+            apiResult = { success: true, order_id: details._leo_order_id, server_finalized: true };
+            clearPendingPayPalOrder();
+            console.log('✅ PayPal order was already finalized by the server:', details._leo_order_id);
+          } else if (window.api && window.api.orders && window.api.orders.saveOrder) {
             console.log('📦 Sending PayPal order to API:', apiOrderData);
             try {
-              apiResult = await window.api.orders.saveOrder(apiOrderData);
+              apiResult = await savePayPalOrderReliably(apiOrderData);
               console.log('📦 API Response:', apiResult);
               if (!apiResult || !apiResult.success) {
                 console.error('API declined order saving:', apiResult);
@@ -3360,6 +3507,8 @@ async function renderPayPalButton() {
                   }, apiOrderData.order_total, 'paypal');
                 }
                 alert('Zahlung war erfolgreich, aber es gab einen Fehler beim Speichern der Bestellung im System. Bitte kontaktieren Sie uns!');
+                window._paypalOrderSubmitting = false;
+                document.getElementById('paypalProcessingOverlay')?.remove();
                 return;
               }
               if (apiResult.order_id) {
@@ -3376,6 +3525,8 @@ async function renderPayPalButton() {
                 }, apiOrderData.order_total, 'paypal');
               }
               alert('Zahlung war erfolgreich, aber das System konnte nicht erreicht werden.\n\nFehlerdetail: ' + apiErr.message + '\n\nBitte rufen Sie uns an!');
+              window._paypalOrderSubmitting = false;
+              document.getElementById('paypalProcessingOverlay')?.remove();
               return;
             }
           } else {
@@ -3388,6 +3539,8 @@ async function renderPayPalButton() {
               }, apiOrderData.order_total, 'paypal');
             }
             alert('Interner Systemfehler. Zahlung erfolgreich, aber Bestellung konnte nicht übermittelt werden.');
+            window._paypalOrderSubmitting = false;
+            document.getElementById('paypalProcessingOverlay')?.remove();
             return;
           }
           if (typeof window.rememberLeoOrder === 'function') {

@@ -6,6 +6,18 @@
 (function () {
   'use strict';
 
+  // Reserve the generated dish-photo catalog slot while the page global is
+  // still extensible. Some production browser hardening freezes the global
+  // object later in the load sequence; the photo loader can still update an
+  // existing writable property in that case.
+  if (!Object.prototype.hasOwnProperty.call(window, 'LEO_DISH_IMAGE_CATALOG')) {
+    Object.defineProperty(window, 'LEO_DISH_IMAGE_CATALOG', {
+      value: null,
+      writable: true,
+      configurable: true
+    });
+  }
+
   const params = new URLSearchParams(window.location.search || '');
   const requestedAppView = params.get('app') === 'true' || params.has('mock-app') || params.get('mode') === 'app';
   const isLocalPreviewHost = /^(localhost|127\.0\.0\.1|\[::1\])$/i.test(window.location.hostname || '');

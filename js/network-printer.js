@@ -399,7 +399,7 @@ const NetworkPrinter = (() => {
         // Header
         html += `<div class="center big">Leo Sushi</div>`;
         const receiptBranchAddr = (summary.branch && summary.branch.address) ? escapeHtml(summary.branch.address) : 'Florastraße 10A, 13187 Berlin';
-        const receiptBranchPhone = (summary.branch && summary.branch.id === 'branch_haupt') ? '03063912199' : '03071055810';
+        const receiptBranchPhone = (summary.branch && summary.branch.id === 'branch_haupt') ? '03055617056' : '03037476736';
         html += `<div class="center small">${receiptBranchAddr}</div>`;
         html += `<div class="center small">${receiptBranchPhone}</div>`;
         html += `<div class="dashes"></div>`;

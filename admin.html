@@ -2072,6 +2072,7 @@
                 opacity: 0.6;
             }
 </style>
+    <link rel="stylesheet" href="css/admin-ui-v2.css?v=20260825_v1">
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 </head>
 <body>
@@ -2647,7 +2648,7 @@
     <script src="js/menu.js"></script>
     <script src="js/reservation.js"></script>
     <!-- Duplicate admin-stats.js import removed -->
-    <script src="script.js?v=20260408"></script>
+    <script src="script.js?v=20260826_phone"></script>
     <script src="js/email.js"></script>
     <script src="js/customer.js"></script>
     <script src="js/main.js"></script>
@@ -6558,7 +6559,7 @@
   <div class="center">
     <div class="header-logo">LEO SUSHI</div>
     <div>Florastraße 10A, 13187 Berlin</div>
-    <div>Tel: 03071055810</div>
+    <div>Tel: 03037476736</div>
   </div>
   <div class="sep2"></div>
   <div class="info-row"><span class="bold">Bestellung #${ordIdShort}</span><span>${timeDisplay}</span></div>
@@ -6663,7 +6664,8 @@
                 const isMatch = (tabId === 'orders' && (navText === 'đơn hàng' || navText === 'bestellungen')) ||
                     (tabId === 'stats' && (navText === 'thống kê' || navText === 'statistik')) ||
                     (tabId === 'reservations' && (navText === 'lịch đặt' || navText === 'reservierungen')) ||
-                    (tabId === 'customers' && (navText === 'khách' || navText === 'kunden'));
+                    (tabId === 'customers' && (navText === 'khách' || navText === 'kunden')) ||
+                    (tabId === 'menu' && navText === 'menu');
                 nav.classList.toggle('active', isMatch);
             });
 
@@ -6674,9 +6676,10 @@
                 'stats': 'statsContent',
                 'customers': 'customersContent',
                 'menu': 'menuContent',
-                'discount-codes': 'discountContent',
+                'discount-codes': 'discount-codesContent',
                 'promotions': 'promotionsContent',
-                'holiday-schedule': 'holidayContent'
+                'holiday-schedule': 'holiday-scheduleContent',
+                'printer': 'printerContent'
             };
 
             Object.values(tabContents).forEach(id => {
@@ -6690,11 +6693,6 @@
                 activeContent.style.display = 'block';
                 activeContent.style.animation = 'fadeIn 0.3s ease';
 
-                // Show/Hide order filters based on tab
-                const filters = document.querySelector('.admin-filters');
-                if (filters) {
-                    filters.style.display = (tabId === 'orders' || tabId === 'reservations') ? 'flex' : 'none';
-                }
             }
 
             // 4. Load data based on tab
@@ -6712,6 +6710,16 @@
                 } else {
                     if (typeof loadMenuItems === 'function') loadMenuItems();
                 }
+            } else if (tabId === 'customers') {
+                if (typeof loadCustomers === 'function') loadCustomers();
+            } else if (tabId === 'discount-codes') {
+                if (typeof loadDiscountCodes === 'function') loadDiscountCodes();
+            } else if (tabId === 'promotions') {
+                if (typeof loadRedemptionRules === 'function') loadRedemptionRules();
+            } else if (tabId === 'holiday-schedule') {
+                if (typeof loadHolidaySchedule === 'function') loadHolidaySchedule();
+            } else if (tabId === 'printer') {
+                if (typeof updatePrinterStatusUI === 'function') updatePrinterStatusUI();
             }
         }
         window.switchTab = switchTab;
@@ -8082,8 +8090,10 @@
 
                     if (adminRoleObj && adminRoleObj.role === 'branch_admin' && adminRoleObj.branch) {
                         displayData = displayData.filter(r => {
-                            const resBranch = r.branch_id || 'branch_flora';
-                            return resBranch === adminRoleObj.branch;
+                            const resBranch = r.branch_id || '';
+                            // Legacy reservations without a branch must stay visible so
+                            // neither restaurant silently loses a booking.
+                            return !resBranch || resBranch === adminRoleObj.branch;
                         });
                     }
 
@@ -8339,12 +8349,21 @@
             const customerCode = reservation.customer_code || reservation.customerCode || '';
             const note = reservation.note || '';
             const guests = reservation.guests || 1;
+            const reservationBranch = reservation.branch_id || '';
+            const reservationBranchLabel = reservationBranch === 'branch_haupt'
+                ? 'Hauptstraße 29a'
+                : reservationBranch === 'branch_flora'
+                    ? 'Florastraße 10A'
+                    : 'Chưa xác định chi nhánh';
 
             return `
                 <div class="reservation-card ${status}" data-reservation-id="${reservationId}">
                     <div class="card-header">
                         <div class="reservation-id">📅 #${reservationIdShort}</div>
                         <span class="card-status status-${status}">${statusText}</span>
+                    </div>
+                    <div class="reservation-branch-chip ${reservationBranch ? '' : 'missing'}">
+                        ${reservationBranch ? '📍' : '⚠️'} ${reservationBranchLabel}
                     </div>
                     <div class="card-info">
                         <div class="info-item">
@@ -9115,7 +9134,7 @@
                                 note: reservationForEmail.note || '',
                                 restaurant_name: 'LEO SUSHI',
                                 restaurant_address: 'Florastraße 10A, 13187 Berlin',
-                                restaurant_phone: '03071055810',
+                                restaurant_phone: '03037476736',
                                 restaurant_email: EMAILJS_CONFIG.OWNER_EMAIL
                             };
                             emailjs.send(
@@ -9218,10 +9237,10 @@
                                     table_number_display: reservation.table_number || reservation.tableNumber || 'N/A',
                                     note: reservation.note || '',
                                     note_display: '',
-                                    estimated_time_display: `<div class="order-info" style="background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%); border-left-color: #ef4444; margin-top: 20px;"><h3>❌ Reservierung konnte nicht bestätigt werden</h3><p style="font-size: 16px; font-weight: 600; color: #dc2626; margin: 10px 0;">Leider ist unser Restaurant zu diesem Zeitpunkt voll ausgebucht. Wir bitten Sie, eine andere Uhrzeit oder einen anderen Tag zu wählen.</p><p style="font-size: 14px; color: #7f1d1d; margin-top: 12px;">Wir freuen uns, Sie zu einem anderen Termin begrüßen zu dürfen!</p><p style="font-size: 15px; font-weight: 700; color: #7f1d1d; margin-top: 12px;">📞 Tel: 03071055810</p></div>`,
+                                    estimated_time_display: `<div class="order-info" style="background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%); border-left-color: #ef4444; margin-top: 20px;"><h3>❌ Reservierung konnte nicht bestätigt werden</h3><p style="font-size: 16px; font-weight: 600; color: #dc2626; margin: 10px 0;">Leider ist unser Restaurant zu diesem Zeitpunkt voll ausgebucht. Wir bitten Sie, eine andere Uhrzeit oder einen anderen Tag zu wählen.</p><p style="font-size: 14px; color: #7f1d1d; margin-top: 12px;">Wir freuen uns, Sie zu einem anderen Termin begrüßen zu dürfen!</p><p style="font-size: 15px; font-weight: 700; color: #7f1d1d; margin-top: 12px;">📞 Tel: 03037476736</p></div>`,
                                     restaurant_name: 'LEO SUSHI',
                                     restaurant_address: 'Florastraße 10A, 13187 Berlin',
-                                    restaurant_phone: '03071055810',
+                                    restaurant_phone: '03037476736',
                                     restaurant_email: EMAILJS_CONFIG.OWNER_EMAIL
                                 };
 
@@ -10768,4 +10787,6 @@
         // Call loadStoreStatus on init
         setTimeout(loadStoreStatus, 1000);
 </script>
+<script src="js/admin-ui-v2.js?v=20260825_v1"></script>
+</body>
 </html>

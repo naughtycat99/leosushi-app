@@ -393,7 +393,7 @@ function sendOrderOutForDeliveryEmail($to, $name, $orderData) {
 
     $branch = $orderData['branch'] ?? [];
     $branchAddress = $branch['address'] ?? 'Florastraße 10A, 13187 Berlin';
-    $branchPhone = $branch['phone'] ?? '030 71055810';
+    $branchPhone = $branch['phone'] ?? '030 37476736';
 
     $pm = strtolower((string)($orderData['payment_method'] ?? 'cash'));
     $payStatus = (strpos($pm, 'paid') !== false || strpos($pm, 'paypal') !== false || strpos($pm, 'stripe') !== false || strpos($pm, 'karte') !== false) ? 'Bereits online bezahlt' : 'Barzahlung bei Lieferung';
@@ -423,7 +423,7 @@ function sendOrderReadyForPickupEmail($to, $name, $orderData) {
 
     $branch = $orderData['branch'] ?? [];
     $branchAddress = $branch['address'] ?? 'Florastraße 10A, 13187 Berlin';
-    $branchPhone = $branch['phone'] ?? '030 71055810';
+    $branchPhone = $branch['phone'] ?? '030 37476736';
 
     $pm = strtolower((string)($orderData['payment_method'] ?? 'cash'));
     $payStatus = (strpos($pm, 'paid') !== false || strpos($pm, 'paypal') !== false || strpos($pm, 'stripe') !== false || strpos($pm, 'karte') !== false) ? 'Bereits online bezahlt' : 'Barzahlung bei Abholung';
@@ -532,7 +532,7 @@ function sendOrderBillEmail($to, $name, $orderData) {
       Bitte &ouml;ffnen Sie den Anhang, um Ihre vollst&auml;ndige Rechnung anzuzeigen oder zu drucken.
     </div>
   </div>';
-  $branchPhone = ($orderData['branch']['id'] ?? '') === 'branch_haupt' ? '030 63912199' : '03071055810';
+  $branchPhone = ($orderData['branch']['id'] ?? '') === 'branch_haupt' ? '030 55617056' : '03037476736';
   $htmlBody .= '
   <div style="background:#1a1a1a;padding:20px;text-align:center;">
     <p style="color:rgba(255,255,255,.5);font-size:12px;margin:4px 0;"><strong style="color:#d4af37;">LEO SUSHI</strong> &bull; ' . $branchAddress . '</p>

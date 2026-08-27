@@ -63,10 +63,13 @@ function getAuthToken() {
 // Helper function to make API requests
 async function apiRequest(endpoint, options = {}) {
   const fullEndpoint = endpoint.startsWith('http') ? endpoint : `${API_PHP_BASE_URL}${endpoint}`;
+  const timeoutMs = Math.max(5000, Math.min(120000, Number(options.timeoutMs) || 20000));
+  const fetchOptions = { ...options };
+  delete fetchOptions.timeoutMs;
   const token = getAuthToken();
   const headers = {
     'Content-Type': 'application/json',
-    ...options.headers
+    ...fetchOptions.headers
   };
 
   if (token) {
@@ -75,13 +78,13 @@ async function apiRequest(endpoint, options = {}) {
 
   // Add timeout controller
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 20000); // 20 second timeout
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
   try {
     const isNative = window.Capacitor && window.Capacitor.isNativePlatform();
 
     const response = await fetch(fullEndpoint, {
-      ...options,
+      ...fetchOptions,
       credentials: isNative ? 'same-origin' : 'include',
       headers,
       signal: controller.signal
@@ -193,10 +196,11 @@ const authAPI = {
 // Orders API
 const ordersAPI = {
   // Save order
-  async saveOrder(orderData) {
+  async saveOrder(orderData, options = {}) {
     return await apiRequest('/index.php?route=v1/data/orders/create', {
       method: 'POST',
-      body: JSON.stringify(orderData)
+      body: JSON.stringify(orderData),
+      timeoutMs: options.timeoutMs || 20000
     });
   },
 

@@ -25,7 +25,7 @@
             id: 'branch_flora',
             name: 'LEO SUSHI - Florastraße 10A',
             address: 'Florastraße 10A, 13187 Berlin',
-            phone: '+49 30 71055810',
+            phone: '+49 30 37476736',
             lat: 52.5694,
             lng: 13.4077
         },
@@ -33,12 +33,12 @@
             id: 'branch_haupt',
             name: 'LEO SUSHI - Hauptstraße 29a',
             address: 'Hauptstraße 29a, 13158 Berlin',
-            phone: '+49 30 63912199',
+            phone: '+49 30 55617056',
             lat: 52.5855,
             lng: 13.3854
         }
     };
-    const APP_BRANCH_CONFIRMATION_VERSION = 'v53';
+    const APP_BRANCH_CONFIRMATION_VERSION = 'v60';
 
     function ensureAppBranchSelection() {
         let branchKey = localStorage.getItem('selected_branch');
@@ -51,14 +51,11 @@
         if (savedBranch && (savedBranch.id === 'branch_haupt' || savedBranch.id === 'haupt')) branchKey = 'haupt';
         else if (savedBranch && (savedBranch.id === 'branch_flora' || savedBranch.id === 'flora')) branchKey = 'flora';
 
-        if (!branchKey || (branchKey !== 'flora' && branchKey !== 'haupt')) {
-            branchKey = 'flora';
-        }
+        const isValidBranch = branchKey === 'flora' || branchKey === 'haupt';
+        const isConfirmed = localStorage.getItem('leoBranchSelectionConfirmed') === APP_BRANCH_CONFIRMATION_VERSION;
+        if (!isValidBranch || !isConfirmed) return null;
 
-        const branch = APP_BRANCHES[branchKey] || APP_BRANCHES.flora;
-        localStorage.setItem('selected_branch', branchKey);
-        localStorage.setItem('leoSelectedBranch', JSON.stringify(branch));
-        return branch;
+        return APP_BRANCHES[branchKey];
     }
 
     function syncAppBranchLabels(branchKey) {
@@ -247,13 +244,14 @@
 
     function getExactAppBranchMenu() {
         const branch = ensureAppBranchSelection();
-        const branchId = (branch && branch.id) ? branch.id : 'branch_flora';
+        if (!branch) return [];
+        const branchId = branch.id;
         if (Array.isArray(window.MENU_DATA_FROM_API) && window.MENU_DATA_FROM_API.length > 0 && window.LEO_MENU_BRANCH_ID === branchId) {
             return window.MENU_DATA_FROM_API;
         }
         // Fallback to cache for instant rendering
         try {
-            const cached = localStorage.getItem(`leo_menu_cache_${branchId}`) || localStorage.getItem('leo_menu_cache_branch_flora');
+            const cached = localStorage.getItem(`leo_menu_cache_${branchId}`);
             if (cached) {
                 const parsed = JSON.parse(cached);
                 if (Array.isArray(parsed) && parsed.length > 0) {
@@ -266,15 +264,6 @@
 
         if (typeof window.loadMenuFromAPI === 'function' && !appBranchMenuLoadPromise) {
             loadExactAppBranchMenu();
-        }
-
-        if (Array.isArray(window.MENU_DATA_FROM_API) && window.MENU_DATA_FROM_API.length > 0) {
-            return window.MENU_DATA_FROM_API;
-        }
-
-        // Instant static fallback: NEVER leave the screen empty or stuck loading
-        if (typeof MENU_DATA !== 'undefined' && Array.isArray(MENU_DATA) && MENU_DATA.length > 0) {
-            return MENU_DATA;
         }
 
         return [];
@@ -517,7 +506,7 @@
             return `
                 <div class="app-food-card" id="dish_card_${dish.id}">
                     <button type="button" class="app-food-img-wrap app-food-img-button" onclick="window.openAppDishDetail('${dish.id}')" aria-label="Details zu ${dish.cleanName || dish.name} öffnen">
-                        <img src="${dish.image}" alt="${dish.name}" class="app-food-img" loading="lazy" onerror="this.onerror=null;this.src='${getDishFallbackImage(dish.cat, dish.name)}'">
+                        ${renderAppDishImageTag(dish.image, dish.name, 'app-food-img', getDishFallbackImage(dish.cat, dish.name))}
                         ${dish.badge ? `<span class="app-food-tag">${dish.badge}</span>` : ''}
                     </button>
                     <div class="app-food-body">
@@ -744,8 +733,18 @@
             .replace(/[\u0300-\u036f]/g, '')
             .toLowerCase();
 
-        // 1. Drinks / Getränke Granular Detection by Name & Category
-        if (category === 'getranke' || category === 'drinks' || category === 'getraenke' || category === 'beverages' || category === 'softdrinks') {
+        const drinkCategories = ['getranke', 'getraenke', 'drinks', 'beverages', 'softdrinks'];
+        const sushiCategories = [
+            'specialrolls', 'special-rolls', 'sushimenu', 'menus', 'sashimi',
+            'nigiri', 'firenigiri', 'fire-nigiri', 'crunchy',
+            'crunchy-inside-out-rolls', 'bigrolls', 'big-rolls', 'minirolls',
+            'mini-rolls', 'insideout', 'inside-out', 'maki', 'temaki'
+        ];
+
+        // The menu category always wins over name keywords. For example, "Sake"
+        // is salmon in a Maki/Nigiri category but a drink in Getränke.
+        // 1. Drinks / Getränke granular detection
+        if (drinkCategories.includes(category)) {
             // Water
             if (/wasser|mineral|naturell|sprudel|still/.test(normalizedName)) {
                 return 'assets/drink_water.webp';
@@ -778,47 +777,40 @@
             return 'assets/drink_cocktail.webp';
         }
 
-        // Check if name itself is a drink
-        if (/coca|cola|fanta|sprite|limonade|eistee|lassi|mineralwasser|bier|radler|wein|sake|espresso|cappuccino|saft|juice/.test(normalizedName)) {
-            if (/wasser|naturell|sprudel/.test(normalizedName)) return 'assets/drink_water.webp';
-            if (/cola|fanta|sprite|spezi/.test(normalizedName)) return 'assets/drink_softdrink.webp';
-            if (/bier|beer|pils/.test(normalizedName)) return 'assets/drink_beer.webp';
-            if (/wein|wine|sake/.test(normalizedName)) return 'assets/drink_wine.webp';
-            if (/kaffee|coffee|cafe|tea|tee/.test(normalizedName)) return 'assets/drink_coffee_tea.webp';
-            if (/saft|juice/.test(normalizedName)) return 'assets/drink_juice.webp';
-            return 'assets/drink_homemade.webp';
-        }
-
         // 2. Desserts
-        if (category === 'dessert' || category === 'desserts' || /dessert|mochi|dragon ball|banane|chuoi|sesam|eis|ice cream|matcha eis/.test(normalizedName)) {
+        if (category === 'dessert' || category === 'desserts') {
             return 'assets/dessert_mochi.webp';
         }
 
         // 3. Soups & Salads
-        if (category === 'suppen' || category === 'soup' || /suppe|soup|miso|ramen|canh|tom yum|tom kha/.test(normalizedName)) {
+        if (category === 'suppen' || category === 'soup') {
             return 'assets/soup_new_banner.png';
         }
-        if (category === 'salate' || category === 'salad' || /salat|salad|nom|goi/.test(normalizedName)) {
+        if (category === 'salate' || category === 'salad') {
+            if (/garnel|ebi|shrimp/.test(normalizedName)) return 'assets/salat_mit_garnelen_88520.webp';
             return 'assets/salad_new_banner.png';
         }
 
         // 4. Warm Dishes / Hauptspeisen / Teriyaki / Curry
-        if (category === 'hauptspeisen' || category === 'teriyaki' || category === 'warm-dishes' || /curry|erdnuss|teriyaki|gebratene|udon|pad thai|rice|reis gericht|pho|com/.test(normalizedName)) {
+        if (category === 'hauptspeisen' || category === 'teriyaki' || category === 'warm-dishes' || category === 'warmekueche') {
+            if (category === 'teriyaki' && /thunfisch|tuna/.test(normalizedName)) {
+                return 'assets/Image_Teriyaki-Tuna-Tataki-Flatbread_Teriyaki-Sauce_RT_SV_BKP_092921-5.webp';
+            }
             return 'assets/474747577_583620977982257_5069519367255368765_n.webp';
         }
 
         // 5. Vorspeisen / Appetizers
-        if (category === 'vorspeisen' || category === 'starters' || /spring roll|fruhlingsrolle|sommerrolle|summer roll|nem|gyoza|wantan|edamame|yakitori|sate/.test(normalizedName)) {
+        if (category === 'vorspeisen' || category === 'starters') {
             return 'assets/477094040_943569787952278_5086544566261599514_n.webp';
         }
 
         // 6. Bowls / Poke Bowl
-        if (category === 'pokebowl' || category === 'bowls' || /poke|bowl/.test(normalizedName)) {
+        if (category === 'pokebowl' || category === 'bowls') {
             return 'assets/sake-poke-bowl-with-rice-or-salad.webp';
         }
 
         // 7. Sides / Beilagen
-        if (category === 'beilagen' || category === 'sides' || /duftreis|sushi reis|ingwer|wasabi|sose|sauce|nudeln/.test(normalizedName)) {
+        if (category === 'beilagen' || category === 'sides') {
             return 'assets/524354655_17842903512542764_6403983830540063508_n11 1.webp';
         }
 
@@ -854,6 +846,44 @@
             return 'assets/dsc06551_master.webp';
         }
 
+        // Name-based recovery is only used for uncategorized legacy items.
+        // It intentionally runs after the category rules to avoid collisions
+        // such as Sake Maki/Sake Nigiri being displayed as wine.
+        if (!sushiCategories.includes(category)) {
+            if (/dessert|mochi|dragon ball|banane|chuoi|sesam|eis|ice cream|matcha eis/.test(normalizedName)) {
+                return 'assets/dessert_mochi.webp';
+            }
+            if (/suppe|soup|miso|ramen|canh|tom yum|tom kha/.test(normalizedName)) {
+                return 'assets/soup_new_banner.png';
+            }
+            if (/salat|salad|nom|goi/.test(normalizedName)) {
+                return /garnel|ebi|shrimp/.test(normalizedName)
+                    ? 'assets/salat_mit_garnelen_88520.webp'
+                    : 'assets/salad_new_banner.png';
+            }
+            if (/curry|erdnuss|teriyaki|gebratene|udon|pad thai|rice|reis gericht|pho|com/.test(normalizedName)) {
+                return 'assets/474747577_583620977982257_5069519367255368765_n.webp';
+            }
+            if (/spring roll|fruhlingsrolle|sommerrolle|summer roll|nem|gyoza|wantan|edamame|yakitori|sate/.test(normalizedName)) {
+                return 'assets/477094040_943569787952278_5086544566261599514_n.webp';
+            }
+            if (/poke|bowl/.test(normalizedName)) {
+                return 'assets/sake-poke-bowl-with-rice-or-salad.webp';
+            }
+            if (/duftreis|sushi reis|ingwer|wasabi|sose|sauce|nudeln/.test(normalizedName)) {
+                return 'assets/524354655_17842903512542764_6403983830540063508_n11 1.webp';
+            }
+            if (/coca|cola|fanta|sprite|limonade|eistee|lassi|mineralwasser|bier|radler|wein|espresso|cappuccino|saft|juice/.test(normalizedName)) {
+                if (/wasser|naturell|sprudel/.test(normalizedName)) return 'assets/drink_water.webp';
+                if (/cola|fanta|sprite|spezi/.test(normalizedName)) return 'assets/drink_softdrink.webp';
+                if (/bier|beer|pils/.test(normalizedName)) return 'assets/drink_beer.webp';
+                if (/wein|wine/.test(normalizedName)) return 'assets/drink_wine.webp';
+                if (/kaffee|coffee|cafe|tea|tee/.test(normalizedName)) return 'assets/drink_coffee_tea.webp';
+                if (/saft|juice/.test(normalizedName)) return 'assets/drink_juice.webp';
+                return 'assets/drink_homemade.webp';
+            }
+        }
+
         return getCategoryFallbackImage(category);
     }
 
@@ -861,15 +891,53 @@
         const candidate = item && typeof item.image === 'string' ? item.image.trim() : '';
         const cat = String(catId || '').toLowerCase().trim();
         const isDrinkOrDessertOrSide = ['getranke', 'drinks', 'getraenke', 'softdrinks', 'dessert', 'desserts', 'beilagen'].includes(cat);
+        const curatedImage = window.LEO_DISH_IMAGE_CATALOG && typeof window.LEO_DISH_IMAGE_CATALOG.resolve === 'function'
+            ? window.LEO_DISH_IMAGE_CATALOG.resolve(catId, item)
+            : '';
 
         if (candidate && /\.(?:avif|gif|jpe?g|png|webp)(?:[?#].*)?$/i.test(candidate)) {
             // Prevent generic sushi images from being assigned to drinks / desserts / sides
             if (isDrinkOrDessertOrSide && /sushi|rolls|maki|nigiri|sashimi|platter|close-up-sushi/i.test(candidate)) {
-                return getDishFallbackImage(catId, item && (item.name || item.cleanName));
+                return curatedImage || getDishFallbackImage(catId, item && (item.name || item.cleanName));
             }
             return candidate;
         }
-        return getDishFallbackImage(catId, item && (item.name || item.cleanName));
+        return curatedImage || getDishFallbackImage(catId, item && (item.name || item.cleanName));
+    }
+
+    function getDishImageRenderData(reference) {
+        const catalog = window.LEO_DISH_IMAGE_CATALOG;
+        const sprite = catalog && typeof catalog.parse === 'function' ? catalog.parse(reference) : null;
+        if (!sprite) return { src: reference, style: '' };
+
+        // Center the requested square cell inside any card aspect ratio without
+        // stretching the food photo. Percent transforms are relative to the
+        // complete 4x4 sheet, so one cell occupies exactly 25% per axis.
+        const translateX = -(sprite.column * 25 + 12.5);
+        const translateY = -(sprite.row * 25 + 12.5);
+        return {
+            src: sprite.src,
+            style: `width:400%;height:auto;max-width:none;left:50%;top:50%;object-fit:initial;transform:translate(${translateX}%,${translateY}%);`
+        };
+    }
+
+    function renderAppDishImageTag(reference, alt, className, fallback) {
+        const renderData = getDishImageRenderData(reference);
+        const styleAttr = renderData.style ? ` style="${renderData.style}"` : '';
+        return `<img src="${renderData.src}" alt="${alt || ''}" class="${className}" loading="eager" decoding="async"${styleAttr} onerror="this.onerror=null;this.removeAttribute('style');this.src='${fallback}'">`;
+    }
+
+    function applyAppDishImage(element, reference, fallback) {
+        if (!element) return;
+        const renderData = getDishImageRenderData(reference);
+        element.onerror = function () {
+            this.onerror = null;
+            this.removeAttribute('style');
+            this.src = fallback;
+        };
+        element.src = renderData.src;
+        if (renderData.style) element.setAttribute('style', renderData.style);
+        else element.removeAttribute('style');
     }
 
     function enforceNativeMenuLayout() {
@@ -1075,7 +1143,7 @@
             return `
                 <div class="app-food-card" id="dish_card_${dish.id}">
                     <button type="button" class="app-food-img-wrap app-food-img-button" onclick="window.handleAppDishCardClick('${dish.id}')" aria-label="Details zu ${dish.name} öffnen">
-                        <img src="${dish.image}" alt="${dish.name}" class="app-food-img" loading="lazy" onerror="this.onerror=null;this.src='${getDishFallbackImage(dish.catId, dish.rawName || dish.name)}'">
+                        ${renderAppDishImageTag(dish.image, dish.name, 'app-food-img', getDishFallbackImage(dish.catId, dish.rawName || dish.name))}
                         ${dish.badge ? `<span class="app-food-tag">${dish.badge}</span>` : ''}
                     </button>
                     <div class="app-food-body">
@@ -1355,7 +1423,9 @@
             <div style="display: flex; flex-direction: column; gap: 10px;">
                 ${cart.map(item => `
                     <div class="app-cart-item-row">
-                        <img src="${item.image}" alt="${item.name}" class="app-cart-item-img">
+                        <div class="app-cart-item-img-wrap">
+                            ${renderAppDishImageTag(item.image, item.name, 'app-cart-item-img', 'assets/close-up-sushi-served-table 1.webp')}
+                        </div>
                         <div class="app-cart-item-info">
                             <div class="app-cart-item-name">${item.name}</div>
                             <div class="app-cart-item-price">${formatEuro(item.price * item.qty)}</div>
@@ -1597,7 +1667,7 @@
         const optionsSec = document.getElementById('detailOptionsSection');
         const optionsList = document.getElementById('detailOptionsList');
 
-        if (imgEl) imgEl.src = dish.image;
+        applyAppDishImage(imgEl, dish.image, getDishFallbackImage(dish.cat || dish.catId, dish.rawName || dish.name));
         if (titleEl) titleEl.textContent = dish.name;
         if (badgeEl) badgeEl.textContent = dish.badge || '';
         if (descEl) descEl.textContent = dish.desc;
@@ -1889,7 +1959,7 @@
                             <div class="app-branch-badge">Filiale 1 • Pankow</div>
                             <div class="app-branch-heading">LEO SUSHI - Florastraße 10A</div>
                             <div class="app-branch-sub">13187 Berlin • ⏱️ ca. 30-45 Min</div>
-                            <div class="app-branch-tel">📞 030 71055810</div>
+                            <div class="app-branch-tel">📞 030 37476736</div>
                         </div>
                         <div class="app-branch-check" id="branchCheckFlora">✓</div>
                     </button>
@@ -1898,7 +1968,7 @@
                             <div class="app-branch-badge">Filiale 2 • Wilhelmsruh</div>
                             <div class="app-branch-heading">LEO SUSHI - Hauptstraße 29a</div>
                             <div class="app-branch-sub">13158 Berlin • ⏱️ ca. 30-45 Min</div>
-                            <div class="app-branch-tel">📞 030 63912199</div>
+                            <div class="app-branch-tel">📞 030 55617056</div>
                         </div>
                         <div class="app-branch-check" id="branchCheckHaupt" style="display: none;">✓</div>
                     </button>

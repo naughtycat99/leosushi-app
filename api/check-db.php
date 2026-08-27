@@ -70,6 +70,8 @@ try {
             'updated_at' => "ALTER TABLE `orders` ADD COLUMN `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()",
             'delivery_location' => "ALTER TABLE `orders` ADD COLUMN `delivery_location` varchar(255) DEFAULT NULL",
             'payment_status' => "ALTER TABLE `orders` ADD COLUMN `payment_status` varchar(20) DEFAULT 'pending' AFTER `payment_method`",
+            'paypal_order_id' => "ALTER TABLE `orders` ADD COLUMN `paypal_order_id` varchar(255) DEFAULT NULL AFTER `payment_status`",
+            'paypal_capture_id' => "ALTER TABLE `orders` ADD COLUMN `paypal_capture_id` varchar(255) DEFAULT NULL AFTER `paypal_order_id`",
             'promotion_id' => "ALTER TABLE `orders` ADD COLUMN `promotion_id` varchar(50) DEFAULT NULL AFTER `customer_code`"
         ]
     );

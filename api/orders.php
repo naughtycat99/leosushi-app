@@ -6,6 +6,9 @@
 require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/utils.php';
 require_once __DIR__ . '/mailer.php';
+if (file_exists(__DIR__ . '/paypal-order-store.php')) {
+    require_once __DIR__ . '/paypal-order-store.php';
+}
 
 function handleOrderRequest($method, $action, $input)
 {
@@ -151,8 +154,85 @@ function getBestsellingDishes($input)
     }
 }
 
+/**
+ * PayPal reliability schema and idempotency helpers.
+ *
+ * Older checkout builds captured the payment in Safari/WebView and only then
+ * attempted to create the restaurant order. A slow request could therefore
+ * charge the customer without leaving any recoverable payment identifier in
+ * the database. Store both PayPal's order id and the final capture/transaction
+ * id, with unique indexes, so retries are safe and an existing payment always
+ * resolves to one canonical restaurant order.
+ */
+function ensurePayPalReliabilitySchema($conn)
+{
+    $paypalOrderColumn = $conn->query("SHOW COLUMNS FROM orders LIKE 'paypal_order_id'");
+    if (!$paypalOrderColumn || $paypalOrderColumn->num_rows === 0) {
+        if (!$conn->query("ALTER TABLE orders ADD COLUMN paypal_order_id VARCHAR(255) DEFAULT NULL AFTER payment_status")) {
+            throw new RuntimeException('PayPal order id column could not be created: ' . $conn->error);
+        }
+    }
+
+    $paypalCaptureColumn = $conn->query("SHOW COLUMNS FROM orders LIKE 'paypal_capture_id'");
+    if (!$paypalCaptureColumn || $paypalCaptureColumn->num_rows === 0) {
+        if (!$conn->query("ALTER TABLE orders ADD COLUMN paypal_capture_id VARCHAR(255) DEFAULT NULL AFTER paypal_order_id")) {
+            throw new RuntimeException('PayPal capture id column could not be created: ' . $conn->error);
+        }
+    }
+
+    $orderIndex = $conn->query("SHOW INDEX FROM orders WHERE Key_name = 'uniq_orders_paypal_order_id'");
+    if (!$orderIndex || $orderIndex->num_rows === 0) {
+        if (!$conn->query("CREATE UNIQUE INDEX uniq_orders_paypal_order_id ON orders (paypal_order_id)")) {
+            throw new RuntimeException('PayPal order id index could not be created: ' . $conn->error);
+        }
+    }
+
+    $captureIndex = $conn->query("SHOW INDEX FROM orders WHERE Key_name = 'uniq_orders_paypal_capture_id'");
+    if (!$captureIndex || $captureIndex->num_rows === 0) {
+        if (!$conn->query("CREATE UNIQUE INDEX uniq_orders_paypal_capture_id ON orders (paypal_capture_id)")) {
+            throw new RuntimeException('PayPal capture id index could not be created: ' . $conn->error);
+        }
+    }
+}
+
+function findOrderByPayPalPayment($conn, $paypalOrderId, $paypalCaptureId)
+{
+    if ($paypalCaptureId !== null) {
+        $stmt = $conn->prepare('SELECT order_id, status, service_type FROM orders WHERE paypal_capture_id = ? LIMIT 1');
+        $stmt->bind_param('s', $paypalCaptureId);
+        $stmt->execute();
+        $row = $stmt->get_result()->fetch_assoc();
+        if ($row) return $row;
+    }
+    if ($paypalOrderId !== null) {
+        $stmt = $conn->prepare('SELECT order_id, status, service_type FROM orders WHERE paypal_order_id = ? LIMIT 1');
+        $stmt->bind_param('s', $paypalOrderId);
+        $stmt->execute();
+        $row = $stmt->get_result()->fetch_assoc();
+        if ($row) return $row;
+    }
+    return null;
+}
+
+function sendExistingPayPalOrderResponse(array $order)
+{
+    echo json_encode([
+        'success' => true,
+        'duplicate' => true,
+        'message' => 'Bestellung wurde bereits gespeichert',
+        'order_id' => $order['order_id'],
+        'status' => $order['status'] ?? 'pending',
+        'service_type' => $order['service_type'] ?? 'delivery'
+    ], JSON_UNESCAPED_UNICODE);
+}
+
 function createOrder($input)
 {
+    // A paid browser can disappear at any moment. Once this request reaches
+    // PHP, finish the durable DB write even if the client times out/closes.
+    ignore_user_abort(true);
+    @set_time_limit(180);
+    $orderSequenceLock = null;
     try {
         $customerEmail = $input['customer']['email'] ?? '';
 
@@ -170,6 +250,27 @@ function createOrder($input)
         }
 
         $orderId = $input['order_id'] ?? ('LEO-' . date('YmdHis'));
+        $paypalOrderId = trim((string)($input['paypal_order_id'] ?? $input['paypal_payment_id'] ?? ''));
+        $paypalCaptureId = trim((string)($input['paypal_capture_id'] ?? $input['paypal_transaction_id'] ?? ''));
+        foreach ([$paypalOrderId, $paypalCaptureId] as $paypalId) {
+            if ($paypalId !== '' && !preg_match('/^[A-Za-z0-9_-]{8,255}$/', $paypalId)) {
+                http_response_code(422);
+                echo json_encode(['success' => false, 'message' => 'Ungültige PayPal-Zahlungs-ID']);
+                return;
+            }
+        }
+        if ($paypalOrderId === '') $paypalOrderId = null;
+        if ($paypalCaptureId === '') $paypalCaptureId = null;
+
+        if ($paypalOrderId !== null || $paypalCaptureId !== null) {
+            $paypalConn = getDbConnection();
+            ensurePayPalReliabilitySchema($paypalConn);
+            $existingPayPalOrder = findOrderByPayPalPayment($paypalConn, $paypalOrderId, $paypalCaptureId);
+            if ($existingPayPalOrder) {
+                sendExistingPayPalOrderResponse($existingPayPalOrder);
+                return;
+            }
+        }
         $stripePaymentId = trim((string)($input['stripe_payment_id'] ?? $input['payment_intent_id'] ?? ''));
         if ($stripePaymentId !== '' && !preg_match('/^pi_[A-Za-z0-9_]+$/', $stripePaymentId)) {
             http_response_code(422);
@@ -278,6 +379,8 @@ function createOrder($input)
             'delivery_distance_km' => isset($input['delivery_distance_km']) ? floatval($input['delivery_distance_km']) : null,
             'branch' => $input['branch'] ?? null
         ];
+        if ($paypalOrderId !== null) $summary['paypal_order_id'] = $paypalOrderId;
+        if ($paypalCaptureId !== null) $summary['paypal_capture_id'] = $paypalCaptureId;
         if ($stripePaymentId !== null) {
             $summary['stripe_payment_id'] = $stripePaymentId;
         }
@@ -315,6 +418,18 @@ function createOrder($input)
         $dd = date('d', strtotime($orderDate));
         $prefix = "LEO-$yy$mm$dd-";
 
+        // Serialize sequence allocation. Without this lock two simultaneous
+        // payments can receive the same order_id and ON DUPLICATE KEY would
+        // overwrite the first customer's order.
+        $orderSequenceLock = 'leo_order_sequence_' . str_replace('-', '', $orderDate);
+        $lockStmt = $conn->prepare('SELECT GET_LOCK(?, 10) AS acquired');
+        $lockStmt->bind_param('s', $orderSequenceLock);
+        $lockStmt->execute();
+        $lockRow = $lockStmt->get_result()->fetch_assoc();
+        if ((int)($lockRow['acquired'] ?? 0) !== 1) {
+            throw new RuntimeException('Bestellnummer konnte nicht reserviert werden');
+        }
+
         // Only look for orders from this logical date that follow the sequential format
         $maxIdStmt = $conn->prepare("SELECT order_id FROM orders WHERE date = ? AND order_id LIKE ?");
         $likePattern = $prefix . '%';
@@ -348,7 +463,7 @@ function createOrder($input)
                 'id' => $bId,
                 'name' => $bId === 'branch_haupt' ? 'Leo Sushi - Hauptstr.' : 'Leo Sushi - Florastr.',
                 'address' => $bId === 'branch_haupt' ? 'Hauptstraße 29a, 13158 Berlin' : 'Florastraße 10A, 13187 Berlin',
-                'phone' => $bId === 'branch_haupt' ? '030 63912199' : '030 71055810'
+                'phone' => $bId === 'branch_haupt' ? '030 55617056' : '030 37476736'
             ];
         }
         $summaryJson = json_encode($summary);
@@ -371,11 +486,16 @@ function createOrder($input)
             }
         }
 
+        if ($paypalOrderId !== null || $paypalCaptureId !== null) {
+            ensurePayPalReliabilitySchema($conn);
+        }
+
         $stmt = $conn->prepare('
             INSERT INTO orders (
                 order_id, customer_id, status, service_type, items, delivery_address,
-                summary, customer_code, promotion_id, payment_method, payment_status, stripe_payment_id, date, branch_id
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                summary, customer_code, promotion_id, payment_method, payment_status,
+                stripe_payment_id, paypal_order_id, paypal_capture_id, date, branch_id
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ON DUPLICATE KEY UPDATE
                 status = VALUES(status),
                 items = VALUES(items),
@@ -385,6 +505,8 @@ function createOrder($input)
                 payment_method = VALUES(payment_method),
                 payment_status = VALUES(payment_status),
                 stripe_payment_id = COALESCE(VALUES(stripe_payment_id), stripe_payment_id),
+                paypal_order_id = COALESCE(VALUES(paypal_order_id), paypal_order_id),
+                paypal_capture_id = COALESCE(VALUES(paypal_capture_id), paypal_capture_id),
                 branch_id = VALUES(branch_id),
                 updated_at = CURRENT_TIMESTAMP
         ');
@@ -395,7 +517,7 @@ function createOrder($input)
         $customerCode = $input['customer_code'] ?? $input['discount'] ?? null;
 
         $branchId = $input['branch_id'] ?? ($input['branch']['id'] ?? 'branch_flora');
-        $stmt->bind_param('ssssssssssssss',
+        $stmt->bind_param('ssssssssssssssss',
             $orderId,
             $customerId,
             $status,
@@ -408,11 +530,20 @@ function createOrder($input)
             $paymentMethod,
             $paymentStatus,
             $stripePaymentId,
+            $paypalOrderId,
+            $paypalCaptureId,
             $orderDate,
             $branchId
         );
 
         $stmt->execute();
+
+        if ($orderSequenceLock !== null) {
+            $releaseStmt = $conn->prepare('SELECT RELEASE_LOCK(?)');
+            $releaseStmt->bind_param('s', $orderSequenceLock);
+            $releaseStmt->execute();
+            $orderSequenceLock = null;
+        }
 
         // A webhook or another browser request may have inserted the same
         // PaymentIntent concurrently. Always return the canonical DB order id.
@@ -422,6 +553,17 @@ function createOrder($input)
             $canonicalStmt->execute();
             $canonicalRow = $canonicalStmt->get_result()->fetch_assoc();
             if ($canonicalRow && !empty($canonicalRow['order_id'])) $orderId = $canonicalRow['order_id'];
+        }
+        if ($paypalOrderId !== null || $paypalCaptureId !== null) {
+            $canonicalPayPalOrder = findOrderByPayPalPayment($conn, $paypalOrderId, $paypalCaptureId);
+            if ($canonicalPayPalOrder && !empty($canonicalPayPalOrder['order_id'])) {
+                $canonicalPayPalOrderId = $canonicalPayPalOrder['order_id'];
+                if ($canonicalPayPalOrderId !== $orderId) {
+                    sendExistingPayPalOrderResponse($canonicalPayPalOrder);
+                    return;
+                }
+                $orderId = $canonicalPayPalOrderId;
+            }
         }
 
         // Check if order was saved
@@ -499,6 +641,8 @@ function createOrder($input)
             'is_scheduled' => $isScheduled
         ]);
 
+        header('Content-Length: ' . strlen($responsePayload));
+        header('Connection: close');
         echo $responsePayload;
 
         if (function_exists('fastcgi_finish_request')) {
@@ -572,6 +716,13 @@ function createOrder($input)
         }
     }
     catch (Exception $e) {
+        if ($orderSequenceLock !== null && isset($conn) && $conn instanceof mysqli) {
+            try {
+                $releaseStmt = $conn->prepare('SELECT RELEASE_LOCK(?)');
+                $releaseStmt->bind_param('s', $orderSequenceLock);
+                $releaseStmt->execute();
+            } catch (Throwable $ignored) {}
+        }
         http_response_code(500);
         echo json_encode(['success' => false, 'message' => 'Fehler beim Erstellen der Bestellung: ' . $e->getMessage()]);
         error_log('Error creating order: ' . $e->getMessage());
@@ -583,6 +734,16 @@ function listOrders($input)
 {
     try {
         $conn = getDbConnection();
+
+        // Auto-reconcile pending PayPal transactions (throttled to once every 30s)
+        static $lastPayPalReconcile = 0;
+        if (time() - $lastPayPalReconcile > 30) {
+            $lastPayPalReconcile = time();
+            if (function_exists('paypalReconcilePendingDrafts')) {
+                paypalReconcilePendingDrafts($conn, 1440);
+            }
+        }
+
         $status   = $input['status']    ?? $_GET['status']    ?? null;
         $branchId = $input['branch_id'] ?? $_GET['branch_id'] ?? null;
         $dateFrom = $input['date_from'] ?? $_GET['date_from'] ?? null;
@@ -617,7 +778,6 @@ function listOrders($input)
             $types    .= 's';
         }
 
-        // Full-text search on customer name / phone inside delivery_address JSON
         if ($search) {
             $sql      .= ' AND (delivery_address LIKE ? OR order_id LIKE ?)';
             $like      = '%' . $search . '%';
@@ -1324,9 +1484,20 @@ function registerDeviceToken($input)
         }
 
         $conn = getDbConnection();
-        $stmt = $conn->prepare("INSERT INTO device_tokens (token, user_type, device_info) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE user_type = VALUES(user_type), device_info = VALUES(device_info), last_used = CURRENT_TIMESTAMP");
-        $stmt->bind_param('sss', $token, $userType, $deviceInfo);
+        // Older production schemas did not have a UNIQUE index on token, so
+        // ON DUPLICATE KEY kept creating the same registration on every load.
+        $stmt = $conn->prepare("UPDATE device_tokens SET user_type = ?, device_info = ?, created_at = CURRENT_TIMESTAMP WHERE token = ?");
+        $stmt->bind_param('sss', $userType, $deviceInfo, $token);
         $stmt->execute();
+        $existsStmt = $conn->prepare("SELECT 1 FROM device_tokens WHERE token = ? LIMIT 1");
+        $existsStmt->bind_param('s', $token);
+        $existsStmt->execute();
+        $tokenExists = (bool)$existsStmt->get_result()->fetch_row();
+        if (!$tokenExists) {
+            $stmt = $conn->prepare("INSERT INTO device_tokens (token, user_type, device_info) VALUES (?, ?, ?)");
+            $stmt->bind_param('sss', $token, $userType, $deviceInfo);
+            $stmt->execute();
+        }
 
         echo json_encode(['success' => true, 'message' => 'Token registered']);
     }
@@ -1361,7 +1532,9 @@ function sendPushByGroup($userType, $title, $body, $data = [])
 {
     try {
         $conn = getDbConnection();
-        $stmt = $conn->prepare("SELECT token FROM device_tokens WHERE user_type = ?");
+        // DISTINCT prevents legacy duplicate rows from sending the same alert
+        // dozens of times to one physical device.
+        $stmt = $conn->prepare("SELECT DISTINCT token FROM device_tokens WHERE user_type = ? AND token <> ''");
         $stmt->bind_param('s', $userType);
         $stmt->execute();
         $result = $stmt->get_result();
@@ -1472,9 +1645,14 @@ function getFcmAccessToken()
         return $cachedToken;
     }
 
-    $serviceAccountPath = __DIR__ . '/firebase-service-account.json';
-    if (!file_exists($serviceAccountPath)) {
-        error_log("Firebase service account file not found: $serviceAccountPath");
+    // Never keep a Google private key inside the public web root. Prefer an
+    // explicit server path, then the private directory beside /public.
+    $configuredPath = trim((string)(getenv('FIREBASE_SERVICE_ACCOUNT_PATH') ?: ''));
+    $serviceAccountPath = $configuredPath !== ''
+        ? $configuredPath
+        : dirname(__DIR__, 2) . '/secrets/firebase-service-account.json';
+    if (!is_file($serviceAccountPath) || !is_readable($serviceAccountPath)) {
+        error_log("Firebase service account file not found or unreadable outside web root");
         return null;
     }
 

@@ -136,8 +136,9 @@ function setupReservationTimeOptions() {
 
   if (!dateInput || !timeSelect || timeSelect.tagName !== 'SELECT') return false;
 
-  const openHour = 12; // Restaurant opens at 12:00 for dine-in
-  const closeHour = 22; // Restaurant closes at 22:00
+  const selectedBranch = document.getElementById('reserveBranch')?.value || '';
+  const openMinutes = selectedBranch === 'branch_haupt' ? (11 * 60 + 30) : (12 * 60);
+  const closeMinutes = 22 * 60;
   
   const selectedDate = dateInput.value;
   const now = new Date();
@@ -146,8 +147,9 @@ function setupReservationTimeOptions() {
   const timeOptions = [];
 
   // Generate time slots every 15 minutes (clean restaurant schedule)
-  for (let hour = openHour; hour < closeHour; hour++) {
-    for (let minute = 0; minute < 60; minute += 15) {
+  for (let minutes = openMinutes; minutes < closeMinutes; minutes += 15) {
+      const hour = Math.floor(minutes / 60);
+      const minute = minutes % 60;
       const timeStr = `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
       
       // If date is today, filter out past times (including 30-min buffer)
@@ -158,7 +160,6 @@ function setupReservationTimeOptions() {
       }
       
       timeOptions.push(timeStr);
-    }
   }
 
   // Clear existing options except the first "Zeit wählen" placeholder
@@ -760,7 +761,7 @@ async function handleReservation(event) {
     return;
   }
 
-  // Verify branch is selected (fallback to active branch or default)
+  // A reservation must always be assigned to one of the two restaurants.
   let branchId = document.getElementById('reserveBranch')?.value || null;
   try {
     const savedBranch = localStorage.getItem('leoSelectedBranch');
@@ -769,7 +770,11 @@ async function handleReservation(event) {
       if (parsed && parsed.id) branchId = parsed.id;
     }
   } catch(e) {}
-  if (!branchId) branchId = 'branch_flora';
+  if (!branchId || !['branch_flora', 'branch_haupt'].includes(branchId)) {
+    alert('Bitte wählen Sie zuerst die gewünschte Filiale aus.');
+    document.getElementById('branchCardFlora')?.focus();
+    return;
+  }
 
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (!emailRegex.test(email)) {
@@ -939,6 +944,7 @@ async function handleReservation(event) {
         note: reservationData.note || '',
         items: reservationData.items || [],
         customer_code: reservationData.customerCode || null,
+        branch_id: reservationData.branch_id,
         status: reservationData.status || 'pending'
       };
 
