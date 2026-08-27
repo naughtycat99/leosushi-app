@@ -647,38 +647,8 @@ function createOrder($input)
         }
 
         // ==========================================
-        // FASTCGI FINISH REQUEST - SPEED OPTIMIZATION
-        // Send success response to browser IMMEDIATELY so customer never hangs
-        // ==========================================
-        if (ob_get_level()) {
-            ob_clean();
-        }
-        header('Content-Type: application/json; charset=utf-8');
-        
-        $responsePayload = json_encode([
-            'success' => true,
-            'message' => 'Bestellung erstellt',
-            'discount_code' => $discountCode,
-            'order_id' => $orderId,
-            'status' => $autoStatus,
-            'eta' => $confirmEmailEta,
-            'service_type' => $serviceType,
-            'is_scheduled' => $isScheduled
-        ]);
-
-        header('Content-Length: ' . strlen($responsePayload));
-        header('Connection: close');
-        echo $responsePayload;
-
-        if (function_exists('fastcgi_finish_request')) {
-            fastcgi_finish_request();
-        } else {
-            @ob_flush();
-            @flush();
-        }
-
-        // ==========================================
-        // BACKGROUND NOTIFICATIONS (Admin Email & Push)
+        // NOTIFICATIONS (Admin Email, Customer Email & Push)
+        // Execute before response to guarantee delivery across all hosting configs
         // ==========================================
         $adminOrderData = [
             'order_id' => $orderId,
@@ -730,15 +700,36 @@ function createOrder($input)
             }
         }
 
-        // 4. Send Push Notifications to Admin
+        // Send Push Notifications to Admin
         try {
             $totalFloat = parseEuroAmount($input['order_total'] ?? '0');
-            // Notify Admin of the new pending order
             notifyAdmin('Neue Bestellung wartet auf Bestätigung!', 'Bestellung #' . substr($orderId, -8) . ' - ' . number_format($totalFloat, 2) . '€', ['order_id' => $orderId, 'type' => 'new_order']);
         }
         catch (Exception $e) {
             error_log("Failed to send push notification: " . $e->getMessage());
         }
+
+        // ==========================================
+        // SEND SUCCESS RESPONSE TO CLIENT
+        // ==========================================
+        if (ob_get_level()) {
+            ob_clean();
+        }
+        header('Content-Type: application/json; charset=utf-8');
+        
+        $responsePayload = json_encode([
+            'success' => true,
+            'message' => 'Bestellung erstellt',
+            'discount_code' => $discountCode,
+            'order_id' => $orderId,
+            'status' => $autoStatus,
+            'eta' => $confirmEmailEta,
+            'service_type' => $serviceType,
+            'is_scheduled' => $isScheduled
+        ]);
+
+        header('Content-Length: ' . strlen($responsePayload));
+        echo $responsePayload;
     }
     catch (Exception $e) {
         if ($orderSequenceLock !== null && isset($conn) && $conn instanceof mysqli) {
