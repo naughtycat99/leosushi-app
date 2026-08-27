@@ -197,19 +197,25 @@ function ensurePayPalReliabilitySchema($conn)
 
 function findOrderByPayPalPayment($conn, $paypalOrderId, $paypalCaptureId)
 {
-    if ($paypalCaptureId !== null) {
+    if (!empty($paypalCaptureId)) {
         $stmt = $conn->prepare('SELECT order_id, status, service_type FROM orders WHERE paypal_capture_id = ? LIMIT 1');
-        $stmt->bind_param('s', $paypalCaptureId);
-        $stmt->execute();
-        $row = $stmt->get_result()->fetch_assoc();
-        if ($row) return $row;
+        if ($stmt) {
+            $stmt->bind_param('s', $paypalCaptureId);
+            $stmt->execute();
+            $row = $stmt->get_result()->fetch_assoc();
+            $stmt->close();
+            if ($row) return $row;
+        }
     }
-    if ($paypalOrderId !== null) {
+    if (!empty($paypalOrderId)) {
         $stmt = $conn->prepare('SELECT order_id, status, service_type FROM orders WHERE paypal_order_id = ? LIMIT 1');
-        $stmt->bind_param('s', $paypalOrderId);
-        $stmt->execute();
-        $row = $stmt->get_result()->fetch_assoc();
-        if ($row) return $row;
+        if ($stmt) {
+            $stmt->bind_param('s', $paypalOrderId);
+            $stmt->execute();
+            $row = $stmt->get_result()->fetch_assoc();
+            $stmt->close();
+            if ($row) return $row;
+        }
     }
     return null;
 }
@@ -603,7 +609,7 @@ function createOrder($input)
 
         // A webhook or another browser request may have inserted the same
         // PaymentIntent concurrently. Always return the canonical DB order id.
-        if ($stripePaymentId !== null) {
+        if (!empty($stripePaymentId)) {
             $canonicalStmt = $conn->prepare('SELECT order_id FROM orders WHERE stripe_payment_id = ? LIMIT 1');
             if ($canonicalStmt) {
                 $canonicalStmt->bind_param('s', $stripePaymentId);
@@ -613,7 +619,7 @@ function createOrder($input)
                 if ($canonicalRow && !empty($canonicalRow['order_id'])) $orderId = $canonicalRow['order_id'];
             }
         }
-        if ($paypalOrderId !== null || $paypalCaptureId !== null) {
+        if (!empty($paypalOrderId) || !empty($paypalCaptureId)) {
             $canonicalPayPalOrder = findOrderByPayPalPayment($conn, $paypalOrderId, $paypalCaptureId);
             if ($canonicalPayPalOrder && !empty($canonicalPayPalOrder['order_id'])) {
                 $canonicalPayPalOrderId = $canonicalPayPalOrder['order_id'];
@@ -717,65 +723,75 @@ function createOrder($input)
 
         // ==========================================
         // NOTIFICATIONS (Admin Email, Customer Email & Push)
-        // Dispatched in background after response is sent to client
+        // Dispatched asynchronously in background to ensure instant HTTP response (<0.1s)
         // ==========================================
-        $adminOrderData = [
-            'order_id' => $orderId,
-            'items' => $orderItems,
-            'service_type' => $input['service_type'] ?? 'Abholung',
-            'payment_method' => $input['payment_method'] ?? 'Barzahlung',
-            'total' => $input['order_total'] ?? '0,00 €',
-            'eta' => $confirmEmailEta,
-            'is_scheduled' => $isScheduled,
-            'customer_name' => $customerName,
-            'customer_phone' => $deliveryAddress['phone'] ?? 'N/A',
-            'delivery_address' => $deliveryAddress,
-            'note' => $input['note'] ?? '',
-            'branch' => $summary['branch'] ?? null
-        ];
-
-        try {
-            require_once __DIR__ . '/mailer.php';
-            sendAdminNewOrderEmail($adminOrderData);
-        } catch (Exception $e) {
-            error_log("CRITICAL: Failed to send admin email: " . $e->getMessage());
+        $asyncCmd = 'php ' . __DIR__ . '/async-notify.php ' . escapeshellarg($orderId) . ' > /dev/null 2>&1 &';
+        $dispatchedAsync = false;
+        if (function_exists('exec')) {
+            @exec($asyncCmd);
+            $dispatchedAsync = true;
         }
 
-        // Gửi email xác nhận tiếp nhận đơn hàng ngay lập tức cho khách hàng
-        $customerEmail = $deliveryAddress['email'] ?? null;
-        if (!empty($customerEmail) && filter_var($customerEmail, FILTER_VALIDATE_EMAIL)) {
+        if (!$dispatchedAsync) {
+            // Fallback: Synchronous execution if exec is disabled
+            $adminOrderData = [
+                'order_id' => $orderId,
+                'items' => $orderItems,
+                'service_type' => $input['service_type'] ?? 'Abholung',
+                'payment_method' => $input['payment_method'] ?? 'Barzahlung',
+                'total' => $input['order_total'] ?? '0,00 €',
+                'eta' => $confirmEmailEta,
+                'is_scheduled' => $isScheduled,
+                'customer_name' => $customerName,
+                'customer_phone' => $deliveryAddress['phone'] ?? 'N/A',
+                'delivery_address' => $deliveryAddress,
+                'note' => $input['note'] ?? '',
+                'branch' => $summary['branch'] ?? null
+            ];
+
             try {
-                $custNameFormatted = trim(($deliveryAddress['first_name'] ?? '') . ' ' . ($deliveryAddress['last_name'] ?? '')) ?: 'Gast';
-                $formattedAddress = ($serviceType === 'delivery') 
-                    ? trim(($deliveryAddress['street'] ?? '') . ' ' . ($deliveryAddress['house_number'] ?? '') . ', ' . ($deliveryAddress['postal'] ?? '') . ' ' . ($deliveryAddress['city'] ?? ''))
-                    : ($summary['branch']['address'] ?? 'Florastraße 10A, 13187 Berlin');
-
-                $customerEmailData = [
-                    'name' => $custNameFormatted,
-                    'order_id' => $orderId,
-                    'order_time' => date('d.m.Y H:i'),
-                    'service_type' => ($serviceType === 'delivery' ? 'Lieferung' : ($serviceType === 'pickup' ? 'Abholung' : 'Im Restaurant')),
-                    'payment_method' => $input['payment_method'] ?? $paymentMethod,
-                    'delivery_address' => $formattedAddress,
-                    'phone' => $deliveryAddress['phone'] ?? '',
-                    'order_total' => $input['order_total'] ?? ($summary['total'] ?? '0,00 €'),
-                    'eta' => 'In Bearbeitung (ca. 20-35 Min.)',
-                    'items' => $orderItems
-                ];
-                sendOrderConfirmationWithDiscountCode($customerEmail, $custNameFormatted, $customerEmailData, null);
-                error_log("Order confirmation email sent to customer: " . $customerEmail);
+                require_once __DIR__ . '/mailer.php';
+                sendAdminNewOrderEmail($adminOrderData);
             } catch (Exception $e) {
-                error_log("Failed to send customer confirmation email: " . $e->getMessage());
+                error_log("CRITICAL: Failed to send admin email: " . $e->getMessage());
             }
-        }
 
-        // Send Push Notifications to Admin
-        try {
-            $totalFloat = parseEuroAmount($input['order_total'] ?? '0');
-            notifyAdmin('Neue Bestellung wartet auf Bestätigung!', 'Bestellung #' . substr($orderId, -8) . ' - ' . number_format($totalFloat, 2) . '€', ['order_id' => $orderId, 'type' => 'new_order']);
-        }
-        catch (Exception $e) {
-            error_log("Failed to send push notification: " . $e->getMessage());
+            // Gửi email xác nhận tiếp nhận đơn hàng ngay lập tức cho khách hàng
+            $customerEmail = $deliveryAddress['email'] ?? null;
+            if (!empty($customerEmail) && filter_var($customerEmail, FILTER_VALIDATE_EMAIL)) {
+                try {
+                    $custNameFormatted = trim(($deliveryAddress['first_name'] ?? '') . ' ' . ($deliveryAddress['last_name'] ?? '')) ?: 'Gast';
+                    $formattedAddress = ($serviceType === 'delivery') 
+                        ? trim(($deliveryAddress['street'] ?? '') . ' ' . ($deliveryAddress['house_number'] ?? '') . ', ' . ($deliveryAddress['postal'] ?? '') . ' ' . ($deliveryAddress['city'] ?? ''))
+                        : ($summary['branch']['address'] ?? 'Florastraße 10A, 13187 Berlin');
+
+                    $customerEmailData = [
+                        'name' => $custNameFormatted,
+                        'order_id' => $orderId,
+                        'order_time' => date('d.m.Y H:i'),
+                        'service_type' => ($serviceType === 'delivery' ? 'Lieferung' : ($serviceType === 'pickup' ? 'Abholung' : 'Im Restaurant')),
+                        'payment_method' => $input['payment_method'] ?? $paymentMethod,
+                        'delivery_address' => $formattedAddress,
+                        'phone' => $deliveryAddress['phone'] ?? '',
+                        'order_total' => $input['order_total'] ?? ($summary['total'] ?? '0,00 €'),
+                        'eta' => 'In Bearbeitung (ca. 20-35 Min.)',
+                        'items' => $orderItems
+                    ];
+                    sendOrderConfirmationWithDiscountCode($customerEmail, $custNameFormatted, $customerEmailData, null);
+                    error_log("Order confirmation email sent to customer: " . $customerEmail);
+                } catch (Exception $e) {
+                    error_log("Failed to send customer confirmation email: " . $e->getMessage());
+                }
+            }
+
+            // Send Push Notifications to Admin
+            try {
+                $totalFloat = parseEuroAmount($input['order_total'] ?? '0');
+                notifyAdmin('Neue Bestellung wartet auf Bestätigung!', 'Bestellung #' . substr($orderId, -8) . ' - ' . number_format($totalFloat, 2) . '€', ['order_id' => $orderId, 'type' => 'new_order']);
+            }
+            catch (Exception $e) {
+                error_log("Failed to send push notification: " . $e->getMessage());
+            }
         }
     }
     catch (Exception $e) {
