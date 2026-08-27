@@ -129,6 +129,13 @@ class PdfReceipt {
                 'EUR' . $itemTotal,
                 [$col1, $col2, $col3, $col4]
             );
+
+            $itemNote = trim((string)($item['note'] ?? $item['notes'] ?? $item['options'] ?? $item['comment'] ?? ''));
+            if ($itemNote !== '') {
+                $safeNote = '> Hinweis: ' . substr($itemNote, 0, 42);
+                $s .= $this->text($safeNote, $col1 + 6, $this->y + 2, 7.5, 'HB', [0.85, 0.2, 0.2]);
+                $this->y -= 10;
+            }
         }
         $s .= $this->divider();
 

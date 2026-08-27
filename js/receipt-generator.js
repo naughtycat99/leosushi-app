@@ -171,7 +171,8 @@ const ReceiptGenerator = (() => {
             name = name.substring(0, 34);
             const total = formatPrice(item.total || (item.price * qty) || 0);
             data.push(...leftRight(qty + 'x ' + name, total));
-            if (item.note) data.push(...line('   > ' + item.note));
+            const itemNote = (item.note || item.notes || item.options || item.comment || item.special_instructions || '').trim();
+            if (itemNote) data.push(...CMD.BOLD_ON, ...line('   > HINWEIS: ' + itemNote), ...CMD.BOLD_OFF);
         });
         data.push(...CMD.DOUBLE_OFF, ...dashes());
 
@@ -259,8 +260,9 @@ const ReceiptGenerator = (() => {
             const desc = item.description ? ` (${item.description})` : '';
             // Do not truncate too aggressively, let it wrap if needed. Max length for Double Width is ~24 char per line (58mm=16)
             data.push(...line(qty + 'x ' + name + desc));
-            if (item.note) {
-                data.push(...CMD.DOUBLE_OFF, ...CMD.DOUBLE_HEIGHT, ...CMD.BOLD_ON, ...line('!! ' + item.note), ...CMD.BOLD_OFF, ...CMD.DOUBLE_OFF, ...CMD.DOUBLE_ON);
+            const itemNote = (item.note || item.notes || item.options || item.comment || item.special_instructions || '').trim();
+            if (itemNote) {
+                data.push(...CMD.DOUBLE_OFF, ...CMD.DOUBLE_HEIGHT, ...CMD.BOLD_ON, ...line('!! HINWEIS: ' + itemNote), ...CMD.BOLD_OFF, ...CMD.DOUBLE_OFF, ...CMD.DOUBLE_ON);
             }
         });
         data.push(...CMD.DOUBLE_OFF);

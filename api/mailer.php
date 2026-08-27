@@ -115,9 +115,13 @@ function sendOrderConfirmationEmail($to, $variables = []) {
     $itemsHtml = '';
     if (!empty($variables['order_items']) && is_array($variables['order_items'])) {
         foreach ($variables['order_items'] as $item) {
+            $itemNote = trim((string)($item['note'] ?? $item['notes'] ?? $item['options'] ?? ''));
             $itemsHtml .= '<div class="item">';
             $itemsHtml .= '<span class="item-name">' . htmlspecialchars((string)($item['name'] ?? '')) . ' x' . htmlspecialchars((string)($item['quantity'] ?? $item['qty'] ?? 1)) . '</span>';
             $itemsHtml .= '<span class="item-total">' . htmlspecialchars((string)($item['total'] ?? '0,00 €')) . '</span>';
+            if ($itemNote !== '') {
+                $itemsHtml .= '<div style="font-size: 12px; color: #d9534f; font-weight: bold; margin-top: 3px;">👉 Hinweis: ' . htmlspecialchars($itemNote) . '</div>';
+            }
             $itemsHtml .= '</div>';
         }
     } else if (!empty($variables['order_items']) && is_string($variables['order_items'])) {
@@ -171,9 +175,13 @@ function sendOrderConfirmationWithDiscountCode($to, $name, $orderData, $discount
     $itemsHtml = '';
     if (!empty($orderData['items']) && is_array($orderData['items'])) {
         foreach ($orderData['items'] as $item) {
+            $itemNote = trim((string)($item['note'] ?? $item['notes'] ?? $item['options'] ?? ''));
             $itemsHtml .= '<div class="item">';
             $itemsHtml .= '<span class="item-name">' . htmlspecialchars((string)($item['name'] ?? '')) . ' x' . htmlspecialchars((string)($item['quantity'] ?? 1)) . '</span>';
             $itemsHtml .= '<span class="item-total">' . htmlspecialchars((string)($item['total'] ?? '0,00 €')) . '</span>';
+            if ($itemNote !== '') {
+                $itemsHtml .= '<div style="font-size: 12px; color: #d9534f; font-weight: bold; margin-top: 3px;">👉 Hinweis: ' . htmlspecialchars($itemNote) . '</div>';
+            }
             $itemsHtml .= '</div>';
         }
     }
@@ -257,9 +265,14 @@ function sendAdminNewOrderEmail($orderData) {
     $itemsHtml = '';
     if (!empty($orderData['items']) && is_array($orderData['items'])) {
         foreach ($orderData['items'] as $item) {
+            $itemNote = trim((string)($item['note'] ?? $item['notes'] ?? $item['options'] ?? ''));
             $itemsHtml .= '<tr>';
-            $itemsHtml .= '<td style="padding: 8px 0; border-bottom: 1px solid #eee;">' . htmlspecialchars((string)($item['name'] ?? '')) . ' x' . htmlspecialchars((string)($item['quantity'] ?? 1)) . '</td>';
-            $itemsHtml .= '<td style="padding: 8px 0; border-bottom: 1px solid #eee; text-align: right;">' . htmlspecialchars((string)($item['total'] ?? '0,00 €')) . '</td>';
+            $itemsHtml .= '<td style="padding: 8px 0; border-bottom: 1px solid #eee;">' . htmlspecialchars((string)($item['name'] ?? '')) . ' x' . htmlspecialchars((string)($item['quantity'] ?? 1));
+            if ($itemNote !== '') {
+                $itemsHtml .= '<div style="font-size: 12px; color: #d9534f; font-weight: bold; margin-top: 3px;">👉 HINWEIS: ' . htmlspecialchars($itemNote) . '</div>';
+            }
+            $itemsHtml .= '</td>';
+            $itemsHtml .= '<td style="padding: 8px 0; border-bottom: 1px solid #eee; text-align: right; vertical-align: top;">' . htmlspecialchars((string)($item['total'] ?? '0,00 €')) . '</td>';
             $itemsHtml .= '</tr>';
         }
     }

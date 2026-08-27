@@ -1934,7 +1934,10 @@ async function confirmCheckout() {
           return {
             name: item.name,
             quantity: quantity,
-            total: (price * quantity).toFixed(2) + ' €'
+            price: price,
+            total: (price * quantity).toFixed(2) + ' €',
+            note: (item.note || item.notes || item.options || item.comment || item.special_instructions || '').trim(),
+            description: item.description || ''
           };
         }),
         service_type: window.selectedServiceType || 'delivery',

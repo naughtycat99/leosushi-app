@@ -459,8 +459,9 @@ const NetworkPrinter = (() => {
             name = escapeHtml(name.substring(0, 34));
             const total = formatPrice(item.total || ((item.price || 0) * qty));
             html += `<div class="row medium"><span class="label">${qty}x ${name}</span><span class="value">${total}</span></div>`;
-            if (item.note) {
-                html += `<div class="item-note">&gt; ${escapeHtml(item.note)}</div>`;
+            const itemNote = (item.note || item.notes || item.options || item.comment || item.special_instructions || '').trim();
+            if (itemNote) {
+                html += `<div class="item-note" style="font-weight: bold; color: #d9534f; margin-left: 10px;">&gt; HINWEIS: ${escapeHtml(itemNote)}</div>`;
             }
         });
         html += `<div class="dashes"></div>`;
@@ -585,8 +586,9 @@ const NetworkPrinter = (() => {
             name = name.replace(/\s*\([0-9A-Z,\s]+\)\s*$/, '');
             const desc = item.description ? ` (${item.description})` : '';
             html += `<div class="kitchen-item">${qty}x ${escapeHtml(name + desc)}</div>`;
-            if (item.note) {
-                html += `<div class="kitchen-note">!! ${escapeHtml(item.note)}</div>`;
+            const itemNote = (item.note || item.notes || item.options || item.comment || item.special_instructions || '').trim();
+            if (itemNote) {
+                html += `<div class="kitchen-note" style="font-weight: bold; color: #d9534f; font-size: 1.1em; margin-left: 10px;">!! HINWEIS: ${escapeHtml(itemNote)}</div>`;
             }
         });
 

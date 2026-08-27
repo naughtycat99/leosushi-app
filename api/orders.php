@@ -315,12 +315,23 @@ function createOrder($input)
         $items = $input['items'] ?? [];
         $orderItems = [];
         foreach ($items as $item) {
-            $orderItems[] = [
+            $itemNote = trim((string)($item['note'] ?? $item['notes'] ?? $item['options'] ?? $item['comment'] ?? $item['special_instructions'] ?? ''));
+            $orderItem = [
                 'name' => $item['name'] ?? '',
                 'qty' => $item['qty'] ?? $item['quantity'] ?? 1,
                 'quantity' => $item['qty'] ?? $item['quantity'] ?? 1,
                 'total' => $item['total'] ?? '0,00 €'
             ];
+            if ($itemNote !== '') {
+                $orderItem['note'] = $itemNote;
+            }
+            if (isset($item['price'])) {
+                $orderItem['price'] = $item['price'];
+            }
+            if (!empty($item['description'])) {
+                $orderItem['description'] = $item['description'];
+            }
+            $orderItems[] = $orderItem;
         }
 
         $orderTotal = parseEuroAmount($input['order_total'] ?? '0');
