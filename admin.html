@@ -2218,8 +2218,12 @@
                             <!-- Desktop status buttons -->
                             <div class="desktop-status-filters"
                                 style="position: relative; z-index: 10001 !important; pointer-events: auto !important; display: flex; flex-wrap: wrap; gap: 8px;">
+                                <button class="filter-btn"
+                                    onclick="filterOrdersByStatus('all')"
+                                    data-status="all"
+                                    style="pointer-events: auto !important; cursor: pointer !important; position: relative; z-index: 10002 !important;">Tất cả</button>
                                 <button class="filter-btn active"
-                                    onclick="console.log('Click: Pending'); filterOrdersByStatus('pending')"
+                                    onclick="filterOrdersByStatus('pending')"
                                     data-status="pending"
                                     style="pointer-events: auto !important; cursor: pointer !important; position: relative; z-index: 10002 !important;">Chờ
                                     xử lý</button>
@@ -7085,6 +7089,7 @@
                     if (currentCounter !== loadOrdersCounter) return;
                     allOrdersData = combinedData;
                     console.log('✅ Loaded data (merged + branch filtered):', allOrdersData.length);
+                    if (typeof window.updateAdminV2Summary === 'function') window.updateAdminV2Summary();
                     window.__loadOrdersRunning = false;
 
                     // Check for genuinely NEW orders
