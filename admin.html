@@ -278,25 +278,26 @@
         }
 
 
-        /* Filter visibility */
+        /* Filter visibility - unified button chips */
         .mobile-status-filter {
-            display: none;
+            display: none !important;
         }
 
         .desktop-status-filters {
             display: flex;
-            gap: 12px;
+            flex-wrap: wrap;
+            gap: 8px;
         }
 
         @media (max-width: 768px) {
             .desktop-status-filters {
-                display: none;
+                display: flex;
+                flex-wrap: wrap;
+                gap: 8px;
             }
 
             .mobile-status-filter {
-                display: block;
-                width: 100%;
-                margin-top: 8px;
+                display: none !important;
             }
 
             .admin-filters {
@@ -2243,16 +2244,6 @@
                                     style="pointer-events: auto !important; cursor: pointer !important; position: relative; z-index: 10002 !important;">Đã
                                     hủy</button>
                             </div>
-                            <!-- Mobile status dropdown -->
-                            <select class="filter-input mobile-status-filter"
-                                onchange="filterOrdersByStatus(this.value)"
-                                style="position: relative; z-index: 10001 !important; pointer-events: auto !important;">
-                                <option value="pending">Chờ xử lý</option>
-                                <option value="confirmed">Đã xác nhận</option>
-                                <option value="in_delivery">Đang giao</option>
-                                <option value="completed">Đã xong</option>
-                                <option value="cancelled">Đã hủy</option>
-                            </select>
                         </div>
                     </div>
 
@@ -2370,15 +2361,6 @@
                                     style="position: relative; z-index: 1000 !important; pointer-events: auto !important;">Đã
                                     hủy</button>
                             </div>
-                            <!-- Mobile status dropdown -->
-                            <select class="filter-input mobile-status-filter"
-                                onchange="filterReservationsByStatus(this.value)"
-                                style="position: relative; z-index: 1000 !important; pointer-events: auto !important;">
-                                <option value="all">Tất cả trạng thái</option>
-                                <option value="pending">Chờ xử lý</option>
-                                <option value="confirmed">Đã xác nhận</option>
-                                <option value="cancelled">Đã hủy</option>
-                            </select>
                         </div>
                         <div class="filter-group">
                             <label style="color: rgba(255,255,255,0.5); font-size: 12px; margin-right: 8px;">Lọc theo
