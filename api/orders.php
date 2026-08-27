@@ -842,8 +842,8 @@ function listOrders($input)
             $types    .= 'ss';
         }
 
-        // Use a higher LIMIT when filtering by date so historical orders are visible
-        $limit = ($dateFrom || $dateTo || $search) ? 2000 : 500;
+        // Use a higher LIMIT when filtering by date or searching, lighter limit for real-time polling
+        $limit = ($dateFrom || $dateTo || $search) ? 2000 : 80;
         $sql .= ' ORDER BY created_at DESC LIMIT ' . $limit;
 
         $stmt = $conn->prepare($sql);

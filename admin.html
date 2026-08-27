@@ -7137,7 +7137,7 @@
                     // Run precise auto-printing
                     try {
                         const realOrders = allOrdersData.filter(o => !o.is_merged_reservation);
-                        // checkAutoPrinting(realOrders); // Disabled per user request
+                        checkAutoPrinting(realOrders);
                     } catch (autoPrintErr) {
                         console.error('❌ Error in checkAutoPrinting:', autoPrintErr);
                     }
