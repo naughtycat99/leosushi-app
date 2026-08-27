@@ -332,13 +332,16 @@ function createOrder($input)
         $customerId = null;
         if ($customerEmail) {
             $conn = getDbConnection();
-            $stmt = $conn->prepare('SELECT id FROM customers WHERE email = ? LIMIT 1');
-            $stmt->bind_param('s', $customerEmail);
-            $stmt->execute();
-            $result = $stmt->get_result();
-            if ($result->num_rows > 0) {
-                $customer = $result->fetch_assoc();
-                $customerId = $customer['id'];
+            $cStmt = $conn->prepare('SELECT id FROM customers WHERE email = ? LIMIT 1');
+            if ($cStmt) {
+                $cStmt->bind_param('s', $customerEmail);
+                $cStmt->execute();
+                $result = $cStmt->get_result();
+                if ($result && $result->num_rows > 0) {
+                    $customer = $result->fetch_assoc();
+                    $customerId = $customer['id'];
+                }
+                $cStmt->close();
             }
         }
 
@@ -350,20 +353,23 @@ function createOrder($input)
                 WHERE created_at >= DATE_SUB(NOW(), INTERVAL 60 SECOND) 
                   AND delivery_address LIKE ? 
                   AND items = ? LIMIT 1");
-            $emailParam = '%' . $customerEmail . '%';
-            $checkStmt->bind_param('ss', $emailParam, $itemsJsonCheck);
-            $checkStmt->execute();
-            $existingDuplicate = $checkStmt->get_result()->fetch_assoc();
-            if ($existingDuplicate) {
-                echo json_encode([
-                    'success' => true,
-                    'duplicate' => true,
-                    'message' => 'Bestellung wurde bereits gespeichert',
-                    'order_id' => $existingDuplicate['order_id'],
-                    'status' => $existingDuplicate['status'] ?? 'pending',
-                    'service_type' => $existingDuplicate['service_type'] ?? 'delivery'
-                ]);
-                return;
+            if ($checkStmt) {
+                $emailParam = '%' . $customerEmail . '%';
+                $checkStmt->bind_param('ss', $emailParam, $itemsJsonCheck);
+                $checkStmt->execute();
+                $existingDuplicate = $checkStmt->get_result()->fetch_assoc();
+                $checkStmt->close();
+                if ($existingDuplicate) {
+                    echo json_encode([
+                        'success' => true,
+                        'duplicate' => true,
+                        'message' => 'Bestellung wurde bereits gespeichert',
+                        'order_id' => $existingDuplicate['order_id'],
+                        'status' => $existingDuplicate['status'] ?? 'pending',
+                        'service_type' => $existingDuplicate['service_type'] ?? 'delivery'
+                    ]);
+                    return;
+                }
             }
         }
 
@@ -451,6 +457,7 @@ function createOrder($input)
         $lockStmt->bind_param('s', $orderSequenceLock);
         $lockStmt->execute();
         $lockRow = $lockStmt->get_result()->fetch_assoc();
+        $lockStmt->close();
         if ((int)($lockRow['acquired'] ?? 0) !== 1) {
             throw new RuntimeException('Bestellnummer konnte nicht reserviert werden');
         }
@@ -474,6 +481,7 @@ function createOrder($input)
                 }
             }
         }
+        $maxIdStmt->close();
         $nextNumber = ($maxNumber < 999) ? ($maxNumber + 1) : 1;
         $orderId = sprintf("%s%03d", $prefix, $nextNumber); // LEO-YYMMDD-001
         // ==========================================
@@ -505,10 +513,11 @@ function createOrder($input)
             $promoStmt->bind_param('s', $discountCode);
             $promoStmt->execute();
             $promoResult = $promoStmt->get_result();
-            if ($promoResult->num_rows > 0) {
+            if ($promoResult && $promoResult->num_rows > 0) {
                 $promoData = $promoResult->fetch_assoc();
                 $promotionId = $promoData['promotion_id'];
             }
+            $promoStmt->close();
         }
 
         if ($paypalOrderId !== null || $paypalCaptureId !== null) {
@@ -562,11 +571,16 @@ function createOrder($input)
         );
 
         $stmt->execute();
+        $affectedRows = $stmt->affected_rows;
+        $stmtErrno = $stmt->errno;
+        $stmtError = $stmt->error;
+        $stmt->close();
 
         if ($orderSequenceLock !== null) {
             $releaseStmt = $conn->prepare('SELECT RELEASE_LOCK(?)');
             $releaseStmt->bind_param('s', $orderSequenceLock);
             $releaseStmt->execute();
+            $releaseStmt->close();
             $orderSequenceLock = null;
         }
 
@@ -574,10 +588,13 @@ function createOrder($input)
         // PaymentIntent concurrently. Always return the canonical DB order id.
         if ($stripePaymentId !== null) {
             $canonicalStmt = $conn->prepare('SELECT order_id FROM orders WHERE stripe_payment_id = ? LIMIT 1');
-            $canonicalStmt->bind_param('s', $stripePaymentId);
-            $canonicalStmt->execute();
-            $canonicalRow = $canonicalStmt->get_result()->fetch_assoc();
-            if ($canonicalRow && !empty($canonicalRow['order_id'])) $orderId = $canonicalRow['order_id'];
+            if ($canonicalStmt) {
+                $canonicalStmt->bind_param('s', $stripePaymentId);
+                $canonicalStmt->execute();
+                $canonicalRow = $canonicalStmt->get_result()->fetch_assoc();
+                $canonicalStmt->close();
+                if ($canonicalRow && !empty($canonicalRow['order_id'])) $orderId = $canonicalRow['order_id'];
+            }
         }
         if ($paypalOrderId !== null || $paypalCaptureId !== null) {
             $canonicalPayPalOrder = findOrderByPayPalPayment($conn, $paypalOrderId, $paypalCaptureId);
@@ -592,7 +609,7 @@ function createOrder($input)
         }
 
         // Check if order was saved
-        if ($stmt->affected_rows === 0 && $stmt->errno !== 0) {
+        if ($affectedRows === 0 && $stmtErrno !== 0) {
             throw new Exception('Failed to save order to database: ' . $stmt->error);
         }
 
@@ -622,7 +639,12 @@ function createOrder($input)
         $summaryJson = json_encode($summary);
 
         // Final database update
-        $conn->query("UPDATE orders SET status = '$autoStatus', summary = '" . $conn->real_escape_string($summaryJson) . "' WHERE order_id = '" . $conn->real_escape_string($orderId) . "'");
+        $upStmt = $conn->prepare("UPDATE orders SET status = ?, summary = ? WHERE order_id = ?");
+        if ($upStmt) {
+            $upStmt->bind_param('sss', $autoStatus, $summaryJson, $orderId);
+            $upStmt->execute();
+            $upStmt->close();
+        }
 
         // Format ETA for email display (Admin notification only)
         $confirmEmailEta = $autoEta;
@@ -740,8 +762,15 @@ function createOrder($input)
             } catch (Throwable $ignored) {}
         }
         http_response_code(500);
-        echo json_encode(['success' => false, 'message' => 'Fehler beim Erstellen der Bestellung: ' . $e->getMessage()]);
-        error_log('Error creating order: ' . $e->getMessage());
+        $errResp = [
+            'success' => false,
+            'message' => 'Fehler beim Erstellen der Bestellung: ' . $e->getMessage(),
+            'err_line' => $e->getLine(),
+            'err_file' => $e->getFile(),
+            'err_trace' => $e->getTraceAsString()
+        ];
+        echo json_encode($errResp, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+        error_log('Error creating order: ' . $e->getMessage() . ' at ' . $e->getFile() . ':' . $e->getLine());
     }
 }
 
@@ -1471,13 +1500,13 @@ function getDiscountCodeForOrder($orderTotal)
         $stmt->bind_param('ssd', $today, $today, $orderTotal);
         $stmt->execute();
         $result = $stmt->get_result();
-
-        if ($result->num_rows > 0) {
+        $code = null;
+        if ($result && $result->num_rows > 0) {
             $promotion = $result->fetch_assoc();
-            return $promotion['code'];
+            $code = $promotion['code'] ?? null;
         }
-
-        return null;
+        $stmt->close();
+        return $code;
     }
     catch (Exception $e) {
         error_log('Error getting discount code for order: ' . $e->getMessage());
@@ -1551,13 +1580,15 @@ function sendPushByGroup($userType, $title, $body, $data = [])
         // DISTINCT prevents legacy duplicate rows from sending the same alert
         // dozens of times to one physical device.
         $stmt = $conn->prepare("SELECT DISTINCT token FROM device_tokens WHERE user_type = ? AND token <> ''");
-        $stmt->bind_param('s', $userType);
-        $stmt->execute();
-        $result = $stmt->get_result();
-
         $tokens = [];
-        while ($row = $result->fetch_assoc()) {
-            $tokens[] = $row['token'];
+        if ($stmt) {
+            $stmt->bind_param('s', $userType);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            while ($row = $result->fetch_assoc()) {
+                $tokens[] = $row['token'];
+            }
+            $stmt->close();
         }
 
         if (empty($tokens)) {
