@@ -222,10 +222,29 @@
             if (element) element.textContent = String(value);
         };
 
-        setText('adminV2PendingOrders', orders.filter((order) => (order.status || 'pending') === 'pending').length);
-        setText('adminV2DeliveryOrders', orders.filter((order) => order.status === 'in_delivery').length);
-        setText('adminV2PendingReservations', reservations.filter((reservation) => (reservation.status || 'pending') === 'pending').length);
-        setText('adminV2MissingBranches', reservations.filter((reservation) => !reservation.branch_id).length);
+        const pendingOrders = orders.filter((order) => {
+            if (order.is_merged_reservation) return false;
+            const status = (order.status || 'pending').toLowerCase();
+            return status === 'pending';
+        });
+
+        const deliveryOrders = orders.filter((order) => {
+            if (order.is_merged_reservation) return false;
+            const status = (order.status || '').toLowerCase();
+            return status === 'in_delivery';
+        });
+
+        const pendingReservations = (reservations.length > 0 ? reservations : orders.filter(o => o.is_merged_reservation)).filter((reservation) => {
+            const status = (reservation.status || 'pending').toLowerCase();
+            return status === 'pending';
+        });
+
+        const missingBranches = (reservations.length > 0 ? reservations : orders.filter(o => o.is_merged_reservation)).filter((reservation) => !reservation.branch_id);
+
+        setText('adminV2PendingOrders', pendingOrders.length);
+        setText('adminV2DeliveryOrders', deliveryOrders.length);
+        setText('adminV2PendingReservations', pendingReservations.length);
+        setText('adminV2MissingBranches', missingBranches.length);
     }
     window.updateAdminV2Summary = updateSummary;
 

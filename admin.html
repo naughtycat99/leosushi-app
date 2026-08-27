@@ -7108,6 +7108,7 @@
 
                     if (currentCounter !== loadOrdersCounter) return;
                     allOrdersData = combinedData;
+                    window.allOrdersData = combinedData;
                     console.log('✅ Loaded data (merged + branch filtered):', allOrdersData.length);
                     if (typeof window.updateAdminV2Summary === 'function') window.updateAdminV2Summary();
                     window.__loadOrdersRunning = false;
@@ -8074,6 +8075,9 @@
 
                 if (data.success && data.reservations) {
                     console.log('📅 Loaded reservations from API:', data.reservations.length);
+                    allReservationsData = data.reservations;
+                    window.allReservationsData = data.reservations;
+                    if (typeof window.updateAdminV2Summary === 'function') window.updateAdminV2Summary();
 
                     // Filter reservations by selected date if date picker is set
                     const resDatePicker = document.getElementById('reservationDatePicker');
