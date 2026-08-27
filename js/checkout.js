@@ -1531,7 +1531,35 @@ window.clearAddressInput = clearAddressInput;
 window.executeAddressSearch = executeAddressSearch;
 
 // Confirm checkout
+function showOrderProcessingOverlay(msg) {
+  let overlay = document.getElementById('leoOrderProcessingOverlay');
+  if (!overlay) {
+    overlay = document.createElement('div');
+    overlay.id = 'leoOrderProcessingOverlay';
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.85);backdrop-filter:blur(8px);z-index:999999;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;font-family:inherit;text-align:center;padding:20px;';
+    overlay.innerHTML = '<div style="width:50px;height:50px;border:3px solid rgba(229,207,142,0.2);border-top:3px solid #e5cf8e;border-radius:50%;animation:leoSpin 0.8s linear infinite;margin-bottom:20px;"></div><div id="leoOverlayMsg" style="font-size:18px;font-weight:600;color:#e5cf8e;margin-bottom:8px;">Bestellung wird übermittelt...</div><div style="font-size:13px;color:rgba(255,255,255,0.6);">Bitte schließen Sie das Fenster nicht.</div><style>@keyframes leoSpin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}</style>';
+    document.body.appendChild(overlay);
+  }
+  if (msg) {
+    const msgEl = document.getElementById('leoOverlayMsg');
+    if (msgEl) msgEl.textContent = msg;
+  }
+  overlay.style.display = 'flex';
+}
+
+function hideOrderProcessingOverlay() {
+  const overlay = document.getElementById('leoOrderProcessingOverlay');
+  if (overlay) overlay.style.display = 'none';
+}
+
+window.showOrderProcessingOverlay = showOrderProcessingOverlay;
+window.hideOrderProcessingOverlay = hideOrderProcessingOverlay;
+
 async function confirmCheckout() {
+  if (window._isSubmittingOrder) {
+    console.warn('⛔ [confirmCheckout] Đơn hàng đang được xử lý, bỏ qua click trùng!');
+    return;
+  }
   // ══════════════════════════════════════════════════
   // ⛔ HARD BLOCK: PAYPAL CHƯA THANH TOÁN THÀNH CÔNG
   // Đơn hàng KHÔNG được tạo cho đến khi PayPal capture
@@ -1868,6 +1896,8 @@ async function confirmCheckout() {
   };
 
   try {
+    window._isSubmittingOrder = true;
+    if (typeof showOrderProcessingOverlay === 'function') showOrderProcessingOverlay();
     // Show loading state
     const confirmBtn = document.getElementById('confirmCheckoutBtn');
     if (confirmBtn) {
