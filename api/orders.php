@@ -822,15 +822,6 @@ function listOrders($input)
     try {
         $conn = getDbConnection();
 
-        // Auto-reconcile pending PayPal transactions (throttled to once every 30s)
-        static $lastPayPalReconcile = 0;
-        if (time() - $lastPayPalReconcile > 30) {
-            $lastPayPalReconcile = time();
-            if (function_exists('paypalReconcilePendingDrafts')) {
-                paypalReconcilePendingDrafts($conn, 1440);
-            }
-        }
-
         $status   = $input['status']    ?? $_GET['status']    ?? null;
         $branchId = $input['branch_id'] ?? $_GET['branch_id'] ?? null;
         $dateFrom = $input['date_from'] ?? $_GET['date_from'] ?? null;

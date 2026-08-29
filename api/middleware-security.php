@@ -10,19 +10,9 @@ require_once __DIR__ . '/security-config.php';
  * Try to restore admin session from Authorization header
  */
 function restoreSessionFromHeader() {
-    if (session_status() === PHP_SESSION_NONE) {
-        @session_start();
-    }
-    
-    // If already logged in, nothing to do
-    if (isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in'] === true) {
-        return true;
-    }
-    
-    // Try to restore from Authorization Bearer token
+    // 1. Try to restore from Authorization Bearer token first (instant, non-blocking, zero session locks)
     $headers = function_exists('getallheaders') ? getallheaders() : [];
     
-    // Normalize headers for case-insensitivity
     $normalizedHeaders = [];
     foreach ($headers as $key => $value) {
         $normalizedHeaders[strtolower($key)] = $value;
@@ -39,37 +29,41 @@ function restoreSessionFromHeader() {
     }
     
     if (!empty($token)) {
-        // 1. Support Master Key Bypass
+        // Master Key Bypass
         if ($token === 'master_session_bypass') {
-            $_SESSION['admin_logged_in'] = true;
-            $_SESSION['admin_role'] = 'owner';
-            $_SESSION['admin_session_id'] = 'master_session_bypass';
             return true;
         }
 
         try {
             $conn = getDbConnection();
             $stmt = $conn->prepare('SELECT id, username, current_session_id, role FROM admin_users WHERE current_session_id = ? LIMIT 1');
-            $stmt->bind_param('s', $token);
-            $stmt->execute();
-            $result = $stmt->get_result();
-            
-            if ($result->num_rows > 0) {
-                $admin = $result->fetch_assoc();
-                $_SESSION['admin_logged_in'] = true;
-                $_SESSION['admin_login_time'] = time();
-                $_SESSION['admin_ip'] = getClientIP();
-                $_SESSION['admin_session_id'] = $token;
-                $_SESSION['admin_user_id'] = $admin['id'];
-                $_SESSION['admin_role'] = $admin['role'] ?? 'staff';
-                return true;
+            if ($stmt) {
+                $stmt->bind_param('s', $token);
+                $stmt->execute();
+                $result = $stmt->get_result();
+                if ($result && $result->num_rows > 0) {
+                    $stmt->close();
+                    return true;
+                }
+                $stmt->close();
             }
-        } catch (Exception $e) {
+        } catch (Throwable $e) {
             error_log('restoreSessionFromHeader error: ' . $e->getMessage());
         }
     }
+
+    // 2. Check PHP session (read-only to avoid concurrency locking on high-frequency polling)
+    if (session_status() === PHP_SESSION_NONE) {
+        @session_start();
+    }
     
-    return false;
+    $isLoggedIn = !empty($_SESSION['admin_logged_in']);
+    
+    if (session_status() === PHP_SESSION_ACTIVE) {
+        session_write_close();
+    }
+    
+    return $isLoggedIn;
 }
 
 /**
