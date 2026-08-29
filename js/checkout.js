@@ -307,12 +307,11 @@ async function checkAndUpdateDeliveryStatus(coords = null) {
 
   if (!streetOnly || !houseNumber || !postal || !city) {
     messageEl.style.display = 'none';
-    // Disable button if address is incomplete for delivery
-    if (confirmBtn && window.selectedServiceType === 'delivery') {
-      confirmBtn.disabled = true;
-      confirmBtn.style.opacity = '0.5';
-      confirmBtn.style.cursor = 'not-allowed';
-      confirmBtn.title = 'Bitte geben Sie eine vollständige Lieferadresse ein';
+    if (confirmBtn) {
+      confirmBtn.disabled = false;
+      confirmBtn.style.opacity = '1';
+      confirmBtn.style.cursor = 'pointer';
+      confirmBtn.title = '';
     }
     return;
   }
@@ -334,6 +333,7 @@ async function checkAndUpdateDeliveryStatus(coords = null) {
       confirmBtn.disabled = false;
       confirmBtn.style.opacity = '1';
       confirmBtn.style.cursor = 'pointer';
+      confirmBtn.title = '';
     }
   } else {
     messageEl.innerHTML = `<div style="color: #ef4444; display: flex; align-items: flex-start; gap: 8px;">
@@ -341,7 +341,7 @@ async function checkAndUpdateDeliveryStatus(coords = null) {
       <div>
         <div style="font-weight: 600; margin-bottom: 4px;">${rangeCheck.message}</div>
         <div style="font-size: 12px; opacity: 0.8; margin-top: 4px;">
-          Bitte wählen Sie stattdessen "Tisch reservieren"
+          Bitte wählen Sie stattdessen "Abholung" oder "Tisch reservieren"
         </div>
       </div>
     </div>`;
@@ -349,12 +349,10 @@ async function checkAndUpdateDeliveryStatus(coords = null) {
     messageEl.style.border = '1px solid rgba(239,68,68,.3)';
     messageEl.style.display = 'block';
 
-    // Disable checkout button if address is out of range
     if (confirmBtn) {
-      confirmBtn.disabled = true;
-      confirmBtn.style.opacity = '0.5';
-      confirmBtn.style.cursor = 'not-allowed';
-      confirmBtn.title = 'Lieferung nicht möglich: Adresse liegt außerhalb des 5km-Radius';
+      confirmBtn.disabled = false;
+      confirmBtn.style.opacity = '1';
+      confirmBtn.style.cursor = 'pointer';
     }
   }
 
@@ -1361,10 +1359,12 @@ function clearAddressInput() {
   const messageEl = document.getElementById('deliveryRangeMessage');
   if (messageEl) messageEl.style.display = 'none';
 
-  // Lock Checkout (because delivery info cleared)
   const confirmBtn = document.getElementById('confirmCheckoutBtn');
-  if (confirmBtn && window.selectedServiceType === 'delivery') {
-    confirmBtn.disabled = true;
+  if (confirmBtn) {
+    confirmBtn.disabled = false;
+    confirmBtn.style.opacity = '1';
+    confirmBtn.style.cursor = 'pointer';
+    confirmBtn.title = '';
   }
 }
 
@@ -1669,23 +1669,76 @@ async function confirmCheckout() {
     } else {
       alert('Bitte wählen Sie eine Filiale aus, bevor Sie bestellen.');
     }
-
-    // Attempt to open the branch selector modal if it exists
     if (typeof openBranchSelector === 'function') {
       openBranchSelector(true);
     }
     return;
   }
-
   // Only check address if service type is delivery (default)
-  // undefined serviceType defaults to delivery
   const isDelivery = typeof window.selectedServiceType === 'undefined' || window.selectedServiceType === 'delivery';
 
+  // Smart Auto-Parse from addressSearchInput if detail fields are still empty
+  let finalStreetOnly = streetOnly;
+  let finalHouseNumber = houseNumber;
+  let finalPostal = postal;
+  let finalCity = city;
+
+  if (isDelivery && (!finalStreetOnly || !finalPostal || !finalCity || !finalHouseNumber)) {
+    const rawSearch = document.getElementById('addressSearchInput')?.value.trim();
+    if (rawSearch && rawSearch.length >= 3) {
+      // 1. Extract 5-digit German postal code
+      const zipMatch = rawSearch.match(/\b(\d{5})\b/);
+      if (zipMatch && !finalPostal) {
+        finalPostal = zipMatch[1];
+        const pEl = document.getElementById('deliveryPostal');
+        if (pEl) pEl.value = finalPostal;
+      }
+      // 2. Extract city or default to Berlin
+      const cityMatch = rawSearch.match(/\b(Berlin|Pankow|Heinersdorf|Niederschönhausen|Wilhelmsruh|Rosenthal|Buch|Karow|Französisch Buchholz)\b/i);
+      if (cityMatch && !finalCity) {
+        finalCity = cityMatch[1];
+        const cEl = document.getElementById('deliveryCity');
+        if (cEl) cEl.value = finalCity;
+      } else if (!finalCity) {
+        finalCity = 'Berlin';
+        const cEl = document.getElementById('deliveryCity');
+        if (cEl) cEl.value = finalCity;
+      }
+      // 3. Extract house number (e.g. "10", "21b", "29a", "64")
+      const hnMatch = rawSearch.match(/\b(\d+[a-zA-Z]?)\b/);
+      if (hnMatch && !finalHouseNumber) {
+        finalHouseNumber = hnMatch[1];
+        const hnEl = document.getElementById('deliveryHouseNumber');
+        if (hnEl) hnEl.value = finalHouseNumber;
+      }
+      // 4. Extract street name
+      if (!finalStreetOnly) {
+        let cleanStreet = rawSearch
+          .replace(/\b\d{5}\b/g, '')
+          .replace(/\bBerlin\b/gi, '')
+          .replace(/\b(Pankow|Heinersdorf|Niederschönhausen|Wilhelmsruh|Rosenthal|Buch|Karow)\b/gi, '')
+          .replace(/\b\d+[a-zA-Z]?\b/g, '')
+          .replace(/[,\.\-\/]/g, ' ')
+          .replace(/\s+/g, ' ')
+          .trim();
+        if (cleanStreet) {
+          finalStreetOnly = cleanStreet;
+          const sEl = document.getElementById('deliveryStreet');
+          if (sEl) sEl.value = finalStreetOnly;
+        }
+      }
+      const grid = document.getElementById('addressDetailsGrid');
+      if (grid) grid.style.display = 'block';
+    }
+  }
+
+  const finalStreet = finalStreetOnly && finalHouseNumber ? `${finalStreetOnly} ${finalHouseNumber}` : finalStreetOnly;
+
   if (isDelivery) {
-    if (!streetOnly) missingFields.push('Straße');
-    if (!houseNumber) missingFields.push('Hausnummer');
-    if (!postal) missingFields.push('PLZ');
-    if (!city) missingFields.push('Stadt');
+    if (!finalStreetOnly) missingFields.push('Straße');
+    if (!finalHouseNumber) missingFields.push('Hausnummer');
+    if (!finalPostal) missingFields.push('PLZ');
+    if (!finalCity) missingFields.push('Stadt');
   }
 
   if (missingFields.length > 0) {
@@ -1706,10 +1759,10 @@ async function confirmCheckout() {
         !lastName ? 'customerLastName' :
           !phone ? 'customerPhone' :
             !email ? 'customerEmail' :
-              (isDelivery && !streetOnly) ? 'addressSearchInput' :
-                (isDelivery && !houseNumber) ? 'deliveryHouseNumber' :
-                  (isDelivery && !postal) ? 'deliveryPostal' :
-                    (isDelivery && !city) ? 'deliveryCity' : null;
+              (isDelivery && !finalStreetOnly) ? 'addressSearchInput' :
+                (isDelivery && !finalHouseNumber) ? 'deliveryHouseNumber' :
+                  (isDelivery && !finalPostal) ? 'deliveryPostal' :
+                    (isDelivery && !finalCity) ? 'deliveryCity' : null;
 
     if (firstMissingFieldId) {
       const el = document.getElementById(firstMissingFieldId);
@@ -1725,7 +1778,7 @@ async function confirmCheckout() {
   // Check if delivery address is within 5km range (Only for Delivery)
   if (selectedServiceType === 'delivery') {
     // OPTIMIZATION: Pass coordinates if available to make it instant
-    const rangeCheck = await checkDeliveryRange(street, postal, city, selectedAddressCoords || window.selectedAddressCoords);
+    const rangeCheck = await checkDeliveryRange(finalStreet, finalPostal, finalCity, selectedAddressCoords || window.selectedAddressCoords);
     if (!rangeCheck.withinRange) {
       if (window.addNotification && window.NOTIFICATION_TYPES) {
         window.addNotification(
@@ -1734,7 +1787,7 @@ async function confirmCheckout() {
           rangeCheck.message + '\nBitte wählen Sie stattdessen "Abholung" oder "Tisch reservieren".',
         );
       } else {
-        alert('Lieferung nicht möglich!\n\n' + rangeCheck.message + '\n\nBitte wählen Sie:\n• "Abholung" oder "Tisch reservieren" (im Restaurant)');
+        alert('Lieferung nicht möglich!\n\n' + rangeCheck.message + '\n\nBitte wählen Sie:\n• "Abholung" hoặc "Tisch reservieren" (im Restaurant)');
       }
 
       // Scroll to delivery address section
@@ -1868,14 +1921,14 @@ async function confirmCheckout() {
       lastName,
       email,
       phone,
-      street: streetOnly,
-      houseNumber,
-      postal,
-      city,
+      street: finalStreetOnly,
+      houseNumber: finalHouseNumber,
+      postal: finalPostal,
+      city: finalCity,
       note
     },
     serviceType: window.selectedServiceType || 'delivery',
-    paymentMethod: window.selectedPaymentMethod,
+    paymentMethod: window.selectedPaymentMethod || 'cash',
     discount: window.appliedDiscount ? {
       code: window.appliedDiscount.code,
       amount: discountAmount
@@ -1895,6 +1948,7 @@ async function confirmCheckout() {
     scheduledDeliveryTime: scheduledDeliveryTime
   };
 
+  let submitSuccess = false;
   try {
     window._isSubmittingOrder = true;
     if (typeof showOrderProcessingOverlay === 'function') showOrderProcessingOverlay();
@@ -1921,8 +1975,7 @@ async function confirmCheckout() {
       // Format order data for API
       const paymentLabel = window.selectedPaymentMethod === 'cash' ? 'Barzahlung'
         : window.selectedPaymentMethod === 'card' ? 'Kartenzahlung'
-          : window.selectedPaymentMethod === 'paypal' ? 'PayPal' // Should never reach here
-            : 'Barzahlung'; // Default fallback
+        : 'Barzahlung'; // Default fallback
 
       const apiOrderData = {
         order_id: `LEO-${Date.now()}`, // Temporary ID, backend will overwrite with LEO-XXX
@@ -1949,10 +2002,10 @@ async function confirmCheckout() {
           lastName,
           email,
           phone,
-          street: streetOnly,
-          houseNumber,
-          postal,
-          city,
+          street: finalStreetOnly,
+          houseNumber: finalHouseNumber,
+          postal: finalPostal,
+          city: finalCity,
           note
         },
         discount_code: window.appliedDiscount ? window.appliedDiscount.code : null,
@@ -1974,6 +2027,7 @@ async function confirmCheckout() {
       console.log('📦 API Response:', result);
 
       if (result && result.success) {
+        submitSuccess = true;
         // Get the official sequential order ID from the backend
         const orderId = result.order_id || result.orderId || apiOrderData.order_id;
 
@@ -1993,9 +2047,9 @@ async function confirmCheckout() {
             lastName: lastName,
             email: email,
             phone: phone,
-            street: street,
-            postal: postal,
-            city: city,
+            street: finalStreet,
+            postal: finalPostal,
+            city: finalCity,
             note: note,
             customerCode: result.customer_code || apiOrderData.customer?.customerCode || null
           };
@@ -2097,6 +2151,16 @@ async function confirmCheckout() {
   } catch (err) {
     console.error('Final Submission Error:', err);
     alert('Fehler beim Senden: ' + err.message);
+  } finally {
+    window._isSubmittingOrder = false;
+    if (!submitSuccess) {
+      if (typeof hideOrderProcessingOverlay === 'function') hideOrderProcessingOverlay();
+      const confirmBtn = document.getElementById('confirmCheckoutBtn');
+      if (confirmBtn) {
+        confirmBtn.disabled = false;
+        confirmBtn.textContent = 'Bestellung bestätigen';
+      }
+    }
   }
 }
 

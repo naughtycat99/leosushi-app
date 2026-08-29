@@ -726,7 +726,7 @@ function createOrder($input)
         // NOTIFICATIONS (Admin Email, Customer Email & Push)
         // Dispatched asynchronously in background to ensure instant HTTP response (<0.1s)
         // ==========================================
-        $asyncCmd = 'php ' . __DIR__ . '/async-notify.php ' . escapeshellarg($orderId) . ' > /dev/null 2>&1 &';
+        $asyncCmd = 'nohup php ' . escapeshellarg(__DIR__ . '/async-notify.php') . ' ' . escapeshellarg($orderId) . ' </dev/null >/dev/null 2>&1 &';
         $dispatchedAsync = false;
         if (function_exists('exec')) {
             @exec($asyncCmd);

@@ -571,7 +571,7 @@ function sendOrderBillEmail($to, $name, $orderData) {
     $mail->Port       = $port;
     $mail->CharSet    = 'UTF-8';
     $mail->SMTPOptions = ['ssl' => ['verify_peer' => false, 'verify_peer_name' => false, 'allow_self_signed' => false]];
-    $mail->Timeout    = 30;
+    $mail->Timeout    = 5;
 
     $mail->setFrom($fromEmail, $fromName);
     $mail->addAddress($to);
@@ -692,7 +692,7 @@ function sendSmtpEmail($to, $subject, $htmlBody, $textBody = '') {
                 'allow_self_signed' => false
             )
         );
-        $mail->Timeout = 30;
+        $mail->Timeout = 5;
         
         // Recipients
         $mail->setFrom($fromEmail, $fromName);
