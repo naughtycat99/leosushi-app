@@ -1376,8 +1376,8 @@ function checkAutoPrinting(orders) {
             return;
         }
 
-        // TUYỆT ĐỐI CHỈ IN KHI ĐƠN ĐÃ ĐƯỢC DUYỆT (confirmed)
-        if (o.status !== 'confirmed') return;
+        // In đơn đã duyệt (confirmed) HOẶC đơn mới / tiền mặt (pending)
+        if (o.status !== 'confirmed' && o.status !== 'pending') return;
 
         if (summary.is_printed) {
             printedSet.add(id);

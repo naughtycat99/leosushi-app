@@ -43,8 +43,8 @@ function checkAutoPrinting(orders) {
         if (typeof summary === 'string') {
             try { summary = JSON.parse(summary); } catch (e) { return; }
         }
-        // CHỈ IN KHI ĐƠN ĐÃ ĐƯỢC DUYỆT (confirmed)
-        if (order.status !== 'confirmed') return;
+        // In đơn đã duyệt (confirmed) HOẶC đơn mới / tiền mặt (pending)
+        if (order.status !== 'confirmed' && order.status !== 'pending') return;
 
         if (summary.is_printed) {
             printedSet.add(id);

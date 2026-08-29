@@ -6873,8 +6873,8 @@
                 let summary = order.summary;
                 if (typeof summary === 'string') {
                     try { summary = JSON.parse(summary); } catch (e) { return; }
-                }
-                if (order.status !== 'confirmed') return;
+                // Allow printing confirmed orders AND pending cash/new orders
+                if (order.status !== 'confirmed' && order.status !== 'pending') return;
 
                 // SERVER-SIDE DUPLICATE CHECK: Skip if already marked as printed in DB
                 if (summary && summary.is_printed) {
@@ -7119,7 +7119,7 @@
                         const newOrderIds = allOrdersData
                             .filter(order => {
                                 const id = order.order_id?.toString();
-                                return id && !previousOrderIds.has(id) && (!order.status || order.status === 'pending');
+                                return id && !previousOrderIds.has(id) && (!order.status || order.status === 'pending' || order.status === 'confirmed');
                             })
                             .map(order => order.order_id.toString());
 
