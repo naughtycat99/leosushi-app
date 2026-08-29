@@ -6316,11 +6316,15 @@
 
         // Print a thermal-style bill for an order
         async function printOrderBill(orderId, etaOverride = '') {
+            if (!orderId) return;
+            window._recentlyPrintedOrders = window._recentlyPrintedOrders || new Set();
+            window._recentlyPrintedOrders.add(orderId.toString());
+
             const order = (allOrdersData || []).find(o =>
                 (o.order_id || o._id || '').toString() === orderId.toString()
             );
             if (!order) {
-                alert('Không tìm thấy đơn hàng!');
+                console.warn('Không tìm thấy đơn hàng trong danh sách cache:', orderId);
                 return;
             }
 
@@ -6837,7 +6841,9 @@
             console.log(`🖨️[AutoPrint] ${msg} `);
         }
 
-        // AUTO-PRINTING ENGINE (Precisely timed)
+        // AUTO-PRINTING ENGINE (Precisely timed & De-duplicated)
+        window._recentlyPrintedOrders = window._recentlyPrintedOrders || new Set();
+
         function checkAutoPrinting(orders) {
             const isAutoPrintEnabled = localStorage.getItem('autoPrintEnabled') === 'true';
             if (!isAutoPrintEnabled) return;
@@ -6851,21 +6857,19 @@
             let newlyPrinted = false;
             const now = Date.now();
 
-            // Count candidates
-            let candidateCount = 0;
-            let skippedPrinted = 0;
-            let skippedLocal = 0;
-
             orders.forEach(order => {
                 const id = (order.order_id || order.id || '').toString();
                 if (!id) return;
 
-                if (printedSet.has(id)) {
-                    skippedLocal++;
+                // Memory lock & LocalStorage lock & PrinterManager lock
+                if (printedSet.has(id) || window._recentlyPrintedOrders.has(id)) {
+                    return;
+                }
+                if (typeof PrinterManager !== 'undefined' && (PrinterManager.wasOrderPrintedRecently(id) || PrinterManager.isOrderPrinting(id))) {
                     return;
                 }
 
-                // Handle confirmed or pending orders (admin wants ALL new orders to print)
+                // Handle confirmed orders
                 let summary = order.summary;
                 if (typeof summary === 'string') {
                     try { summary = JSON.parse(summary); } catch (e) { return; }
@@ -6873,54 +6877,43 @@
                 if (order.status !== 'confirmed') return;
 
                 // SERVER-SIDE DUPLICATE CHECK: Skip if already marked as printed in DB
-                if (summary.is_printed) {
+                if (summary && summary.is_printed) {
                     printedSet.add(id);
+                    window._recentlyPrintedOrders.add(id);
                     newlyPrinted = true;
-                    skippedPrinted++;
                     return;
                 }
 
-                const createdAtTime = order.created_at ? new Date(order.created_at).getTime() : (summary.timestamp ? new Date(summary.timestamp).getTime() : now);
+                const createdAtTime = order.created_at ? new Date(order.created_at).getTime() : (summary && summary.timestamp ? new Date(summary.timestamp).getTime() : now);
                 const isAncient = (now - createdAtTime > 12 * 60 * 60 * 1000);
                 const isDue = !isAncient;
 
                 if (isDue) {
-                    candidateCount++;
-                    const shortId = id.replace(/^(ORD-|LEO-)/, '').slice(-8);
-                    printLog(`Đang in đơn #${shortId}...`, 'info');
+                    // Lock immediately before async operations
+                    window._recentlyPrintedOrders.add(id);
+                    printedSet.add(id);
+                    newlyPrinted = true;
+                    localStorage.setItem('leo_printed_orders', JSON.stringify(Array.from(printedSet).slice(-500)));
 
-                    // ATOMIC LOCK: Try to mark as printed on server FIRST
+                    const shortId = id.replace(/^(ORD-|LEO-)/, '').slice(-8);
+                    printLog(`Đang tự động in đơn #${shortId}...`, 'info');
+
+                    // 1. Trigger print immediately via PrinterManager / printOrderBill
+                    if (typeof printOrderBill === 'function') {
+                        printOrderBill(id).catch(err => {
+                            printLog(`Lỗi in #${shortId}: ${err.message}`, 'error');
+                        });
+                    }
+
+                    // 2. Sync printed status to server
                     const printUrl = `api/index.php?route=${encodeURIComponent('v1/data/orders/update-printed')}`;
                     fetch(printUrl, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ order_id: id })
-                    })
-                        .then(res => res.json())
-                        .then(data => {
-                            if (data.success) {
-                                if (typeof printOrderBill === 'function') {
-                                    printOrderBill(id);
-                                    printedSet.add(id);
-                                    newlyPrinted = true;
-                                    printLog(`IN THÀNH CÔNG #${shortId} `, 'success');
-
-                                    if (typeof showMenuNotification === 'function') {
-                                        showMenuNotification('Đã tự động in đơn #' + shortId, 'success');
-                                    }
-                                }
-                                localStorage.setItem('leo_printed_orders', JSON.stringify(Array.from(printedSet).slice(-500)));
-                            } else if (data.already_printed) {
-                                printLog(`#${shortId} đã in ở máy khác, bỏ qua`, 'warn');
-                                printedSet.add(id);
-                                localStorage.setItem('leo_printed_orders', JSON.stringify(Array.from(printedSet).slice(-500)));
-                            } else {
-                                printLog(`Lỗi server: ${data.message || JSON.stringify(data)} `, 'error');
-                            }
-                        })
-                        .catch(err => {
-                            printLog(`LỖI KẾT NỐI: ${err.message} `, 'error');
-                        });
+                    }).catch(err => {
+                        console.warn('update-printed sync error:', err);
+                    });
                 }
             });
 
@@ -8920,7 +8913,12 @@
                     let printedIds = [];
                     try { printedIds = JSON.parse(localStorage.getItem('leo_printed_orders') || '[]'); } catch (e) { }
                     const printedSet = new Set(printedIds.map(id => id.toString()));
-                    if (!printedSet.has(orderId.toString())) {
+                    const idStr = orderId.toString();
+                    if (!printedSet.has(idStr) && !window._recentlyPrintedOrders.has(idStr)) {
+                        printedSet.add(idStr);
+                        window._recentlyPrintedOrders.add(idStr);
+                        localStorage.setItem('leo_printed_orders', JSON.stringify(Array.from(printedSet).slice(-500)));
+
                         let deliveryAddress = order.delivery?.address || order.delivery_address || {};
                         if (typeof deliveryAddress === 'string') {
                             try { deliveryAddress = JSON.parse(deliveryAddress); } catch (e) { deliveryAddress = {}; }
@@ -8930,8 +8928,7 @@
                         } else if (typeof window.showPrintBills === 'function') {
                             window.showPrintBills(order, deliveryAddress, orderId, estimatedTimeText);
                         }
-                        printedSet.add(orderId.toString());
-                        localStorage.setItem('leo_printed_orders', JSON.stringify(Array.from(printedSet).slice(-500)));
+
                         fetch(`api/index.php?route=${encodeURIComponent('v1/data/orders/update-printed')}`, {
                             method: 'POST',
                             credentials: 'include',

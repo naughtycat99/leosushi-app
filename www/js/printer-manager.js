@@ -1,7 +1,7 @@
 /**
  * PrinterManager.js
  * Unified manager for Bluetooth and Network printers.
- * Handles auto-discovery and persistent connections.
+ * Handles auto-discovery, persistent connections, queue serialization, and deduplication.
  */
 const PrinterManager = (() => {
     let currentPrinter = null;
@@ -9,6 +9,11 @@ const PrinterManager = (() => {
     let scanTimeout = null;
 
     const STORAGE_KEY = 'leo_preferred_printer';
+    
+    // In-memory print queue and debouncing locks
+    let printQueue = Promise.resolve();
+    const activeJobs = new Set();
+    const recentPrints = new Map(); // orderId -> timestamp
 
     /**
      * Initialize the manager
@@ -56,7 +61,7 @@ const PrinterManager = (() => {
                 }
             } else if (printer.type === 'network') {
                 if (typeof NativeLanPrinter !== 'undefined' && NativeLanPrinter.hasNativeBridge()) {
-                    await NativeLanPrinter.connect(printer.ip);
+                    await NativeLanPrinter.autoConnect();
                 }
             }
         } catch (err) {
@@ -88,7 +93,6 @@ const PrinterManager = (() => {
     }
 
     async function scanBluetoothSilent() {
-        // Implementation using Capacitor Bluetooth LE (to be updated in bluetooth-printer.js)
         console.log('🖨️ Scanning for Bluetooth printers...');
     }
 
@@ -112,9 +116,9 @@ const PrinterManager = (() => {
     }
 
     /**
-     * Unified print function
+     * Internal printer execution function
      */
-    async function print(orderData, deliveryAddress, orderId, estimatedTimeText) {
+    async function executePrintJob(orderData, deliveryAddress, orderId, estimatedTimeText) {
         // Direct Sunmi V3 SDK Integration
         if (typeof SunmiNativePrinter !== 'undefined' && SunmiNativePrinter.hasPlugin()) {
             try {
@@ -124,7 +128,7 @@ const PrinterManager = (() => {
                     const bytes = ReceiptGenerator.generateReceiptBytes(orderData, deliveryAddress, orderId, estimatedTimeText);
                     await SunmiNativePrinter.printRaw(bytes);
                     console.log('🖨️ [Sunmi Native] Print successful.');
-                    return; // Success, return
+                    return { success: true, method: 'sunmi_native' };
                 }
             } catch (err) {
                 console.error('🖨️ Sunmi direct print error:', err);
@@ -161,12 +165,68 @@ const PrinterManager = (() => {
         }
     }
 
+    /**
+     * Unified print function with Queue Serialization & Deduplication
+     */
+    function print(orderData, deliveryAddress, orderId, estimatedTimeText) {
+        const idKey = (orderId || 'UNKNOWN').toString();
+        const now = Date.now();
+
+        // 1. Strict Deduplication Check:
+        if (activeJobs.has(idKey)) {
+            console.warn(`🖨️ [PrinterManager] Order ${idKey} is already being printed. Ignoring duplicate call.`);
+            return Promise.resolve({ skipped: true, reason: 'in_progress' });
+        }
+
+        const lastTime = recentPrints.get(idKey);
+        if (lastTime && (now - lastTime < 8000)) {
+            console.warn(`🖨️ [PrinterManager] Order ${idKey} was printed ${Math.round((now - lastTime) / 1000)}s ago. Ignoring duplicate call.`);
+            return Promise.resolve({ skipped: true, reason: 'debounced' });
+        }
+
+        activeJobs.add(idKey);
+        recentPrints.set(idKey, now);
+
+        // Clean up old recent prints map
+        if (recentPrints.size > 200) {
+            const cutoff = now - 60000;
+            for (const [k, v] of recentPrints.entries()) {
+                if (v < cutoff) recentPrints.delete(k);
+            }
+        }
+
+        // 2. Sequential Queue Execution
+        const jobPromise = printQueue.then(async () => {
+            try {
+                const res = await executePrintJob(orderData, deliveryAddress, orderId, estimatedTimeText);
+                // Pause 300ms between physical ESC/POS print jobs to let printer buffer drain
+                await new Promise(r => setTimeout(r, 300));
+                return res;
+            } finally {
+                activeJobs.delete(idKey);
+            }
+        }).catch(err => {
+            activeJobs.delete(idKey);
+            throw err;
+        });
+
+        // Keep queue moving even if this job fails
+        printQueue = jobPromise.catch(() => {});
+
+        return jobPromise;
+    }
+
     return {
         init,
         print,
         startSmartDiscovery,
         getSavedPrinter,
-        savePrinter
+        savePrinter,
+        isOrderPrinting: (id) => activeJobs.has((id || '').toString()),
+        wasOrderPrintedRecently: (id) => {
+            const t = recentPrints.get((id || '').toString());
+            return !!(t && (Date.now() - t < 15000));
+        }
     };
 })();
 

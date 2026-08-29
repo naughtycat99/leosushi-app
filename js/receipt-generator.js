@@ -84,8 +84,27 @@ const ReceiptGenerator = (() => {
 
         const items = orderData.items || [];
         const summary = orderData.summary || {};
-        const serviceType = orderData.service_type === 'delivery' ? 'Lieferung' : 'Abholung';
-        const pm = (summary.payment_method || '').toLowerCase();
+        const rawType = (orderData.service_type || '').toLowerCase();
+        
+        let tableNumber = orderData.table_id || summary.table_number || '';
+        const fullNote = (deliveryAddress.note || summary.note || orderData.note || '').trim();
+        const tableMatch = fullNote.match(/Tisch\s*(\d+)/i) || fullNote.match(/Bàn\s*(\d+)/i);
+        if (tableMatch) {
+            tableNumber = tableMatch[1];
+        }
+
+        let serviceType = 'Abholung';
+        if (rawType === 'delivery') {
+            serviceType = 'Lieferung';
+        } else if (rawType === 'dinein' || rawType === 'table' || tableNumber) {
+            serviceType = tableNumber ? `Im Restaurant (Tisch ${tableNumber})` : 'Im Restaurant';
+        } else if (rawType === 'reservation') {
+            serviceType = 'Reservierung';
+        } else {
+            serviceType = 'Abholung';
+        }
+
+        const pm = (summary.payment_method || orderData.payment_method || '').toLowerCase();
         const payMethod = (pm.includes('cash') || pm.includes('tiền mặt') || pm.includes('bar')) ? 'Barzahlung' :
             (pm.includes('paypal') ? 'PayPal' : 'Kartenzahlung');
 
@@ -97,6 +116,10 @@ const ReceiptGenerator = (() => {
         const branchAddr = (summary.branch && summary.branch.address) ? summary.branch.address : 'Florastraße 10A, 13187 Berlin';
         const branchPhone = (summary.branch && summary.branch.id === 'branch_haupt') ? '03055617056' : '03037476736';
         data.push(...CMD.FONT_A, ...line(branchAddr), ...line(branchPhone), ...dashes());
+
+        if (tableNumber) {
+            data.push(...CMD.ALIGN_CENTER, ...CMD.BOLD_ON, ...CMD.DOUBLE_ON, ...line(`*** TISCH ${tableNumber} ***`), ...CMD.DOUBLE_OFF, ...CMD.BOLD_OFF, ...dashes());
+        }
 
         let etaDisplay = estimatedTimeText;
         let cleanEta = '';
@@ -229,6 +252,10 @@ const ReceiptGenerator = (() => {
         // ===== KITCHEN TICKET =====
         data.push(...CMD.INIT, ...CMD.ALIGN_CENTER, ...CMD.BOLD_ON, ...CMD.DOUBLE_ON, ...line('KUECHENTICKET'), ...CMD.DOUBLE_OFF, ...CMD.BOLD_OFF, ...dashes());
         data.push(...CMD.ALIGN_CENTER, ...CMD.DOUBLE_ON, ...CMD.BOLD_ON, ...line(serviceType.toUpperCase()), ...CMD.BOLD_OFF, ...CMD.DOUBLE_OFF, ...dashes());
+
+        if (tableNumber) {
+            data.push(...CMD.ALIGN_CENTER, ...CMD.BOLD_ON, ...CMD.DOUBLE_ON, ...line(`*** TISCH ${tableNumber} ***`), ...CMD.DOUBLE_OFF, ...CMD.BOLD_OFF, ...dashes());
+        }
 
         data.push(...CMD.ALIGN_LEFT);
         if (estimatedTimeText) {
