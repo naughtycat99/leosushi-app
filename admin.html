@@ -6873,6 +6873,7 @@
                 let summary = order.summary;
                 if (typeof summary === 'string') {
                     try { summary = JSON.parse(summary); } catch (e) { return; }
+                }
                 // Allow printing confirmed orders AND pending cash/new orders
                 if (order.status !== 'confirmed' && order.status !== 'pending') return;
 
