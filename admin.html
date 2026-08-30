@@ -2221,32 +2221,27 @@
                                 <button class="filter-btn"
                                     onclick="filterOrdersByStatus('all')"
                                     data-status="all"
-                                    style="pointer-events: auto !important; cursor: pointer !important; position: relative; z-index: 10002 !important;">Tất cả</button>
+                                    style="pointer-events: auto !important; cursor: pointer !important; position: relative; z-index: 10002 !important;">Tất cả <span class="tab-count-badge" id="badge_all" style="display:none; background:rgba(255,255,255,0.2); padding:2px 7px; border-radius:10px; font-size:11px; margin-left:4px;">0</span></button>
                                 <button class="filter-btn active"
                                     onclick="filterOrdersByStatus('pending')"
                                     data-status="pending"
-                                    style="pointer-events: auto !important; cursor: pointer !important; position: relative; z-index: 10002 !important;">Chờ
-                                    xử lý</button>
+                                    style="pointer-events: auto !important; cursor: pointer !important; position: relative; z-index: 10002 !important;">Chờ xử lý <span class="tab-count-badge" id="badge_pending" style="display:none; background:#ef4444; color:#fff; padding:2px 7px; border-radius:10px; font-size:11px; margin-left:4px; font-weight:bold;">0</span></button>
                                 <button class="filter-btn"
                                     onclick="console.log('Click: Confirmed'); filterOrdersByStatus('confirmed')"
                                     data-status="confirmed"
-                                    style="pointer-events: auto !important; cursor: pointer !important; position: relative; z-index: 10002 !important;">Đã
-                                    xác nhận</button>
+                                    style="pointer-events: auto !important; cursor: pointer !important; position: relative; z-index: 10002 !important;">Đã xác nhận <span class="tab-count-badge" id="badge_confirmed" style="display:none; background:#3b82f6; color:#fff; padding:2px 7px; border-radius:10px; font-size:11px; margin-left:4px;">0</span></button>
                                 <button class="filter-btn"
                                     onclick="console.log('Click: In Delivery'); filterOrdersByStatus('in_delivery')"
                                     data-status="in_delivery"
-                                    style="pointer-events: auto !important; cursor: pointer !important; position: relative; z-index: 10002 !important;">Đang
-                                    giao</button>
+                                    style="pointer-events: auto !important; cursor: pointer !important; position: relative; z-index: 10002 !important;">Đang giao <span class="tab-count-badge" id="badge_in_delivery" style="display:none; background:#8b5cf6; color:#fff; padding:2px 7px; border-radius:10px; font-size:11px; margin-left:4px;">0</span></button>
                                 <button class="filter-btn"
                                     onclick="console.log('Click: Completed'); filterOrdersByStatus('completed')"
                                     data-status="completed"
-                                    style="pointer-events: auto !important; cursor: pointer !important; position: relative; z-index: 10002 !important;">Đã
-                                    xong</button>
+                                    style="pointer-events: auto !important; cursor: pointer !important; position: relative; z-index: 10002 !important;">Đã xong <span class="tab-count-badge" id="badge_completed" style="display:none; background:#10b981; color:#fff; padding:2px 7px; border-radius:10px; font-size:11px; margin-left:4px;">0</span></button>
                                 <button class="filter-btn"
                                     onclick="console.log('Click: Cancelled'); filterOrdersByStatus('cancelled')"
                                     data-status="cancelled"
-                                    style="pointer-events: auto !important; cursor: pointer !important; position: relative; z-index: 10002 !important;">Đã
-                                    hủy</button>
+                                    style="pointer-events: auto !important; cursor: pointer !important; position: relative; z-index: 10002 !important;">Đã hủy <span class="tab-count-badge" id="badge_cancelled" style="display:none; background:#6b7280; color:#fff; padding:2px 7px; border-radius:10px; font-size:11px; margin-left:4px;">0</span></button>
                             </div>
                         </div>
                     </div>
@@ -6372,21 +6367,16 @@
                     console.log('🖨️ Direct ESC/POS print successful. Bypassing fallback.');
                     return; // Done
                 } catch (err) {
-                    console.warn('🖨️ Direct print via PrinterManager failed:', err);
-
-                    // If we are in the native app, we DO NOT want to fall back to the OS printer
-                    // because the user expects a direct POS print. Show the error directly.
-                    const isApp = (typeof window.Capacitor !== 'undefined') ||
+                    // Check if actually running inside native Capacitor / Android APK bridge
+                    const isNativeApp = (typeof window.Capacitor !== 'undefined' && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) ||
                         (typeof window.Android !== 'undefined') ||
                         (typeof window.AndroidPrinter !== 'undefined') ||
-                        (window.location.protocol === 'file:') ||
-                        (window.location.hostname === 'localhost') ||
-                        (window.location.hostname.includes('leo-sushi-berlin.de')) ||
-                        (/Android|iPhone|iPad|iPod/i.test(navigator.userAgent) && window.location.protocol !== 'https:');
+                        (typeof NativeLanPrinter !== 'undefined' && NativeLanPrinter.hasNativeBridge && NativeLanPrinter.hasNativeBridge()) ||
+                        (typeof SunmiNativePrinter !== 'undefined' && SunmiNativePrinter.hasPlugin && SunmiNativePrinter.hasPlugin());
 
-                    if (isApp) {
-                        alert('Lỗi in (Native):\n' + (err.message || 'Không thể kết nối máy in. Vui lòng kiểm tra nguồn và mạng của máy in.'));
-                        return; // Prevent OS fallback (No white screen/browser print)
+                    if (isNativeApp) {
+                        printLog('Lỗi in (Native): ' + (err.message || 'Không thể kết nối máy in.'), 'error');
+                        return; // Prevent OS fallback in native APK
                     }
                 }
             }
@@ -7104,6 +7094,7 @@
                     allOrdersData = combinedData;
                     window.allOrdersData = combinedData;
                     console.log('✅ Loaded data (merged + branch filtered):', allOrdersData.length);
+                    updateFilterBadges(allOrdersData);
                     if (typeof window.updateAdminV2Summary === 'function') window.updateAdminV2Summary();
                     window.__loadOrdersRunning = false;
 
@@ -7206,6 +7197,25 @@
                         <button class="btn-action btn-view" onclick="event.stopPropagation(); loadOrders()" style="margin-top: 12px;">Thử lại</button>
                     </div>
                     `;
+                }
+            }
+        }
+
+        // Update live order count badges on filter tabs
+        function updateFilterBadges(orders) {
+            if (!orders || !Array.isArray(orders)) return;
+            const counts = { all: orders.length, pending: 0, confirmed: 0, in_delivery: 0, completed: 0, cancelled: 0 };
+            orders.forEach(o => {
+                const st = (o.status || 'pending').toLowerCase();
+                if (counts[st] !== undefined) {
+                    counts[st]++;
+                }
+            });
+            for (const [st, num] of Object.entries(counts)) {
+                const badge = document.getElementById('badge_' + st);
+                if (badge) {
+                    badge.textContent = num;
+                    badge.style.display = num > 0 ? 'inline-block' : 'none';
                 }
             }
         }
